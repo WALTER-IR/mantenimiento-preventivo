@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inventario de Equipos</string>
+
+    <string-array name="prioridades">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+
+    <string-array name="estados_mantenimiento">
+        <item>Pendiente</item>
+        <item>Realizado</item>
+        <item>En proceso</item>
+    </string-array>
+
+    <string-array name="zonas">
+        <item>Norte</item>
+        <item>Sur</item>
+    </string-array>
+
+    <string-array name="estados_equipo">
+        <item>Activo</item>
+        <item>En uso</item>
+        <item>Inactivo</item>
+        <item>Reparación</item>
+        <item>Baja</item>
+    </string-array>
+</resources>

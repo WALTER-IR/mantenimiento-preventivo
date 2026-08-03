@@ -7,14 +7,6 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual lila
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.1.0
-
-- **Login obligatorio** con permisos: Lectura / Edición / Administrador.
-- Usuario administrador inicial: `admin` / `admin`.
-- **Configuración solo administrador** (empresa, respaldo, actualizaciones).
-- **Usuarios y permisos**: agregar/editrar responsables y cambiar permisos.
-- **Auditoría** de las últimas acciones (inicios de sesión, altas, bajas, cambios de permiso).
-
 ## Publicación
 
 Este repositorio se publica con GitHub Pages desde la rama `main`.

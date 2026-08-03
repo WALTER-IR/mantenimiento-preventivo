@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@color/bg">
+
+    <TextView
+        android:id="@+id/formUsuTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="14dp"
+        style="@style/Title"
+        android:text="Nuevo responsable" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:paddingBottom="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Label"
+                android:text="NOMBRE Y APELLIDOS *" />
+
+            <EditText
+                android:id="@+id/usNombre"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:hint="Nombre y apellidos"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="DNI *" />
+
+            <EditText
+                android:id="@+id/usDni"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:hint="DNI"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="ZONA *" />
+
+            <Spinner
+                android:id="@+id/usZona"
+                style="@style/Input"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="PERMISO" />
+
+            <Spinner
+                android:id="@+id/usRol"
+                style="@style/Input"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="CONTRASEÑA" />
+
+            <EditText
+                android:id="@+id/usClave"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:hint="Contraseña (si la dejas vacía: DNI)"
+                android:singleLine="true"
+                android:inputType="textPassword" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="SUBDIVISION" />
+
+            <EditText
+                android:id="@+id/usSubdivision"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="CeCo SAP" />
+
+            <EditText
+                android:id="@+id/usCeco"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="AREA" />
+
+            <EditText
+                android:id="@+id/usArea"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="CARGO" />
+
+            <EditText
+                android:id="@+id/usCargo"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
+                android:text="EMAIL" />
+
+            <EditText
+                android:id="@+id/usEmail"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:inputType="textEmailAddress"
+                android:singleLine="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnEliminarUsuario"
+                    style="@style/BtnDanger"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginRight="6dp"
+                    android:text="Eliminar" />
+
+                <Button
+                    android:id="@+id/btnGuardarUsuario"
+                    style="@style/BtnPrimary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Guardar" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
