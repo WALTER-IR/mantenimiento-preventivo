@@ -1,0 +1,16 @@
+{
+  "name": "mantenimiento-sync",
+  "version": "1.0.0",
+  "description": "API de sincronizacion para Mantenimiento Preventivo (APK + PWA)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
+  }
+}

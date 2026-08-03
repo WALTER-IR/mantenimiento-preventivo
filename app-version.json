@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-03",
-  "changelog": "Login obligatorio con permisos (lectura/edición/admin), configuración solo administrador y auditoría de acciones."
+  "changelog": "Sincronización con el APK: URL y clave configurables desde Ajustes (solo admin), sincronización automática cada 10 minutos y botón manual."
 }

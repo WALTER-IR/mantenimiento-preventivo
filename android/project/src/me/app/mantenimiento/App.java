@@ -5,6 +5,7 @@ import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.Toast;
@@ -23,10 +24,16 @@ public class App extends Application {
     private static volatile long lastBeat = 0L;
     private static volatile Activity current;
 
+    // Sincronización automática cada 10 minutos (si hay sesión y URL configurada)
+    private static final long SYNC_INTERVAL_MS = 10 * 60 * 1000L;
+    private Handler syncHandler;
+    private HandlerThread syncThread;
+
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
+        Db.init(this);
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override
@@ -66,6 +73,11 @@ public class App extends Application {
 
         mainHandler.post(beatRunnable);
         new Thread(watchdogRunnable, "watchdog").start();
+
+        syncThread = new HandlerThread("sync");
+        syncThread.start();
+        syncHandler = new Handler(syncThread.getLooper());
+        programarSync(30000); // primera pasada a los 30 s, luego cada 10 min
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
@@ -131,6 +143,23 @@ public class App extends Application {
             }
         }
     };
+
+    // Programa la sincronización periódica en su propio hilo.
+    private void programarSync(long delay) {
+        syncHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (Db.getSesionRol() >= 0 && Sync.enabled(instance)) {
+                        Sync.sincronizar(instance);
+                    }
+                } catch (Throwable t) {
+                    logMessage("SYNC AUTO: " + crashMsg(t));
+                }
+                programarSync(SYNC_INTERVAL_MS);
+            }
+        }, delay);
+    }
 
     private static void restartApp() {
         try {

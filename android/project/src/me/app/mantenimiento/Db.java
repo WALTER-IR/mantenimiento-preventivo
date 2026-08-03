@@ -201,6 +201,18 @@ public final class Db {
         return prefs(app).getInt(SES_ROL, -1);
     }
 
+    // Tras una importación los ids cambian: vuelve a enlazar la sesión actual
+    // por nombre para que el usuario siga identificado con su nuevo id/rol.
+    public static void refrescarSesion() {
+        long id = getSesionId();
+        String nombre = getSesionNombre();
+        if (id < 0 || nombre.length() == 0) return;
+        Usuario u = findUsuarioByNombre(nombre);
+        if (u != null) {
+            setSesion(u.id, u.nombre, u.rol);
+        }
+    }
+
     public static boolean sesionActiva() {
         return getSesionRol() >= 0;
     }

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mantenimiento-sync
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: SYNC_TOKEN
+        value: mantenimiento2026
+      - key: DATABASE_URL
+        sync: false
