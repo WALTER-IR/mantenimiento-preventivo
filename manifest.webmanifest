@@ -1,0 +1,18 @@
+{
+  "name": "Mantenimiento Preventivo",
+  "short_name": "Mantenimiento",
+  "description": "Control de mantenimientos preventivos para laptops y computadoras. Funciona sin conexión y se actualiza por internet.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#7C3AED",
+  "theme_color": "#7C3AED",
+  "lang": "es",
+  "categories": ["business", "utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
