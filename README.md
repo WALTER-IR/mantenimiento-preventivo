@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.8.0
 
+- **Filtros de búsqueda en el APK**: la pestaña Mantenimiento ahora tiene buscador de texto, filtro por estado (Pendiente / En proceso / Realizado) y filtro por rango de fechas (desde/hasta).
 - **Pestaña "Mantenimiento" en el APK**: la app Android ahora tiene la opción Mantenimiento en la barra inferior, con la lista de todos los mantenimientos (solo los visibles para tu usuario), búsqueda y botón "+ Nuevo".
 - **Salir visible para todos**: el botón "Salir" aparece en la barra superior para cualquier usuario, no solo administrador.
 - **Tarjeta de Responsables en el panel**: el panel de control muestra la cantidad de responsables, visible para todos los usuarios.

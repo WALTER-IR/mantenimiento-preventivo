@@ -14,6 +14,13 @@
         <item>En proceso</item>
     </string-array>
 
+    <string-array name="filtros_estado_mant">
+        <item>Estado: todos</item>
+        <item>Pendiente</item>
+        <item>En proceso</item>
+        <item>Realizado</item>
+    </string-array>
+
     <string-array name="zonas">
         <item>Norte</item>
         <item>Sur</item>

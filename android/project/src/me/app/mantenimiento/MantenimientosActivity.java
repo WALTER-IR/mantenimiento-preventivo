@@ -1,6 +1,7 @@
 package me.app.mantenimiento;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -9,12 +10,16 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -23,6 +28,8 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
     private ListView lv;
     private EditText search;
     private TextView empty;
+    private Spinner filterEstado;
+    private EditText filterDesde, filterHasta;
     private ArrayList<Mantenimiento> items = new ArrayList<>();
     private HashMap<Long, String> labels = new HashMap<>();
     private int loadSeq = 0;
@@ -53,6 +60,26 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         lv = (ListView) findViewById(R.id.listaMantenimientos);
         search = (EditText) findViewById(R.id.searchMant);
         empty = (TextView) findViewById(R.id.emptyMantenimientos);
+        filterEstado = (Spinner) findViewById(R.id.filterEstado);
+        filterDesde = (EditText) findViewById(R.id.filterDesde);
+        filterHasta = (EditText) findViewById(R.id.filterHasta);
+
+        filterEstado.setAdapter(new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item,
+                getResources().getStringArray(R.array.filtros_estado_mant)));
+        filterEstado.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
+                load();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> p) {
+            }
+        });
+
+        setFilterDatePicker(filterDesde);
+        setFilterDatePicker(filterHasta);
 
         search.addTextChangedListener(new TextWatcher() {
             @Override
@@ -79,6 +106,46 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         });
     }
 
+    private void setFilterDatePicker(final EditText field) {
+        field.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickFilterDate(field);
+            }
+        });
+        field.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                field.setText("");
+                load();
+                return true;
+            }
+        });
+    }
+
+    private void pickFilterDate(final EditText field) {
+        Calendar c = Calendar.getInstance();
+        String canon = Fmt.canon(field.getText().toString());
+        if (canon.length() > 0) {
+            try {
+                c.setTime(Fmt.FMT.parse(canon));
+            } catch (Exception ignored) {
+            }
+        }
+        DatePickerDialog dlg = new DatePickerDialog(this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int day) {
+                        Calendar sel = Calendar.getInstance();
+                        sel.set(year, month, day);
+                        field.setText(Fmt.disp(Fmt.FMT.format(sel.getTime())));
+                        load();
+                    }
+                },
+                c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        dlg.show();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -93,24 +160,29 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
     private void load() {
         final int seq = ++loadSeq;
         final String q = search == null ? "" : search.getText().toString().trim().toLowerCase(Locale.ROOT);
+        final int estadoPos = filterEstado == null ? 0 : filterEstado.getSelectedItemPosition();
+        final String desde = Fmt.canon(filterDesde == null ? "" : filterDesde.getText().toString());
+        final String hasta = Fmt.canon(filterHasta == null ? "" : filterHasta.getText().toString());
+        final String estadoSel = estadoPos <= 0 ? ""
+                : getResources().getStringArray(R.array.estados_mantenimiento)[estadoPos - 1];
         new Thread(new Runnable() {
             @Override
             public void run() {
                 final ArrayList<Mantenimiento> result;
                 final HashMap<Long, String> map = new HashMap<>();
                 try {
-                    result = Db.allMants();
-                    if (q.length() > 0) {
-                        ArrayList<Mantenimiento> filt = new ArrayList<>();
-                        for (Mantenimiento m : result) {
-                            if (m.usuario.toLowerCase(Locale.ROOT).contains(q)
-                                    || m.serie.toLowerCase(Locale.ROOT).contains(q)
-                                    || m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
-                                filt.add(m);
-                            }
+                    result = new ArrayList<>();
+                    for (Mantenimiento m : Db.allMants()) {
+                        if (q.length() > 0 && !m.usuario.toLowerCase(Locale.ROOT).contains(q)
+                                && !m.serie.toLowerCase(Locale.ROOT).contains(q)
+                                && !m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
+                            continue;
                         }
-                        result.clear();
-                        result.addAll(filt);
+                        if (estadoSel.length() > 0 && !m.estado.equalsIgnoreCase(estadoSel)) continue;
+                        String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
+                        if (desde.length() > 0 && eff.compareTo(desde) < 0) continue;
+                        if (hasta.length() > 0 && eff.compareTo(hasta) > 0) continue;
+                        result.add(m);
                     }
                     for (Equipo e : Db.allEquipos()) map.put(e.id, Db.equipoLabel(e));
                 } catch (final Exception ex) {
