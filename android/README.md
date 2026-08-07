@@ -19,6 +19,12 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.21.0 (vc36): la carga masiva de equipos ya no crea un usuario por cada
+  "USUARIO ASIGNADO" distinto (eso mezclaba los datos del responsable con la
+  serie de otro equipo). Cada equipo se asigna a su RESPONSABLE (los usuarios
+  registrados), resuelto por la columna RESPONSABLE o DNI (que trae el nombre
+  del responsable). El "USUARIO ASIGNADO" (propietario físico) se guarda como
+  dato propio del equipo y se muestra en su detalle.
 - 3.20.0 (vc35): el lector de Excel de la Carga Masiva tolera archivos cuyas
   celdas no traen la referencia de columna (A/B/C), común en exportaciones de
   ERP/SAP convertidas a XLSX, y descarta filas totalmente vacías (evita

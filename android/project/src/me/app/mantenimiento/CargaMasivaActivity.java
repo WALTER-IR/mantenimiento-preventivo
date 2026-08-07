@@ -54,7 +54,7 @@ public class CargaMasivaActivity extends Activity {
             columnas.setText("SERIE DE EQUIPO; Prioridad; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES");
         } else {
             title.setText("Cargar equipos");
-            desc.setText("Cada fila creará un equipo asignado al USUARIO ASIGNADO (o RESPONSABLE) indicado. Si el usuario no existe, se crea automáticamente con su DNI.");
+            desc.setText("Cada fila crea un equipo asignado al RESPONSABLE indicado (columna RESPONSABLE, o DNI si trae un nombre, o USUARIO ASIGNADO). El USUARIO ASIGNADO se guarda como propietario del equipo. No se crean usuarios automáticamente.");
             columnas.setText("USUARIO ASIGNADO; RESPONSABLE; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; SERIE DE EQUIPO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS");
         }
 

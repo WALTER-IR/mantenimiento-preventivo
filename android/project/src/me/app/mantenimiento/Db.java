@@ -60,7 +60,7 @@ public final class Db {
 
     private static class Helper extends SQLiteOpenHelper {
         Helper(Context c) {
-            super(c, "mantenimiento.db", null, 4);
+            super(c, "mantenimiento.db", null, 5);
         }
 
         @Override
@@ -80,6 +80,7 @@ public final class Db {
             db.execSQL("CREATE TABLE equipos (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "usuario_id INTEGER DEFAULT 0," +
+                    "usuario_asignado TEXT DEFAULT ''," +
                     "hostname TEXT DEFAULT ''," +
                     "ip TEXT DEFAULT ''," +
                     "ubicacion TEXT DEFAULT ''," +
@@ -112,6 +113,12 @@ public final class Db {
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // Migraciones que conservan los datos.
+            if (oldVersion < 5) {
+                try {
+                    db.execSQL("ALTER TABLE equipos ADD COLUMN usuario_asignado TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
             if (oldVersion < 4) {
                 try {
                     db.execSQL("ALTER TABLE usuarios ADD COLUMN clave TEXT DEFAULT ''");
@@ -463,6 +470,7 @@ public final class Db {
     public static long saveEquipo(Equipo e) {
         ContentValues v = new ContentValues();
         v.put("usuario_id", e.usuarioId);
+        v.put("usuario_asignado", e.usuarioAsignado);
         v.put("hostname", e.hostname);
         v.put("ip", e.ip);
         v.put("ubicacion", e.ubicacion);
@@ -577,6 +585,7 @@ public final class Db {
         Equipo e = new Equipo();
         e.id = c.getLong(c.getColumnIndexOrThrow("id"));
         e.usuarioId = c.getLong(c.getColumnIndexOrThrow("usuario_id"));
+        e.usuarioAsignado = s(c, "usuario_asignado");
         e.hostname = s(c, "hostname");
         e.ip = s(c, "ip");
         e.ubicacion = s(c, "ubicacion");
@@ -936,25 +945,30 @@ public final class Db {
                 addError(errores, i, "serie duplicada: " + serie);
                 continue;
             }
-            String respText = val(f, colResp);
-            if (respText.length() == 0 && colRespAlt >= 0) respText = val(f, colRespAlt);
+            String asignado = val(f, colResp);
+            String respAlt = colRespAlt >= 0 ? val(f, colRespAlt) : "";
             String dniText = val(f, colDni);
+            boolean dniEsNombre = dniText.length() > 0 && !esNumero(dniText);
+            // Responsable a asignar: RESPONSABLE > DNI (si trae nombre) > USUARIO ASIGNADO
+            String nombreResp = respAlt;
+            if (nombreResp.length() == 0 && dniEsNombre) nombreResp = dniText;
+            if (nombreResp.length() == 0) nombreResp = asignado;
             Usuario u = null;
-            if (dniText.length() > 0) u = findUsuarioByDni(dniText);
-            if (u == null && respText.length() > 0) u = matchResponsable(respText);
-            if (u == null && respText.length() > 0) {
-                u = new Usuario();
-                u.nombre = respText;
-                u.dni = dniText;
-                u.clave = dniText;
-                u.rol = ROL_EDICION;
-                u.id = saveUsuario(u);
-            } else if (u != null && dniText.length() > 0 && !dniText.equalsIgnoreCase(u.dni)) {
+            if (dniText.length() > 0 && !dniEsNombre) u = findUsuarioByDni(dniText);
+            if (u == null && nombreResp.length() > 0) u = matchResponsable(nombreResp);
+            if (u == null) {
+                err++;
+                addError(errores, i, "no se encontró el responsable: " +
+                        (nombreResp.length() > 0 ? nombreResp : "—"));
+                continue;
+            }
+            if (dniText.length() > 0 && !dniEsNombre && !dniText.equalsIgnoreCase(u.dni)) {
                 u.dni = dniText;
                 saveUsuario(u);
             }
             Equipo e = new Equipo();
-            e.usuarioId = u != null ? u.id : 0;
+            e.usuarioId = u.id;
+            e.usuarioAsignado = asignado;
             e.hostname = val(f, colHost);
             e.ip = val(f, colIp);
             e.ubicacion = val(f, colUbic);
@@ -1061,6 +1075,15 @@ public final class Db {
     private static String val(String[] f, int col) {
         if (col < 0 || col >= f.length) return "";
         return f[col] == null ? "" : f[col].trim();
+    }
+
+    // True si el valor es un DNI numérico (solo dígitos); un nombre en la columna DNI no lo es.
+    private static boolean esNumero(String s) {
+        if (s == null || s.length() == 0) return false;
+        for (char ch : s.toCharArray()) {
+            if (!Character.isDigit(ch)) return false;
+        }
+        return true;
     }
 
     // Convierte una fecha de Excel a yyyy-MM-dd (interno): serial numérico (ej. 45658) o texto DD/MM/YYYY.

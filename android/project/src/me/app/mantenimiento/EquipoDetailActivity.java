@@ -119,7 +119,8 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
         ((TextView) findViewById(R.id.detTitle)).setText(Db.equipoLabel(equipo));
 
         equipoCard.removeViews(1, equipoCard.getChildCount() - 1);
-        addRow(equipoCard, "USUARIO ASIGNADO", equipo.responsable.length() > 0 ? equipo.responsable : "—");
+        String asignado = equipo.usuarioAsignado.length() > 0 ? equipo.usuarioAsignado : equipo.responsable;
+        addRow(equipoCard, "USUARIO ASIGNADO", asignado.length() > 0 ? asignado : "—");
         addRow(equipoCard, "HOSTNAME", equipo.hostname);
         addRow(equipoCard, "DIR. IP", equipo.ip);
         addRow(equipoCard, "UBICACIÓN FISICA", equipo.ubicacion);

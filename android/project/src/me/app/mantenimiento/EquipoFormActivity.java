@@ -171,6 +171,10 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
 
         Equipo e = new Equipo();
         e.id = equipoId;
+        if (equipoId > 0) {
+            Equipo prev = Db.getEquipo(equipoId);
+            if (prev != null) e.usuarioAsignado = prev.usuarioAsignado;
+        }
         e.usuarioId = usuarioId;
         e.hostname = eqHostname.getText().toString().trim();
         e.ip = eqIp.getText().toString().trim();

@@ -1,6 +1,6 @@
 {
-  "version": "1.12.1",
+  "version": "1.13.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "La lista de equipos muestra primero el usuario asignado, luego el nombre del equipo y la serie."
+  "changelog": "Al registrar un equipo, el campo 'Usuario asignado' ahora carga la lista de responsables registrados."
 }

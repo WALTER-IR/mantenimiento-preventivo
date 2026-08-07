@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.13.0
 
+- **Carga masiva de equipos corregida (APK 3.21.0)**: al importar equipos ya no se crea un usuario por cada "USUARIO ASIGNADO" distinto (eso mezclaba los datos del responsable con la serie de otro equipo). Ahora cada equipo se asigna a su **RESPONSABLE** (los 4 usuarios registrados), resuelto por la columna RESPONSABLE o DNI (que trae el nombre del responsable). El "USUARIO ASIGNADO" (propietario físico) se guarda como dato propio del equipo y se muestra en su detalle.
 - **Carga masiva más robusta (APK 3.20.0)**: el lector de Excel del APK ahora tolera archivos cuyas celdas no traen la referencia de columna (A/B/C) —común en exportaciones de ERP/SAP convertidas a XLSX— y descarta filas totalmente vacías, evitando que la importación de responsables, equipos y mantenimientos registre datos desordenados o de más.
 - **Nombres en el detalle de equipo (APK 3.19.0)**: en el "DETALLE DE EQUIPO" se muestra el nombre del **USUARIO ASIGNADO**, y en el "DETALLE DE RESPONSABLE" el nombre del **RESPONSABLE**.
 - **Detalle de equipo (APK 3.18.0)**: la vista del equipo ahora tiene dos secciones con cabeceras "DETALLE DE EQUIPO" (datos del equipo) y "DETALLE DE RESPONSABLE" (datos del responsable). El formulario de nuevo/editar responsable muestra la sección "EQUIPOS DEL RESPONSABLE" con los equipos asignados.

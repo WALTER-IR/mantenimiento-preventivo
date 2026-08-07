@@ -4,6 +4,9 @@ public class Equipo {
     public long id;
     public long usuarioId;
 
+    // propietario físico del equipo (USUARIO ASIGNADO en la carga masiva)
+    public String usuarioAsignado = "";
+
     // atributos del equipo
     public String hostname = "";
     public String ip = "";
