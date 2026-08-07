@@ -17,6 +17,7 @@ import java.util.HashMap;
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private TextView statResp, statEquipos, statVencidos, statProximos, lblEmpresa;
+    private TextView statProgramados, statReprogramados, statFinalizados;
     private int loadSeq = 0;
 
     @Override
@@ -30,6 +31,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         statEquipos = (TextView) findViewById(R.id.statEquipos);
         statVencidos = (TextView) findViewById(R.id.statVencidos);
         statProximos = (TextView) findViewById(R.id.statProximos);
+        statProgramados = (TextView) findViewById(R.id.statProgramados);
+        statReprogramados = (TextView) findViewById(R.id.statReprogramados);
+        statFinalizados = (TextView) findViewById(R.id.statFinalizados);
 
         findViewById(R.id.navEquipos).setOnClickListener(this);
         findViewById(R.id.navAlertas).setOnClickListener(this);
@@ -73,6 +77,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             @Override
             public void run() {
                 final int r1, r2, r3, r4;
+                final int[] avance;
                 final ArrayList<Mantenimiento> alertas, recientes;
                 final HashMap<Long, String> labels = new HashMap<>();
                 try {
@@ -80,6 +85,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     r2 = Db.countEquipos();
                     r3 = Db.countVencidos();
                     r4 = Db.countProximos();
+                    avance = Db.avanceMantenimiento();
                     for (Equipo e : Db.allEquipos()) labels.put(e.id, Db.equipoLabel(e));
                     alertas = new ArrayList<>();
                     alertas.addAll(Db.alertas(0));
@@ -103,6 +109,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         statEquipos.setText(String.valueOf(r2));
                         statVencidos.setText(String.valueOf(r3));
                         statProximos.setText(String.valueOf(r4));
+                        statProgramados.setText(String.valueOf(avance[0]));
+                        statReprogramados.setText(String.valueOf(avance[1]));
+                        statFinalizados.setText(String.valueOf(avance[2]));
                         ((ListView) findViewById(R.id.listaAlertas)).setAdapter(new MantAlertAdapter(alertas, labels));
                         ((ListView) findViewById(R.id.listaRecientes)).setAdapter(new MantItemAdapter(recientes, labels));
                     }

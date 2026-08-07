@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Cada usuario (Lectura/Edición) solo ve los registros asignados a él: el equipo, sus mantenimientos y alertas. El administrador sigue viendo todo."
+  "changelog": "Nuevo panel de avance del mantenimiento: registros Programados, Reprogramados y Finalizados. Los mantenimientos ahora tienen estado (finalizado por defecto)."
 }

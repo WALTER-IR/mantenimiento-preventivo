@@ -76,6 +76,24 @@
       </div>
 
       <div class="section-head">
+        <h3>Avance del mantenimiento</h3>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card info">
+          <div class="stat-num" id="statProg">0</div>
+          <div class="stat-label">Programados</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-num" id="statReprog">0</div>
+          <div class="stat-label">Reprogramados</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-num" id="statFin">0</div>
+          <div class="stat-label">Finalizados</div>
+        </div>
+      </div>
+
+      <div class="section-head">
         <h3>Alertas de mantenimiento</h3>
         <button class="btn btn-ghost" id="btnVerTodasAlertas">Ver todas</button>
       </div>
@@ -322,6 +340,12 @@
             </select>
           </div>
         </div>
+        <label class="field-label" for="mtEstado">Estado</label>
+        <select id="mtEstado" class="input select">
+          <option value="finalizado">Finalizado</option>
+          <option value="programado">Programado</option>
+          <option value="reprogramado">Reprogramado</option>
+        </select>
         <label class="field-label">Actividades realizadas</label>
         <div id="checklist" class="checklist"></div>
         <div class="field-row">

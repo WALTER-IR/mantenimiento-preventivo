@@ -36,6 +36,15 @@
   };
   const equiposVisibles = () => equipos.filter(esVisibleEquipo);
 
+  // ---------------- Estado del mantenimiento ----------------
+  const estadoMant = (m) => (m.estado === "programado" || m.estado === "reprogramado") ? m.estado : "finalizado";
+  const estadoLabel = (e) => (e === "programado" ? "Programado" : e === "reprogramado" ? "Reprogramado" : "Finalizado");
+  const estadoBadge = (m) => {
+    const e = estadoMant(m);
+    const cls = e === "finalizado" ? "ok" : e === "reprogramado" ? "warn" : "info";
+    return `<span class="badge ${cls}">${estadoLabel(e)}</span>`;
+  };
+
   // ---------------- Utilidades de fecha ----------------
   const todayISO = () => toISODate(new Date());
   function toISODate(d) {
@@ -228,6 +237,15 @@
     $("#statProximos").textContent = stats.proximos;
     $("#statMes").textContent = mes;
 
+    const prog = { programado: 0, reprogramado: 0, finalizado: 0 };
+    mantenimientos.forEach((m) => {
+      if (!visIds.has(m.equipoId)) return;
+      prog[estadoMant(m)]++;
+    });
+    $("#statProg").textContent = prog.programado;
+    $("#statReprog").textContent = prog.reprogramado;
+    $("#statFin").textContent = prog.finalizado;
+
     const alerts = vis
       .map((e) => ({ eq: e, st: statusOf(e) }))
       .filter((x) => x.st.key !== "ok")
@@ -270,7 +288,7 @@
         <div class="item-avatar">🔧</div>
         <div class="item-body">
           <div class="item-title">${esc(eqName(m.equipoId))}</div>
-          <div class="item-sub">${fmtDate(m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"} · ${esc(m.tecnico || "—")}</div>
+          <div class="item-sub">${estadoLabel(estadoMant(m))} · ${fmtDate(m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"} · ${esc(m.tecnico || "—")}</div>
         </div>
         <div class="item-meta">
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
@@ -416,6 +434,7 @@
       sel.value = mant.equipoId;
       $("#mtFecha").value = mant.fecha || todayISO();
       $("#mtTipo").value = mant.tipo || "preventivo";
+      $("#mtEstado").value = estadoMant(mant);
       $("#mtTecnico").value = mant.tecnico || "";
       $("#mtCosto").value = mant.costo || "";
       $("#mtProxima").value = mant.proxima || "";
@@ -426,6 +445,7 @@
       sel.value = vis[0] ? vis[0].id : "";
       $("#mtFecha").value = todayISO();
       $("#mtTipo").value = "preventivo";
+      $("#mtEstado").value = "finalizado";
       $("#mtTecnico").value = "";
       $("#mtCosto").value = "";
       $("#mtProxima").value = "";
@@ -450,11 +470,13 @@
     if (!equipoId || !fecha) return toast("Equipo y fecha son obligatorios", "err");
     const id = $("#mtId").value;
     const tareas = $$("#checklist input:checked").map((i) => i.value);
+    const estado = estadoMant({ estado: $("#mtEstado").value });
     const data = {
       id: id || "mt-" + Date.now(),
       equipoId,
       fecha,
       tipo: $("#mtTipo").value,
+      estado,
       tecnico: $("#mtTecnico").value.trim(),
       costo: parseFloat($("#mtCosto").value) || 0,
       proxima: $("#mtProxima").value,
@@ -463,9 +485,9 @@
     };
     await DB.put("mantenimientos", data);
 
-    // actualizar último mantenimiento del equipo
+    // el equipo solo se marca con último mantenimiento cuando se finaliza
     const eq = equipos.find((x) => x.id === equipoId);
-    if (eq) {
+    if (eq && estado === "finalizado") {
       eq.fechaUltimoMant = fecha;
       eq.intervalo = eq.intervalo || appConfig.intervalo;
       await DB.put("equipos", eq);
@@ -502,6 +524,7 @@
       <div class="mant-row" data-open-detail="${m.equipoId}">
         <div class="mant-row-head">
           <span class="mant-row-title">${esc(eqName(m.equipoId))}</span>
+          ${estadoBadge(m)}
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
         </div>
         <div class="mant-row-sub">${fmtDate(m.fecha)} · Técnico: ${esc(m.tecnico || "—")}${m.costo ? ` · Costo: $${m.costo}` : ""}</div>
@@ -587,7 +610,7 @@
     $("#detalleHistorial").innerHTML = hist.map((m) => `
       <div class="mant-row">
         <div class="mant-row-head">
-          <span class="mant-row-title">${fmtDate(m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
+          <span class="mant-row-title">${estadoLabel(estadoMant(m))} · ${fmtDate(m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
           ${canEdit ? `<div>
             <button class="btn btn-ghost" data-edit-mant="${m.id}">Editar</button>
             <button class="btn btn-ghost" data-del-mant="${m.id}" style="color:var(--danger)">Eliminar</button>

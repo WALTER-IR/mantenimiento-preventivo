@@ -92,6 +92,8 @@ body {
 .stat-card.danger .stat-num { color: var(--danger); }
 .stat-card.warn .stat-num { color: var(--warn); }
 .stat-card.success .stat-num { color: var(--success); }
+.stat-card.info { border-top-color: #2563EB; }
+.stat-card.info .stat-num { color: #2563EB; }
 .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
 /* ---------------- Cards & lists ---------------- */
@@ -126,6 +128,7 @@ body {
 .badge.warn { background: var(--warn-bg); color: var(--warn); }
 .badge.danger { background: var(--danger-bg); color: var(--danger); }
 .badge.neutral { background: var(--rojo-100); color: var(--rojo-700); }
+.badge.info { background: #DBEAFE; color: #2563EB; }
 .badge.gray { background: #EDEDF5; color: #6b6878; }
 .due-line { font-size: 11px; margin-top: 5px; font-weight: 600; }
 

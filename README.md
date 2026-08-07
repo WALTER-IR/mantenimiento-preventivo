@@ -7,8 +7,10 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.5.0
+## Versión actual: 1.6.0
 
+- **Panel de avance del mantenimiento**: contadores de mantenimientos Programados, Reprogramados y Finalizados en el inicio.
+- **Estado en los mantenimientos**: cada registro indica si quedó Programado, Reprogramado o Finalizado (finalizado por defecto).
 - **Visibilidad por usuario**: cada usuario con permiso de Lectura o Edición solo ve los registros asignados a él (equipos, mantenimientos y alertas). El administrador ve todo.
 - **Eliminada la sincronización con servidores externos** (APK y web ya no dependen de un servicio de internet).
 - **Tema visual rojo** en toda la aplicación.

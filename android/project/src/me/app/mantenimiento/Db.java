@@ -747,6 +747,22 @@ public final class Db {
         return alertas(1).size();
     }
 
+    // Avance del mantenimiento: programados (pendientes sin reprogramar),
+    // reprogramados (pendientes con fecha reprogramada) y finalizados.
+    public static int[] avanceMantenimiento() {
+        int prog = 0, reprog = 0, fin = 0;
+        for (Mantenimiento m : allMants()) {
+            if (estadoFinal(m.estado) || m.fechaReal.length() > 0) {
+                fin++;
+            } else if (m.fechaReprogramada.length() > 0) {
+                reprog++;
+            } else {
+                prog++;
+            }
+        }
+        return new int[]{prog, reprog, fin};
+    }
+
     public static ArrayList<Mantenimiento> recent(int n) {
         ArrayList<Mantenimiento> all = allMants();
         ArrayList<Mantenimiento> out = new ArrayList<>();
