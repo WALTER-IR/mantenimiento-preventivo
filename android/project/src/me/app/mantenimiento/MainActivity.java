@@ -247,7 +247,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     eq.setText(lbl != null ? lbl : "Equipo #" + m.equipoId);
                 }
                 usuario.setText(m.usuario.length() > 0 ? "👤 " + m.usuario : "");
-                String estado = m.estado.length() > 0 ? m.estado : "Pendiente";
+                String estado = m.estado.length() > 0 ? m.estado : "Programado";
                 int color = Db.estadoFinal(m.estado) ? Ui.OK : Ui.WARN;
                 setBadge(badge, estado.toUpperCase(), color);
                 StringBuilder sb = new StringBuilder("Programado: ").append(Fmt.disp(m.fechaProgramada));

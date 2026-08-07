@@ -682,7 +682,7 @@ public final class Db {
         m.fechaProgramada = s(c, "fecha_programada");
         m.fechaReprogramada = s(c, "fecha_reprogramada");
         m.fechaReal = s(c, "fecha_real");
-        m.estado = s(c, "estado");
+        m.estado = estadoNorm(s(c, "estado"));
         m.observaciones = s(c, "observaciones");
         m.serie = s(c, "m_serie");
         m.hostname = s(c, "m_hostname");
@@ -722,6 +722,18 @@ public final class Db {
                 || e.contains("ok") || e.contains("cumplid") || e.contains("concluid")
                 || e.contains("finaliz") || e.contains("termin") || e.contains("ejecutad")
                 || e.contains("atendid") || e.contains("anulad") || e.contains("cancelad");
+    }
+
+    // Estados de mantenimiento unificados: Programado / Reprogramado / Finalizado.
+    // Convierte valores antiguos (Pendiente, Realizado, En proceso) al nuevo esquema.
+    public static String estadoNorm(String estado) {
+        if (estado == null) return "";
+        String e = estado.trim().toLowerCase(Locale.ROOT);
+        if (e.contains("reprogram")) return "Reprogramado";
+        if (e.contains("program")) return "Programado";
+        if (estadoFinal(estado)) return "Finalizado";
+        if (e.contains("pendiente") || e.contains("en proceso")) return "Programado";
+        return estado.trim();
     }
 
     // tipo 0 = vencidos, 1 = proximos 30 dias
@@ -1008,7 +1020,7 @@ public final class Db {
             m.fechaProgramada = toDate(val(f, colProg));
             m.fechaReprogramada = toDate(val(f, colRepro));
             m.fechaReal = toDate(val(f, colReal));
-            m.estado = val(f, colEstado);
+            m.estado = estadoNorm(val(f, colEstado));
             m.observaciones = val(f, colObs);
             saveMant(m);
             ok++;
@@ -1218,7 +1230,7 @@ public final class Db {
                     m.fechaProgramada = o.optString("fecha_programada");
                     m.fechaReprogramada = o.optString("fecha_reprogramada");
                     m.fechaReal = o.optString("fecha_real");
-                    m.estado = o.optString("estado");
+                    m.estado = estadoNorm(o.optString("estado"));
                     m.observaciones = o.optString("observaciones");
                     ContentValues v = new ContentValues();
                     v.put("equipo_id", m.equipoId);
@@ -1249,12 +1261,12 @@ public final class Db {
         ensureAdmin();
     }
 
-    // Deja como pendientes (PROGRAMADO) todos los mantenimientos programados para 2026,
+    // Deja como programados todos los mantenimientos de 2026,
     // borrando su fecha real/reprogramada para que aparezcan activos en Alertas.
     public static int activarMantenimientos2026() {
         SQLiteDatabase db = w();
         ContentValues v = new ContentValues();
-        v.put("estado", "PROGRAMADO");
+        v.put("estado", "Programado");
         v.put("fecha_real", "");
         v.put("fecha_reprogramada", "");
         int n = db.update("mantenimientos", v,

@@ -22,6 +22,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 - 3.3.0 (vc18): login obligatorio con roles (Lectura / Edición / Administrador),
   configuración solo administrador, cambio de permisos (pulsación larga en la lista)
   y módulo de auditoría.
+- 3.17.0 (vc32): estados de mantenimiento y filtro unificados a Programado /
+  Reprogramado / Finalizado (antes Pendiente / En proceso / Realizado). Los
+  registros antiguos se convierten automáticamente.
 - 3.16.0 (vc31): el formato de carga masiva de equipos incluye las columnas
   "USUARIO ASIGNADO" y "RESPONSABLE" (con DNI). La importación acepta cualquiera
   de las dos.

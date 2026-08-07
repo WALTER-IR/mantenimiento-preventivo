@@ -211,7 +211,7 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
                 eq.setText((m.prioridad.length() > 0 ? m.prioridad + " · " : "") +
                         (m.fechaProgramada.length() > 0 ? "Programado: " + Fmt.disp(m.fechaProgramada) : ""));
                 usuario.setText(m.usuario.length() > 0 ? "👤 " + m.usuario : "");
-                String estado = m.estado.length() > 0 ? m.estado : "Pendiente";
+                String estado = m.estado.length() > 0 ? m.estado : "Programado";
                 int color = Db.estadoFinal(m.estado) ? Ui.OK : Ui.WARN;
                 badge.setText(estado.toUpperCase());
                 GradientDrawable g = new GradientDrawable();

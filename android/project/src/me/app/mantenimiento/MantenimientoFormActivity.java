@@ -154,7 +154,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         m.id = mantId;
         m.equipoId = equipoId;
         m.prioridad = mtPrioridad.getSelectedItem() == null ? "" : mtPrioridad.getSelectedItem().toString();
-        m.estado = mtEstado.getSelectedItem() == null ? "Pendiente" : mtEstado.getSelectedItem().toString();
+        m.estado = mtEstado.getSelectedItem() == null ? "Programado" : mtEstado.getSelectedItem().toString();
         m.fechaProgramada = Fmt.canon(mtProgramada.getText().toString().trim());
         m.fechaReprogramada = Fmt.canon(mtReprogramada.getText().toString().trim());
         m.fechaReal = Fmt.canon(mtReal.getText().toString().trim());

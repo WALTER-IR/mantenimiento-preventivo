@@ -9,16 +9,16 @@
     </string-array>
 
     <string-array name="estados_mantenimiento">
-        <item>Pendiente</item>
-        <item>Realizado</item>
-        <item>En proceso</item>
+        <item>Programado</item>
+        <item>Reprogramado</item>
+        <item>Finalizado</item>
     </string-array>
 
     <string-array name="filtros_estado_mant">
         <item>Estado: todos</item>
-        <item>Pendiente</item>
-        <item>En proceso</item>
-        <item>Realizado</item>
+        <item>Programado</item>
+        <item>Reprogramado</item>
+        <item>Finalizado</item>
     </string-array>
 
     <string-array name="zonas">
