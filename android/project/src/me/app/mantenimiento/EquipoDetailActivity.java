@@ -38,6 +38,7 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
 
         findViewById(R.id.btnEditarEquipo).setOnClickListener(this);
         findViewById(R.id.btnNuevoMant).setOnClickListener(this);
+        findViewById(R.id.btnFormato).setOnClickListener(this);
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -170,6 +171,8 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
             startActivity(new Intent(this, EquipoFormActivity.class).putExtra("equipoId", equipoId));
         } else if (id == R.id.btnNuevoMant) {
             startActivity(new Intent(this, MantenimientoFormActivity.class).putExtra("equipoId", equipoId));
+        } else if (id == R.id.btnFormato) {
+            startActivity(new Intent(this, FormatoActivity.class).putExtra("equipoId", equipoId));
         }
     }
 

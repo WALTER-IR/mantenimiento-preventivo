@@ -630,7 +630,141 @@
     $("#detalleHistEmpty").classList.toggle("hidden", hist.length > 0);
     $("#btnEliminarEquipo").onclick = () => eliminarEquipo(id);
     $("#btnEditarEquipo").onclick = () => { closeModal("modalDetalle"); openEquipoModal(eq); };
+    $("#btnFormato").onclick = () => { closeModal("modalDetalle"); generarFormato(id); };
     openModal("modalDetalle");
+  }
+
+  // ============================================================
+  //  FORMATO DE MANTENIMIENTO (TI-F016)
+  // ============================================================
+  let viewAntesFormato = "dashboard";
+  let formatoActual = null;
+  const HW_RE = /limpieza de disco|ram|placa|disipador|pasta t|pasta é|fuente|ventilador|cpu|gpu|bater|tarjeta|hardware|cableado|puertos|ssd|hdd|teclado|pantalla|limpieza interna|disco f/i;
+
+  function splitTareas(tareas) {
+    const soft = [], hard = [];
+    (tareas || []).forEach((t) => {
+      if (HW_RE.test(t)) hard.push(t); else soft.push(t);
+    });
+    return { soft, hard };
+  }
+
+  function datosResponsable(nombre) {
+    const n = (nombre || "").trim().toLowerCase();
+    const u = usuarios.find((x) => (x.nombre || "").toLowerCase() === n)
+      || usuarios.find((x) => (x.dni || "") === (nombre || "").trim())
+      || usuarios.find((x) => (x.nombre || "").toLowerCase().includes(n) || n.includes((x.nombre || "").toLowerCase()));
+    return u ? { nombre: u.nombre, dni: u.dni || "" } : { nombre: nombre || "", dni: "" };
+  }
+
+  function generarFormato(id) {
+    const eq = equipos.find((x) => x.id === id);
+    if (!eq || !esVisibleEquipo(eq)) { toast("Equipo no encontrado", "err"); return; }
+    const resp = datosResponsable(eq.responsable);
+    const mants = mantenimientos
+      .filter((m) => m.equipoId === id)
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+    const m = mants[0];
+    const { soft, hard } = splitTareas(m ? m.tareas : []);
+    const d = {
+      eq, resp,
+      fechaMant: m ? fmtDate(m.fecha) : todayISO(),
+      centro: eq.ubicacion || eq.departamento || "—",
+      area: eq.departamento || "—",
+      tec: sesion ? sesion.nombre : "—",
+      soft, hard
+    };
+    formatoActual = d;
+    renderFormatoHTML();
+    viewAntesFormato = currentView;
+    $$(".view").forEach((v) => v.classList.add("hidden"));
+    $("#view-formato").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function renderFormatoHTML() {
+    const d = formatoActual;
+    if (!d) return;
+    const field = (l, v) => `<tr><td class="f-label">${l}</td><td>${esc(v || "")}</td></tr>`;
+    const items = (arr) => arr.length
+      ? arr.map((t) => `<div class="f-item">• ${esc(t)}</div>`).join("")
+      : `<div class="f-item">—</div>`;
+    $("#formatoContenido").innerHTML = `
+      <div class="formato-head">
+        <div class="formato-title">FORMATO DE MANTENIMIENTO</div>
+        <div class="formato-meta">
+          <span>Código: <b>TI-F016</b></span>
+          <span>Versión: <b>02</b></span>
+          <span>Fecha de Aprobación: <b>01/03/2023</b></span>
+          <span>Nº CC:</span>
+        </div>
+      </div>
+      <table class="formato-fields">
+        ${field("Apellidos y nombres:", d.resp.nombre)}
+        ${field("DNI:", d.resp.dni)}
+        ${field("Cargo:", "")}
+        ${field("Área:", d.area)}
+        ${field("Fecha Mantenimiento:", d.fechaMant)}
+        ${field("Serie/CI:", d.eq.serie)}
+        ${field("Centro de trabajo:", d.centro)}
+        ${field("Responsable de TI:", d.tec)}
+      </table>
+      <div class="formato-act">
+        <h4>Actividades Realizadas:</h4>
+        <p>A continuación, se detallan los mantenimientos:</p>
+        <h5>Mantenimiento de Software</h5>
+        ${items(d.soft)}
+        <h5>Mantenimiento de Hardware</h5>
+        ${items(d.hard)}
+      </div>`;
+  }
+
+  function formatoTexto() {
+    const d = formatoActual;
+    if (!d) return "";
+    const items = (arr) => arr.length ? arr.map((t) => "• " + t).join("\n") : "—";
+    return [
+      "FORMATO DE MANTENIMIENTO",
+      "Código: TI-F016 | Versión: 02 | Fecha de Aprobación: 01/03/2023",
+      "Nº CC:",
+      "",
+      "Apellidos y nombres: " + (d.resp.nombre || ""),
+      "DNI: " + (d.resp.dni || ""),
+      "Cargo: ",
+      "Área: " + (d.area || ""),
+      "Fecha Mantenimiento: " + d.fechaMant,
+      "Serie/CI: " + (d.eq.serie || ""),
+      "Centro de trabajo: " + (d.centro || ""),
+      "Responsable de TI: " + (d.tec || ""),
+      "",
+      "Actividades Realizadas:",
+      "A continuación, se detallan los mantenimientos:",
+      "",
+      "Mantenimiento de Software",
+      items(d.soft),
+      "",
+      "Mantenimiento de Hardware",
+      items(d.hard)
+    ].join("\n");
+  }
+
+  async function enviarFormato() {
+    const texto = formatoTexto();
+    if (!texto) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Formato de mantenimiento", text: texto });
+        return;
+      }
+    } catch (e) { /* el usuario canceló el share */ }
+    const wa = "https://wa.me/?text=" + encodeURIComponent(texto);
+    window.open(wa, "_blank");
+  }
+
+  function imprimirFormato() {
+    document.body.classList.add("imprimiendo");
+    window.print();
+    document.body.classList.remove("imprimiendo");
   }
 
   // ============================================================
@@ -968,6 +1102,11 @@
 
     // estado de conexión
     window.addEventListener("online", () => checkForUpdates(true));
+
+    // formato de mantenimiento (TI-F016)
+    $("#btnVolverFormato").addEventListener("click", () => setView(viewAntesFormato || "dashboard"));
+    $("#btnEnviarFormato").addEventListener("click", enviarFormato);
+    $("#btnImprimirFormato").addEventListener("click", imprimirFormato);
   }
 
   function init() {

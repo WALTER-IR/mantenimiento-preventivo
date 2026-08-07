@@ -8,21 +8,18 @@
 //  con los archivos locales y se actualizará cuando la publiques.
 // ============================================================
 window.APP_CONFIG = {
-  APP_VERSION: "1.9.0",
+  APP_VERSION: "1.10.0",
   APP_NAME: "Mantenimiento Preventivo",
   UPDATE_URL: "https://WALTER-IR.github.io/mantenimiento-preventivo/", // ej. "https://midominio.com/mantenimiento/"
   CHECKLIST_DEFAULT: [
-    "Limpieza interna / externa",
-    "Pasta térmica y ventilador",
-    "Comprobación de disco (SMART)",
-    "Eliminación de archivos temporales",
-    "Actualización del sistema operativo",
-    "Antivirus / malware",
-    "Respaldo de datos",
-    "Estado de batería",
-    "Memoria RAM y almacenamiento",
-    "Diagnóstico de hardware",
-    "Revisión de cableado y puertos",
-    "Configuración de energía"
+    "Desfragmentación de disco duro",
+    "Limpieza de temporales",
+    "Liberación de espacio en el disco duro",
+    "Limpieza de papelera de reciclaje",
+    "Limpieza de RAM",
+    "Limpieza de Disco Duro",
+    "Limpieza de Placa y disipador",
+    "Se añadió pasta térmica al procesador",
+    "Limpieza de Fuente de poder"
   ]
 };

@@ -343,3 +343,25 @@ body {
 .aud-accion { font-size: 12px; font-weight: 700; color: var(--rojo-700); }
 .aud-fecha { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; }
 .aud-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; word-break: break-word; }
+
+/* ---------------- Formato de mantenimiento (TI-F016) ---------------- */
+.formato { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.formato-head { border-bottom: 2px solid var(--rojo-700); padding-bottom: 10px; margin-bottom: 14px; }
+.formato-title { font-size: 18px; font-weight: 800; color: var(--rojo-700); letter-spacing: 1px; }
+.formato-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.formato-meta b { color: var(--text); }
+.formato-fields { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.formato-fields td { border: 1px solid var(--border); padding: 7px 10px; font-size: 13px; vertical-align: top; }
+.formato-fields .f-label { width: 200px; font-weight: 700; color: var(--text-muted); font-size: 12px; background: var(--rojo-50); }
+.formato-act h4 { margin: 4px 0 6px; color: var(--rojo-700); }
+.formato-act p { font-size: 13px; margin-bottom: 8px; }
+.formato-act h5 { margin: 10px 0 4px; font-size: 13px; font-weight: 700; }
+.formato-act .f-item { font-size: 13px; padding: 2px 0 2px 4px; }
+
+@media print {
+  body.imprimiendo { background: #fff; }
+  body.imprimiendo * { visibility: hidden; }
+  body.imprimiendo #view-formato, body.imprimiendo #view-formato * { visibility: visible; }
+  body.imprimiendo #view-formato { position: absolute; left: 0; top: 0; width: 100%; }
+  body.imprimiendo .btn-row { display: none; }
+}

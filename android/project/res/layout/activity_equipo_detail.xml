@@ -56,6 +56,14 @@
                     android:text="Usuario" />
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btnFormato"
+                style="@style/BtnOutline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Formato de mantenimiento" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
