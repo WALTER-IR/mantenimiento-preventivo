@@ -885,7 +885,7 @@ public final class Db {
 
     private static int[] loadEquipos0(String[] headers, List<String[]> filas, List<String> errores) {
         int ok = 0, err = 0;
-        int colResp = findCol(headers, "USUARIO", "RESPONSABLE");
+        int colResp = findCol(headers, "USUARIO ASIGNADO", "USUARIO", "RESPONSABLE");
         int colDni = findCol(headers, "DNI");
         int colHost = findCol(headers, "HOSTNAME", "NEW HOSTNAME");
         int colIp = findCol(headers, "DIR. IP", "IP");

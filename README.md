@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.12.1
 
+- **Campo "Usuario asignado" (APK 3.15.0)**: el registro de equipos y la carga masiva del APK ahora usan el término "USUARIO ASIGNADO" (antes "USUARIO/RESPONSABLE"). La importación acepta columnas "USUARIO ASIGNADO", "USUARIO" o "RESPONSABLE".
 - **Lista de equipos con usuario, equipo y serie**: cada tarjeta muestra primero el usuario asignado (ej. "👤 Juan Osorio"), luego el nombre del equipo (ej. "PC") y la serie (ej. "123456").
 - **Usuario asignado en la lista de equipos**: la vista de equipos muestra el nombre del usuario al que se asignó el equipo (antes solo aparecía el departamento). El campo del formulario y del detalle ahora se llama "Usuario asignado".
 - **Buscar y Limpiar en el filtro de fechas**: el historial de mantenimientos (PWA y APK 3.14.0) ahora tiene botones "Buscar" y "Limpiar" para el rango de fechas.
