@@ -135,7 +135,7 @@ public class UsuariosActivity extends Activity implements View.OnClickListener {
             String z = u.zona.length() > 0 ? u.zona.toUpperCase() : "SIN ZONA";
             zona.setText(z);
             GradientDrawable g = new GradientDrawable();
-            g.setColor(z.contains("NORTE") ? Ui.PURPLE : Ui.PURPLE_DARK);
+            g.setColor(z.contains("NORTE") ? Ui.RED : Ui.RED_DARK);
             g.setCornerRadius(Ui.dp(UsuariosActivity.this, 10));
             zona.setBackgroundDrawable(g);
             zona.setTextColor(0xFFFFFFFF);

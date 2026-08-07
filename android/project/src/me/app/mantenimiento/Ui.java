@@ -17,8 +17,8 @@ import java.util.Map;
 
 public final class Ui {
 
-    public static final int PURPLE = 0xFF7C3AED;
-    public static final int PURPLE_DARK = 0xFF6D28D9;
+    public static final int RED = 0xFFDC2626;
+    public static final int RED_DARK = 0xFFB91C1C;
     public static final int TEXT = 0xFF1E293B;
     public static final int MUT = 0xFF64748B;
     public static final int BG = 0xFFF8FAFC;
@@ -49,7 +49,7 @@ public final class Ui {
         TextView t = new TextView(ctx);
         t.setText(label.toUpperCase());
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        t.setTextColor(Ui.PURPLE);
+        t.setTextColor(Ui.RED);
         t.setTypeface(null, Typeface.BOLD);
         t.setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 4));
         return t;

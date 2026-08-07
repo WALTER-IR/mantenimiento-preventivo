@@ -183,7 +183,7 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             String st = e.status.length() > 0 ? e.status.toUpperCase() : "ACTIVO";
             badge.setText(st);
             GradientDrawable g = new GradientDrawable();
-            g.setColor(Ui.PURPLE);
+            g.setColor(Ui.RED);
             g.setCornerRadius(Ui.dp(EquiposActivity.this, 10));
             badge.setBackgroundDrawable(g);
             badge.setTextColor(0xFFFFFFFF);
