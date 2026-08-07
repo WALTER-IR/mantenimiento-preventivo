@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.12.1
 
+- **Plantilla de carga masiva actualizada**: el formato de los equipos usa la columna "USUARIO ASIGNADO" (con DNI). Plantillas de ejemplo en la carpeta `excel_ejemplo/` del repositorio (responsables.xlsx, equipos.xlsx, mantenimientos.xlsx). En el APK, la Carga Masiva muestra las columnas esperadas de cada formato.
 - **Campo "Usuario asignado" (APK 3.15.0)**: el registro de equipos y la carga masiva del APK ahora usan el término "USUARIO ASIGNADO" (antes "USUARIO/RESPONSABLE"). La importación acepta columnas "USUARIO ASIGNADO", "USUARIO" o "RESPONSABLE".
 - **Lista de equipos con usuario, equipo y serie**: cada tarjeta muestra primero el usuario asignado (ej. "👤 Juan Osorio"), luego el nombre del equipo (ej. "PC") y la serie (ej. "123456").
 - **Usuario asignado en la lista de equipos**: la vista de equipos muestra el nombre del usuario al que se asignó el equipo (antes solo aparecía el departamento). El campo del formulario y del detalle ahora se llama "Usuario asignado".
@@ -43,6 +44,19 @@ URL de la aplicación: https://WALTER-IR.github.io/mantenimiento-preventivo/
 1. Abre la URL desde cualquier navegador (recomendado: Chrome o Samsung Internet en el celular).
 2. En el celular, usa "Añadir a pantalla de inicio" para que se vea como una app.
 3. Registra equipos, programa mantenimientos y revisa las alertas.
+
+## Carga masiva (Excel)
+
+En el APK, desde "Cargar responsables", "Cargar equipos" o "Cargar mantenimientos" se importa un archivo `.xlsx`. La primera fila debe ser la cabecera con las columnas esperadas (los nombres pueden variar ligeramente, se reconocen por coincidencia):
+
+**Responsables:** `DNI; ZONA; RESPONSABLE; SUBDIVISION; CeCo SAP; AREA; CARGO; EMAIL`
+
+**Equipos:** `USUARIO ASIGNADO; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; SERIE DE EQUIPO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS`
+- El `USUARIO ASIGNADO` (o DNI) indica a qué usuario se asigna el equipo. Si el usuario no existe, se crea automáticamente.
+
+**Mantenimientos:** `SERIE DE EQUIPO; Prioridad; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES`
+
+Plantillas de ejemplo con datos de prueba: carpeta `excel_ejemplo/` de este repositorio.
 
 ## Actualizaciones
 

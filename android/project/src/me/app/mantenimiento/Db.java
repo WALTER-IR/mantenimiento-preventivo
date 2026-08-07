@@ -872,7 +872,7 @@ public final class Db {
         return new int[]{ok, err};
     }
 
-    // Equipos: USUARIO/RESPONSABLE, DNI, HOSTNAME, DIR. IP, UBICACIÓN FISICA, EQUIPO,
+    // Equipos: USUARIO ASIGNADO, DNI, HOSTNAME, DIR. IP, UBICACIÓN FISICA, EQUIPO,
     // COD. INVENTARIO, SERIE DE EQUIPO, MARCA, MODELO, CONTRATO DE ARRENDAMIENTO, STATUS
     public static int[] loadEquipos(String[] headers, List<String[]> filas, List<String> errores) {
         silencioAuditoria = true;
