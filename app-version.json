@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
+  "version": "1.10.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "La tarjeta de Responsables del panel ahora solo la ve el administrador."
+  "changelog": "Nuevo botón 'Formato' en el detalle del equipo que genera el formato de mantenimiento TI-F016, con opciones de Enviar e Imprimir."
 }
