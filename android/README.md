@@ -19,6 +19,10 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.20.0 (vc35): el lector de Excel de la Carga Masiva tolera archivos cuyas
+  celdas no traen la referencia de columna (A/B/C), común en exportaciones de
+  ERP/SAP convertidas a XLSX, y descarta filas totalmente vacías (evita
+  registros desordenados o de más en responsables, equipos y mantenimientos).
 - 3.3.0 (vc18): login obligatorio con roles (Lectura / Edición / Administrador),
   configuración solo administrador, cambio de permisos (pulsación larga en la lista)
   y módulo de auditoría.

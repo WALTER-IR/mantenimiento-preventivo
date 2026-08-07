@@ -121,11 +121,13 @@ public final class XlsxReader {
             Element rowEl = (Element) rowList.item(r);
             NodeList cells = rowEl.getElementsByTagNameNS("*", "c");
             String[] row = null;
+            int nextCol = 0;
             for (int c = 0; c < cells.getLength(); c++) {
                 Element cell = (Element) cells.item(c);
                 String ref = cell.getAttribute("r");
                 int col = colIndex(ref);
-                if (col < 0) continue;
+                if (col < 0) col = nextCol++;
+                else nextCol = col + 1;
                 String type = cell.getAttribute("t");
                 String val = cellText(cell, type, shared);
                 if (row == null) row = new String[col + 1];
@@ -136,9 +138,16 @@ public final class XlsxReader {
                 }
                 row[col] = val;
             }
-            if (row != null) rows.add(row);
+            if (row != null && !isEmpty(row)) rows.add(row);
         }
         return rows;
+    }
+
+    private static boolean isEmpty(String[] row) {
+        for (String s : row) {
+            if (s != null && s.trim().length() > 0) return false;
+        }
+        return true;
     }
 
     private static String cellText(Element cell, String type, ArrayList<String> shared) {

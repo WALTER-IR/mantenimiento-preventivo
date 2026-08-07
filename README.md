@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.13.0
 
+- **Carga masiva más robusta (APK 3.20.0)**: el lector de Excel del APK ahora tolera archivos cuyas celdas no traen la referencia de columna (A/B/C) —común en exportaciones de ERP/SAP convertidas a XLSX— y descarta filas totalmente vacías, evitando que la importación de responsables, equipos y mantenimientos registre datos desordenados o de más.
 - **Nombres en el detalle de equipo (APK 3.19.0)**: en el "DETALLE DE EQUIPO" se muestra el nombre del **USUARIO ASIGNADO**, y en el "DETALLE DE RESPONSABLE" el nombre del **RESPONSABLE**.
 - **Detalle de equipo (APK 3.18.0)**: la vista del equipo ahora tiene dos secciones con cabeceras "DETALLE DE EQUIPO" (datos del equipo) y "DETALLE DE RESPONSABLE" (datos del responsable). El formulario de nuevo/editar responsable muestra la sección "EQUIPOS DEL RESPONSABLE" con los equipos asignados.
 - **Estados de mantenimiento unificados (APK 3.17.0)**: los estados del mantenimiento y su filtro ahora son **Programado / Reprogramado / Finalizado** (antes Pendiente / En proceso / Realizado), igual que en la PWA. Los registros antiguos se convierten automáticamente al abrir.
