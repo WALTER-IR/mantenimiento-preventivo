@@ -331,6 +331,7 @@
           <div class="item-body">
             <div class="item-title">${esc(e.nombre)}</div>
             <div class="item-sub">${esc(e.marca || "—")} ${esc(e.modelo || "")} · ${esc(e.departamento || "Sin departamento")}</div>
+            <div class="item-user">👤 ${esc(e.responsable || "Sin usuario asignado")}</div>
             <div class="due-line ${st.key === "vencido" ? "badge danger" : st.key === "proximo" ? "badge warn" : "badge ok"}">Próx. mant.: ${fmtDate(st.due)}</div>
           </div>
           <div class="item-meta">${badge}</div>
@@ -598,7 +599,7 @@
       ["Modelo", eq.modelo || "—"],
       ["No. serie", eq.serie || "—"],
       ["Departamento", eq.departamento || "—"],
-      ["Responsable", eq.responsable || "—"],
+      ["Usuario asignado", eq.responsable || "—"],
       ["Ubicación", eq.ubicacion || "—"],
       ["Sistema operativo", eq.so || "—"],
       ["Dirección IP", eq.ip || "—"],

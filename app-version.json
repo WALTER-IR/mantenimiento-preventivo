@@ -1,6 +1,6 @@
 {
-  "version": "1.11.0",
+  "version": "1.12.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Botones Buscar y Limpiar para el filtro de fechas en el historial de mantenimientos (PWA y APK)."
+  "changelog": "La lista de equipos ahora muestra el nombre del usuario asignado y el campo se llama 'Usuario asignado'."
 }
