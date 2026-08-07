@@ -92,6 +92,11 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
                             finish();
                             return;
                         }
+                        if (!Db.puedeVerEquipo(e)) {
+                            Fmt.toast(EquipoDetailActivity.this, "Este equipo no está asignado a tu usuario");
+                            finish();
+                            return;
+                        }
                         equipo = e;
                         try {
                             render();

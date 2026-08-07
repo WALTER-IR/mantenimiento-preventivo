@@ -91,11 +91,25 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+
+        // Un usuario común solo puede registrar equipos para sí mismo.
+        if (!Db.esAdmin()) {
+            int idx = usuarioIds.indexOf(Db.getSesionId());
+            if (idx >= 0) {
+                eqResponsable.setSelection(idx);
+                eqResponsable.setEnabled(false);
+            }
+        }
     }
 
     private void cargar() {
         Equipo e = Db.getEquipo(equipoId);
         if (e == null) {
+            finish();
+            return;
+        }
+        if (!Db.puedeVerEquipo(e)) {
+            Fmt.toast(this, "Este equipo no está asignado a tu usuario");
             finish();
             return;
         }

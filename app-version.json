@@ -1,6 +1,6 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Eliminada la sincronización con el servidor externo (APK y web ya no dependen de un servicio de internet)."
+  "changelog": "Cada usuario (Lectura/Edición) solo ve los registros asignados a él: el equipo, sus mantenimientos y alertas. El administrador sigue viendo todo."
 }

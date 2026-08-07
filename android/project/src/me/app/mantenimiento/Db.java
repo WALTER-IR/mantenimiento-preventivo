@@ -225,6 +225,11 @@ public final class Db {
         return getSesionRol() == ROL_ADMIN;
     }
 
+    // Un usuario común solo ve los registros asignados a su usuario (el admin ve todo).
+    public static boolean puedeVerEquipo(Equipo e) {
+        return e != null && (esAdmin() || e.usuarioId == getSesionId());
+    }
+
     public static String rolNombre(int rol) {
         if (rol == ROL_ADMIN) return "Administrador";
         if (rol == ROL_EDICION) return "Edición";
@@ -506,11 +511,17 @@ public final class Db {
 
     public static ArrayList<Equipo> allEquipos(String filter) {
         ArrayList<Equipo> out = new ArrayList<>();
-        Cursor c = r().rawQuery("SELECT e.*, u.nombre AS u_nombre, u.zona AS u_zona, " +
+        String sql = "SELECT e.*, u.nombre AS u_nombre, u.zona AS u_zona, " +
                 "u.subdivision AS u_subdivision, u.dni AS u_dni, u.ceco AS u_ceco, " +
                 "u.area AS u_area, u.cargo AS u_cargo, u.email AS u_email " +
-                "FROM equipos e LEFT JOIN usuarios u ON u.id = e.usuario_id " +
-                "ORDER BY e.hostname COLLATE NOCASE ASC", null);
+                "FROM equipos e LEFT JOIN usuarios u ON u.id = e.usuario_id ";
+        String[] args = null;
+        if (!esAdmin()) {
+            sql += "WHERE e.usuario_id=? ";
+            args = new String[]{String.valueOf(getSesionId())};
+        }
+        sql += "ORDER BY e.hostname COLLATE NOCASE ASC";
+        Cursor c = r().rawQuery(sql, args);
         if (c != null) {
             while (c.moveToNext()) out.add(equipoFromCursor(c));
             c.close();
@@ -643,10 +654,17 @@ public final class Db {
                 "LEFT JOIN equipos e ON e.id = m.equipo_id " +
                 "LEFT JOIN usuarios u ON u.id = e.usuario_id ";
         String[] args = null;
+        String where = "";
         if (equipoId > 0) {
-            sql += "WHERE m.equipo_id=? ";
+            where = "m.equipo_id=? ";
             args = new String[]{String.valueOf(equipoId)};
         }
+        if (!esAdmin()) {
+            String uid = String.valueOf(getSesionId());
+            where += (where.length() > 0 ? "AND " : "") + "e.usuario_id=? ";
+            args = args == null ? new String[]{uid} : new String[]{args[0], uid};
+        }
+        if (where.length() > 0) sql += "WHERE " + where;
         sql += "ORDER BY m.fecha_programada DESC, m.id DESC";
         Cursor c = r().rawQuery(sql, args);
         if (c != null) {
@@ -743,7 +761,9 @@ public final class Db {
     }
 
     public static int countEquipos() {
-        return scalarInt("SELECT COUNT(*) FROM equipos", null);
+        if (esAdmin()) return scalarInt("SELECT COUNT(*) FROM equipos", null);
+        return scalarInt("SELECT COUNT(*) FROM equipos WHERE usuario_id=?",
+                new String[]{String.valueOf(getSesionId())});
     }
 
     private static int scalarInt(String sql, String[] args) {

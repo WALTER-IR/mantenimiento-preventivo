@@ -24,6 +24,18 @@
   const puedeEditar = () => !!sesion && sesion.rol >= ROL.EDICION;
   const esAdmin = () => !!sesion && sesion.rol === ROL.ADMIN;
 
+  // Un usuario común solo ve los registros asignados a él (coincide su nombre o DNI con el responsable); el admin ve todo.
+  const esVisibleEquipo = (e) => {
+    if (!sesion) return false;
+    if (esAdmin()) return true;
+    const r = (e.responsable || "").trim().toLowerCase();
+    if (!r) return false;
+    const n = (sesion.nombre || "").trim().toLowerCase();
+    const d = (sesion.dni || "").trim().toLowerCase();
+    return r === n || (d !== "" && r === d);
+  };
+  const equiposVisibles = () => equipos.filter(esVisibleEquipo);
+
   // ---------------- Utilidades de fecha ----------------
   const todayISO = () => toISODate(new Date());
   function toISODate(d) {
@@ -203,18 +215,20 @@
   //  DASHBOARD
   // ============================================================
   function renderDashboard() {
-    const total = equipos.length;
+    const vis = equiposVisibles();
+    const total = vis.length;
     const stats = { vencidos: 0, proximos: 0, ok: 0 };
-    equipos.forEach((e) => { stats[statusOf(e).key]++; });
+    vis.forEach((e) => { stats[statusOf(e).key]++; });
     const firstOfMonth = todayISO().slice(0, 7) + "-01";
-    const mes = mantenimientos.filter((m) => m.fecha >= firstOfMonth).length;
+    const visIds = new Set(vis.map((e) => e.id));
+    const mes = mantenimientos.filter((m) => visIds.has(m.equipoId) && m.fecha >= firstOfMonth).length;
 
     $("#statTotal").textContent = total;
     $("#statVencidos").textContent = stats.vencidos;
     $("#statProximos").textContent = stats.proximos;
     $("#statMes").textContent = mes;
 
-    const alerts = equipos
+    const alerts = vis
       .map((e) => ({ eq: e, st: statusOf(e) }))
       .filter((x) => x.st.key !== "ok")
       .sort((a, b) => (a.st.days > b.st.days ? 1 : -1));
@@ -222,7 +236,10 @@
     $("#alertList").innerHTML = alerts.slice(0, 6).map(alertHTML).join("");
     $("#alertEmpty").classList.toggle("hidden", alerts.length > 0);
 
-    const recent = [...mantenimientos].sort((a, b) => (a.fecha < b.fecha ? 1 : -1)).slice(0, 5);
+    const recent = [...mantenimientos]
+      .filter((m) => visIds.has(m.equipoId))
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+      .slice(0, 5);
     $("#recentList").innerHTML = recent.map(recentHTML).join("");
     $("#recentEmpty").classList.toggle("hidden", recent.length > 0);
   }
@@ -272,6 +289,7 @@
     const q = ($("#searchEquipo").value || "").trim().toLowerCase();
     const tipo = $("#filterTipo").value;
     let list = equipos.filter((e) => {
+      if (!esVisibleEquipo(e)) return false;
       if (tipo && e.tipo !== tipo) return false;
       if (!q) return true;
       return [e.nombre, e.serie, e.marca, e.departamento, e.responsable, e.modelo]
@@ -310,7 +328,8 @@
     $("#eqModelo").value = eq ? (eq.modelo || "") : "";
     $("#eqSerie").value = eq ? (eq.serie || "") : "";
     $("#eqDepartamento").value = eq ? (eq.departamento || "") : "";
-    $("#eqResponsable").value = eq ? (eq.responsable || "") : "";
+    $("#eqResponsable").value = eq ? (eq.responsable || "") : (esAdmin() ? "" : (sesion ? sesion.nombre : ""));
+    $("#eqResponsable").disabled = !esAdmin();
     $("#eqUbicacion").value = eq ? (eq.ubicacion || "") : "";
     $("#eqSO").value = eq ? (eq.so || "") : "";
     $("#eqIP").value = eq ? (eq.ip || "") : "";
@@ -390,8 +409,9 @@
     $("#modalMantTitle").textContent = mant ? "Editar mantenimiento" : "Registrar mantenimiento";
     $("#mtId").value = mant ? mant.id : "";
     buildChecklist();
+    const vis = equiposVisibles();
     const sel = $("#mtEquipo");
-    sel.innerHTML = equipos.map((e) => `<option value="${e.id}">${esc(e.nombre)}</option>`).join("");
+    sel.innerHTML = vis.map((e) => `<option value="${e.id}">${esc(e.nombre)}</option>`).join("");
     if (mant) {
       sel.value = mant.equipoId;
       $("#mtFecha").value = mant.fecha || todayISO();
@@ -403,7 +423,7 @@
       const tasks = mant.tareas || [];
       $$("#checklist input").forEach((inp) => { if (tasks.includes(inp.value)) inp.checked = true; });
     } else {
-      sel.value = equipos[0] ? equipos[0].id : "";
+      sel.value = vis[0] ? vis[0].id : "";
       $("#mtFecha").value = todayISO();
       $("#mtTipo").value = "preventivo";
       $("#mtTecnico").value = "";
@@ -461,9 +481,17 @@
   }
 
   function renderMantenimientos() {
-    const fEq = $("#filterEquipo").value;
+    const vis = equiposVisibles();
+    const visIds = new Set(vis.map((e) => e.id));
+    const fSel = $("#filterEquipo");
+    const cur = fSel.value;
+    fSel.innerHTML = `<option value="">Todos los equipos</option>` +
+      vis.map((e) => `<option value="${e.id}">${esc(e.nombre)}</option>`).join("");
+    if (vis.some((e) => e.id === cur)) fSel.value = cur;
+    const fEq = fSel.value;
     const fTipo = $("#filterTipoMant").value;
     let list = mantenimientos.filter((m) => {
+      if (!visIds.has(m.equipoId)) return false;
       if (fEq && m.equipoId !== fEq) return false;
       if (fTipo && m.tipo !== fTipo) return false;
       return true;
@@ -510,6 +538,7 @@
   function renderAlertas() {
     $$(".chip[data-alerttab]").forEach((c) => c.classList.toggle("active", c.dataset.alerttab === alertTab));
     const list = equipos
+      .filter(esVisibleEquipo)
       .map((e) => ({ eq: e, st: statusOf(e) }))
       .filter((x) => (alertTab === "vencidos" ? x.st.key === "vencido" : x.st.key === "proximo"))
       .sort((a, b) => (a.st.days > b.st.days ? 1 : -1));
@@ -522,7 +551,7 @@
   // ============================================================
   function renderDetalle(id) {
     const eq = equipos.find((x) => x.id === id);
-    if (!eq) return;
+    if (!eq || !esVisibleEquipo(eq)) { toast("No tienes acceso a este equipo", "err"); return; }
     currentDetailId = id;
     const st = statusOf(eq);
     const badge = st.key === "vencido"
