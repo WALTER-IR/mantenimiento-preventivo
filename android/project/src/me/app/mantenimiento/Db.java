@@ -872,7 +872,7 @@ public final class Db {
         return new int[]{ok, err};
     }
 
-    // Equipos: USUARIO ASIGNADO, DNI, HOSTNAME, DIR. IP, UBICACIÓN FISICA, EQUIPO,
+    // Equipos: USUARIO ASIGNADO / RESPONSABLE, DNI, HOSTNAME, DIR. IP, UBICACIÓN FISICA, EQUIPO,
     // COD. INVENTARIO, SERIE DE EQUIPO, MARCA, MODELO, CONTRATO DE ARRENDAMIENTO, STATUS
     public static int[] loadEquipos(String[] headers, List<String[]> filas, List<String> errores) {
         silencioAuditoria = true;
@@ -885,7 +885,8 @@ public final class Db {
 
     private static int[] loadEquipos0(String[] headers, List<String[]> filas, List<String> errores) {
         int ok = 0, err = 0;
-        int colResp = findCol(headers, "USUARIO ASIGNADO", "USUARIO", "RESPONSABLE");
+        int colResp = findCol(headers, "USUARIO ASIGNADO", "USUARIO");
+        int colRespAlt = findCol(headers, "RESPONSABLE");
         int colDni = findCol(headers, "DNI");
         int colHost = findCol(headers, "HOSTNAME", "NEW HOSTNAME");
         int colIp = findCol(headers, "DIR. IP", "IP");
@@ -924,6 +925,7 @@ public final class Db {
                 continue;
             }
             String respText = val(f, colResp);
+            if (respText.length() == 0 && colRespAlt >= 0) respText = val(f, colRespAlt);
             String dniText = val(f, colDni);
             Usuario u = null;
             if (dniText.length() > 0) u = findUsuarioByDni(dniText);

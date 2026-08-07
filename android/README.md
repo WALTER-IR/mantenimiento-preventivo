@@ -22,3 +22,13 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 - 3.3.0 (vc18): login obligatorio con roles (Lectura / Edición / Administrador),
   configuración solo administrador, cambio de permisos (pulsación larga en la lista)
   y módulo de auditoría.
+- 3.16.0 (vc31): el formato de carga masiva de equipos incluye las columnas
+  "USUARIO ASIGNADO" y "RESPONSABLE" (con DNI). La importación acepta cualquiera
+  de las dos.
+- 3.15.0 (vc30): el registro de equipos y la carga masiva usan el término
+  "USUARIO ASIGNADO"; la importación acepta "USUARIO ASIGNADO", "USUARIO" o
+  "RESPONSABLE".
+- 3.14.0 (vc29): botones "Buscar" / "Limpiar" en el filtro de fechas de
+  mantenimientos (el rango ya no se aplica solo).
+- 3.13.0 (vc28): formato de mantenimiento TI-F016 desde el detalle de un equipo,
+  con envío y PDF (impresión).
