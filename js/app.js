@@ -233,6 +233,7 @@
     const mes = mantenimientos.filter((m) => visIds.has(m.equipoId) && m.fecha >= firstOfMonth).length;
 
     $("#statTotal").textContent = total;
+    $("#statResp").textContent = usuarios.length;
     $("#statVencidos").textContent = stats.vencidos;
     $("#statProximos").textContent = stats.proximos;
     $("#statMes").textContent = mes;

@@ -318,6 +318,13 @@ body {
   text-overflow: ellipsis;
 }
 
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.topbar-actions .btn-ghost {
+  color: #fff; border: 1px solid rgba(255,255,255,.75);
+  background: rgba(255,255,255,.18); padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+}
+
 /* ---------------- Usuarios y permisos ---------------- */
 .usuarios-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .user-row {

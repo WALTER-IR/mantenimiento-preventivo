@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Filtros en el historial de mantenimientos: rango de fechas (desde/hasta) y estado (Programado, Reprogramado, Finalizado)."
+  "changelog": "Botón Salir visible en la barra superior para todos los usuarios. Tarjeta de Responsables en el panel de control visible para todos."
 }

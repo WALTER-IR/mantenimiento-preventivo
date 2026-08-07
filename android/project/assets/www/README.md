@@ -7,8 +7,10 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.7.0
+## Versión actual: 1.8.0
 
+- **Salir visible para todos**: el botón "Salir" aparece en la barra superior para cualquier usuario, no solo administrador.
+- **Tarjeta de Responsables en el panel**: el panel de control muestra la cantidad de responsables, visible para todos los usuarios.
 - **Filtros en el historial de mantenimientos**: rango de fechas (desde/hasta) y filtro por estado (Programado, Reprogramado, Finalizado), combinables con los filtros de equipo y tipo.
 - **Panel de avance del mantenimiento**: contadores de mantenimientos Programados, Reprogramados y Finalizados en el inicio.
 - **Estado en los mantenimientos**: cada registro indica si quedó Programado, Reprogramado o Finalizado (finalizado por defecto).
