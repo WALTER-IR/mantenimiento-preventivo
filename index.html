@@ -151,6 +151,16 @@
           <option value="preventivo">Preventivo</option>
           <option value="correctivo">Correctivo</option>
         </select>
+        <select id="filterEstadoMant" class="input select">
+          <option value="">Todos los estados</option>
+          <option value="programado">Programado</option>
+          <option value="reprogramado">Reprogramado</option>
+          <option value="finalizado">Finalizado</option>
+        </select>
+        <span class="filter-label">Desde</span>
+        <input type="date" id="filterFechaDesde" class="input" />
+        <span class="filter-label">Hasta</span>
+        <input type="date" id="filterFechaHasta" class="input" />
       </div>
       <div id="mantList" class="mant-list"></div>
       <div id="mantEmpty" class="empty-state hidden">

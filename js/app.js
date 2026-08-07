@@ -512,10 +512,16 @@
     if (vis.some((e) => e.id === cur)) fSel.value = cur;
     const fEq = fSel.value;
     const fTipo = $("#filterTipoMant").value;
+    const fEstado = $("#filterEstadoMant").value;
+    const fDesde = $("#filterFechaDesde").value;
+    const fHasta = $("#filterFechaHasta").value;
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
       if (fEq && m.equipoId !== fEq) return false;
       if (fTipo && m.tipo !== fTipo) return false;
+      if (fEstado && estadoMant(m) !== fEstado) return false;
+      if (fDesde && m.fecha < fDesde) return false;
+      if (fHasta && m.fecha > fHasta) return false;
       return true;
     });
     list.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
@@ -884,6 +890,9 @@
     $("#filterTipo").addEventListener("change", renderEquipos);
     $("#filterEquipo").addEventListener("change", renderMantenimientos);
     $("#filterTipoMant").addEventListener("change", renderMantenimientos);
+    $("#filterEstadoMant").addEventListener("change", renderMantenimientos);
+    $("#filterFechaDesde").addEventListener("change", renderMantenimientos);
+    $("#filterFechaHasta").addEventListener("change", renderMantenimientos);
 
     // cierre de modales
     $$("[data-close]").forEach((b) => b.addEventListener("click", () => closeModal(b.dataset.close)));

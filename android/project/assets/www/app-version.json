@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Nuevo panel de avance del mantenimiento: registros Programados, Reprogramados y Finalizados. Los mantenimientos ahora tienen estado (finalizado por defecto)."
+  "changelog": "Filtros en el historial de mantenimientos: rango de fechas (desde/hasta) y estado (Programado, Reprogramado, Finalizado)."
 }
