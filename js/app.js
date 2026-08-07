@@ -340,6 +340,36 @@
     $("#equipoEmpty").classList.toggle("hidden", list.length > 0);
   }
 
+  function cargarSelectResponsables(eq) {
+    const sel = $("#eqResponsable");
+    const actual = eq ? (eq.responsable || "").trim() : "";
+    const lista = usuarios
+      .map((u) => (u.nombre || "").trim())
+      .filter((n) => n.length > 0)
+      .sort((a, b) => a.localeCompare(b, "es"));
+    const actualNorm = actual.toLowerCase();
+    let encontrado = false;
+    let opts = `<option value="">— Sin asignar —</option>`;
+    for (const n of lista) {
+      const marca = n.toLowerCase() === actualNorm ? "selected" : "";
+      if (marca) encontrado = true;
+      opts += `<option value="${esc(n)}" ${marca}>${esc(n)}</option>`;
+    }
+    if (actual && !encontrado) {
+      opts += `<option value="${esc(actual)}" selected>${esc(actual)} (no está en la lista)</option>`;
+    }
+    sel.innerHTML = opts;
+    if (esAdmin()) {
+      sel.disabled = false;
+      if (!encontrado) sel.selectedIndex = actual ? sel.options.length - 1 : 0;
+    } else {
+      sel.disabled = true;
+      const nom = (sesion ? sesion.nombre : "").trim().toLowerCase();
+      const idx = Array.from(sel.options).findIndex((o) => o.value.toLowerCase() === nom);
+      if (idx >= 0) sel.selectedIndex = idx;
+    }
+  }
+
   function openEquipoModal(eq) {
     $("#modalEquipoTitle").textContent = eq ? "Editar equipo" : "Nuevo equipo";
     $("#eqId").value = eq ? eq.id : "";
@@ -349,8 +379,7 @@
     $("#eqModelo").value = eq ? (eq.modelo || "") : "";
     $("#eqSerie").value = eq ? (eq.serie || "") : "";
     $("#eqDepartamento").value = eq ? (eq.departamento || "") : "";
-    $("#eqResponsable").value = eq ? (eq.responsable || "") : (esAdmin() ? "" : (sesion ? sesion.nombre : ""));
-    $("#eqResponsable").disabled = !esAdmin();
+    cargarSelectResponsables(eq);
     $("#eqUbicacion").value = eq ? (eq.ubicacion || "") : "";
     $("#eqSO").value = eq ? (eq.so || "") : "";
     $("#eqIP").value = eq ? (eq.ip || "") : "";

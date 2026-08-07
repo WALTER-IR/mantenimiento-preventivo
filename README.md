@@ -7,8 +7,9 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.12.1
+## Versión actual: 1.13.0
 
+- **Listado de responsables al registrar un equipo**: el campo "Usuario asignado" del formulario de equipos ahora carga la lista de responsables registrados (en la PWA). El APK ya lo hacía con un selector.
 - **Plantilla de carga masiva actualizada**: el formato de los equipos usa las columnas "USUARIO ASIGNADO" y "RESPONSABLE" (con DNI). Plantillas de ejemplo en la carpeta `excel_ejemplo/` del repositorio (responsables.xlsx, equipos.xlsx, mantenimientos.xlsx). En el APK, la Carga Masiva muestra las columnas esperadas de cada formato.
 - **Campo "Usuario asignado" (APK 3.15.0)**: el registro de equipos y la carga masiva del APK ahora usan el término "USUARIO ASIGNADO" (antes "USUARIO/RESPONSABLE"). La importación acepta columnas "USUARIO ASIGNADO", "USUARIO" o "RESPONSABLE".
 - **Lista de equipos con usuario, equipo y serie**: cada tarjeta muestra primero el usuario asignado (ej. "👤 Juan Osorio"), luego el nombre del equipo (ej. "PC") y la serie (ej. "123456").
