@@ -15,13 +15,16 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
 
-public class EquiposActivity extends Activity implements View.OnClickListener {
+public class MantenimientosActivity extends Activity implements View.OnClickListener {
 
-    private ArrayList<Equipo> items = new ArrayList<>();
     private ListView lv;
     private EditText search;
     private TextView empty;
+    private ArrayList<Mantenimiento> items = new ArrayList<>();
+    private HashMap<Long, String> labels = new HashMap<>();
     private int loadSeq = 0;
 
     @Override
@@ -32,7 +35,7 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             finish();
             return;
         }
-        setContentView(R.layout.activity_equipos);
+        setContentView(R.layout.activity_mantenimientos);
 
         findViewById(R.id.navPanel).setOnClickListener(this);
         findViewById(R.id.navEquipos).setOnClickListener(this);
@@ -40,23 +43,16 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.navAlertas).setOnClickListener(this);
         findViewById(R.id.navConfig).setOnClickListener(this);
         Ui.ajustarNav(this);
-        findViewById(R.id.btnNuevoEquipo).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btnNuevoMantenimiento).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(EquiposActivity.this, EquipoFormActivity.class));
-            }
-        });
-        findViewById(R.id.btnCargaMasiva).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(EquiposActivity.this, CargaMasivaActivity.class)
-                        .putExtra("tipo", CargaMasivaActivity.TIPO_EQUIPOS));
+                startActivity(new Intent(MantenimientosActivity.this, MantenimientoFormActivity.class));
             }
         });
 
-        lv = (ListView) findViewById(R.id.listaEquipos);
-        search = (EditText) findViewById(R.id.searchEquipo);
-        empty = (TextView) findViewById(R.id.emptyEquipos);
+        lv = (ListView) findViewById(R.id.listaMantenimientos);
+        search = (EditText) findViewById(R.id.searchMant);
+        empty = (TextView) findViewById(R.id.emptyMantenimientos);
 
         search.addTextChangedListener(new TextWatcher() {
             @Override
@@ -76,8 +72,9 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> p, View v, int i, long id) {
-                startActivity(new Intent(EquiposActivity.this, EquipoDetailActivity.class)
-                        .putExtra("equipoId", items.get(i).id));
+                Mantenimiento m = items.get(i);
+                startActivity(new Intent(MantenimientosActivity.this, EquipoDetailActivity.class)
+                        .putExtra("equipoId", m.equipoId));
             }
         });
     }
@@ -89,20 +86,33 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             finish();
             return;
         }
-        findViewById(R.id.btnNuevoEquipo).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
-        findViewById(R.id.btnCargaMasiva).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
+        findViewById(R.id.btnNuevoMantenimiento).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
         load();
     }
 
     private void load() {
         final int seq = ++loadSeq;
-        final String f = search.getText().toString();
+        final String q = search == null ? "" : search.getText().toString().trim().toLowerCase(Locale.ROOT);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final ArrayList<Equipo> result;
+                final ArrayList<Mantenimiento> result;
+                final HashMap<Long, String> map = new HashMap<>();
                 try {
-                    result = Db.allEquipos(f);
+                    result = Db.allMants();
+                    if (q.length() > 0) {
+                        ArrayList<Mantenimiento> filt = new ArrayList<>();
+                        for (Mantenimiento m : result) {
+                            if (m.usuario.toLowerCase(Locale.ROOT).contains(q)
+                                    || m.serie.toLowerCase(Locale.ROOT).contains(q)
+                                    || m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
+                                filt.add(m);
+                            }
+                        }
+                        result.clear();
+                        result.addAll(filt);
+                    }
+                    for (Equipo e : Db.allEquipos()) map.put(e.id, Db.equipoLabel(e));
                 } catch (final Exception ex) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -117,6 +127,7 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
                     public void run() {
                         if (seq != loadSeq) return;
                         items = result;
+                        labels = map;
                         lv.setAdapter(new Adapter());
                         empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
                     }
@@ -130,7 +141,8 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
         int id = v.getId();
         Class<?> target = null;
         if (id == R.id.navPanel) target = MainActivity.class;
-        else if (id == R.id.navMantenimientos) target = MantenimientosActivity.class;
+        else if (id == R.id.navEquipos) target = EquiposActivity.class;
+        else if (id == R.id.navMantenimientos) return;
         else if (id == R.id.navAlertas) target = AlertasActivity.class;
         else if (id == R.id.navConfig) target = ConfigActivity.class;
         if (target != null) {
@@ -159,37 +171,36 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
         @Override
         public View getView(int i, View convertView, ViewGroup parent) {
             View v = convertView != null ? convertView
-                    : getLayoutInflater().inflate(R.layout.item_equipo, parent, false);
-            Equipo e = items.get(i);
-            TextView nom = (TextView) v.findViewById(R.id.itemNombre);
-            TextView sub = (TextView) v.findViewById(R.id.itemSub);
-            TextView badge = (TextView) v.findViewById(R.id.itemBadge);
-            nom.setText(Db.equipoLabel(e));
-
-            StringBuilder sb = new StringBuilder();
-            if (e.responsable.length() > 0) sb.append("👤 ").append(e.responsable);
-            if (e.dni.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append("DNI: ").append(e.dni);
+                    : getLayoutInflater().inflate(R.layout.item_mantenimiento, parent, false);
+            try {
+                Mantenimiento m = items.get(i);
+                TextView eq = (TextView) v.findViewById(R.id.mtEquipo);
+                TextView usuario = (TextView) v.findViewById(R.id.mtUsuario);
+                TextView badge = (TextView) v.findViewById(R.id.mtBadge);
+                TextView info = (TextView) v.findViewById(R.id.mtInfo);
+                String lbl = labels.get(m.equipoId);
+                eq.setText(lbl != null ? lbl : "Equipo eliminado");
+                usuario.setText(m.usuario.length() > 0 ? "👤 " + m.usuario : "");
+                String estado = m.estado.length() > 0 ? m.estado : "Pendiente";
+                int color = Db.estadoFinal(m.estado) ? Ui.OK : Ui.WARN;
+                setBadge(badge, estado.toUpperCase(), color);
+                StringBuilder sb = new StringBuilder("Programado: ").append(Fmt.disp(m.fechaProgramada));
+                if (m.fechaReprogramada.length() > 0) sb.append("  ·  Reprogramado: ").append(Fmt.disp(m.fechaReprogramada));
+                if (m.fechaReal.length() > 0) sb.append("  ·  Real: ").append(Fmt.disp(m.fechaReal));
+                if (m.prioridad.length() > 0) sb.append("  ·  ").append(m.prioridad);
+                info.setText(sb.toString());
+            } catch (Exception ignored) {
             }
-            if (e.zona.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append(e.zona);
-            }
-            if (e.equipo.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append(e.equipo);
-            }
-            sub.setText(sb.toString());
-
-            String st = e.status.length() > 0 ? e.status.toUpperCase() : "ACTIVO";
-            badge.setText(st);
-            GradientDrawable g = new GradientDrawable();
-            g.setColor(Ui.RED);
-            g.setCornerRadius(Ui.dp(EquiposActivity.this, 10));
-            badge.setBackgroundDrawable(g);
-            badge.setTextColor(0xFFFFFFFF);
             return v;
         }
+    }
+
+    private void setBadge(TextView t, String text, int color) {
+        t.setText(text);
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(color);
+        g.setCornerRadius(Ui.dp(this, 10));
+        t.setBackgroundDrawable(g);
+        t.setTextColor(0xFFFFFFFF);
     }
 }

@@ -40,6 +40,7 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
 
         findViewById(R.id.navPanel).setOnClickListener(this);
         findViewById(R.id.navEquipos).setOnClickListener(this);
+        findViewById(R.id.navMantenimientos).setOnClickListener(this);
         findViewById(R.id.navAlertas).setOnClickListener(this);
         findViewById(R.id.navConfig).setOnClickListener(this);
         Ui.ajustarNav(this);
@@ -313,6 +314,7 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
         Class<?> target = null;
         if (id == R.id.navPanel) target = MainActivity.class;
         else if (id == R.id.navEquipos) target = EquiposActivity.class;
+        else if (id == R.id.navMantenimientos) target = MantenimientosActivity.class;
         else if (id == R.id.navAlertas) target = AlertasActivity.class;
         if (target != null) {
             startActivity(new Intent(this, target));

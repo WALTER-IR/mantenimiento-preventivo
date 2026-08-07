@@ -36,6 +36,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         statFinalizados = (TextView) findViewById(R.id.statFinalizados);
 
         findViewById(R.id.navEquipos).setOnClickListener(this);
+        findViewById(R.id.navMantenimientos).setOnClickListener(this);
         findViewById(R.id.navAlertas).setOnClickListener(this);
         findViewById(R.id.navConfig).setOnClickListener(this);
         Ui.ajustarNav(this);
@@ -137,6 +138,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         int id = v.getId();
         Class<?> target = null;
         if (id == R.id.navEquipos) target = EquiposActivity.class;
+        else if (id == R.id.navMantenimientos) target = MantenimientosActivity.class;
         else if (id == R.id.navAlertas) target = AlertasActivity.class;
         else if (id == R.id.navConfig) target = ConfigActivity.class;
         else if (id == R.id.btnVerAlertas) target = AlertasActivity.class;
