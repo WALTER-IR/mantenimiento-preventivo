@@ -69,11 +69,6 @@ body {
 .brand-icon { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
 .brand-name { font-weight: 700; font-size: 18px; line-height: 1.2; }
 .brand-sub { font-size: 12px; opacity: .92; }
-.sync-badge {
-  font-size: 11px; background: rgba(255,255,255,.18); padding: 5px 10px;
-  border-radius: 20px; white-space: nowrap;
-}
-.sync-badge.offline { background: rgba(0,0,0,.25); }
 
 /* ---------------- Content ---------------- */
 .content { max-width: 900px; margin: 0 auto; padding: 18px 16px; }

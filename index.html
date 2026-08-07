@@ -46,7 +46,6 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <span id="syncBadge" class="sync-badge" title="Estado de sincronización">● En línea</span>
         <span id="sesionChip" class="sesion-chip hidden"></span>
         <button class="btn btn-ghost" id="btnLogout">Salir</button>
       </div>
@@ -195,20 +194,6 @@
         <input type="file" id="fileImport" class="hidden" accept="application/json" />
       </div>
 
-      <div class="card" id="cardSync">
-        <h3 class="card-title">Sincronización</h3>
-        <p class="card-text">Comparte los datos con la aplicación de Android (APK) mediante el servidor. Se sincroniza automáticamente cada 10 minutos.</p>
-        <label class="field-label" for="syncUrl">URL del servidor</label>
-        <input type="url" id="syncUrl" class="input" placeholder="https://tu-servidor.onrender.com" />
-        <label class="field-label" for="syncToken">Clave de sincronización</label>
-        <input type="password" id="syncToken" class="input" placeholder="Clave compartida" />
-        <div class="btn-row">
-          <button class="btn btn-outline" id="btnGuardarSync">Guardar</button>
-          <button class="btn btn-primary" id="btnSyncNow">Sincronizar ahora</button>
-        </div>
-        <p id="syncStatus" class="update-status">Sin sincronizar todavía</p>
-      </div>
-
       <div class="card">
         <h3 class="card-title">Actualizaciones</h3>
         <p class="card-text">La aplicación se actualiza automáticamente por internet cuando hay una nueva versión disponible.</p>
@@ -220,7 +205,7 @@
 
       <div class="card">
         <h3 class="card-title">Acerca de</h3>
-        <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión y se sincroniza por internet.</p>
+        <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión y se actualiza automáticamente por internet.</p>
         <p class="update-status" id="acercaInfo">❤️ Hecho con ❤️ · v1.0.0</p>
       </div>
     </section>

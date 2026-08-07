@@ -1,6 +1,6 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Tema visual rojo y restablecimiento de las credenciales del administrador (admin/admin) al actualizar."
+  "changelog": "Eliminada la sincronización con el servidor externo (APK y web ya no dependen de un servicio de internet)."
 }

@@ -7,15 +7,15 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.3.0
+## Versión actual: 1.4.0
 
+- **Eliminada la sincronización con servidores externos** (APK y web ya no dependen de un servicio de internet).
 - **Tema visual rojo** en toda la aplicación.
 - **Credenciales de administrador restablecidas**: usuario `admin` / contraseña `admin` (al actualizar a esta versión).
 - **Login obligatorio** con permisos: Lectura / Edición / Administrador.
 - **Configuración solo administrador** (empresa, respaldo, actualizaciones).
 - **Usuarios y permisos**: agregar/editar responsables y cambiar permisos.
 - **Auditoría** de las últimas acciones (inicios de sesión, altas, bajas, cambios de permiso).
-- **Sincronización con el APK**: URL y clave configurables desde Ajustes (solo administrador), sincronización automática cada 10 minutos y botón manual. El servidor se despliega en Render (ver `servidor/README.md`).
 
 ## Publicación
 

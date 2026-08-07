@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -22,9 +21,6 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
 
     private EditText cfgEmpresa;
     private TextView txtSesion;
-    private EditText syncUrl;
-    private EditText syncToken;
-    private TextView txtSyncStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +46,6 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
 
         cfgEmpresa = (EditText) findViewById(R.id.cfgEmpresa);
         txtSesion = (TextView) findViewById(R.id.txtSesion);
-        syncUrl = (EditText) findViewById(R.id.syncUrl);
-        syncToken = (EditText) findViewById(R.id.syncToken);
-        txtSyncStatus = (TextView) findViewById(R.id.txtSyncStatus);
 
         findViewById(R.id.btnCerrarSesion).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,20 +101,6 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
             public void onClick(View v) {
                 Db.setEmpresa(ConfigActivity.this, cfgEmpresa.getText().toString().trim());
                 Fmt.toast(ConfigActivity.this, "Configuración guardada");
-            }
-        });
-        findViewById(R.id.btnGuardarSync).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Sync.setUrl(ConfigActivity.this, syncUrl.getText().toString().trim());
-                Sync.setToken(ConfigActivity.this, syncToken.getText().toString().trim());
-                Fmt.toast(ConfigActivity.this, "Configuración de sincronización guardada");
-            }
-        });
-        findViewById(R.id.btnSyncNow).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sincronizarManual(v);
             }
         });
         findViewById(R.id.btnExportar).setOnClickListener(new View.OnClickListener() {
@@ -235,35 +214,7 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
         }
         cfgEmpresa.setText(Db.getEmpresa(this));
         txtSesion.setText("Sesión: " + Db.getSesionNombre() + "  ·  " + Db.rolNombre(Db.getSesionRol()));
-        syncUrl.setText(Sync.getUrl(this));
-        syncToken.setText(Sync.getToken(this));
-        actualizarSyncStatus();
         aplicarPermisos();
-    }
-
-    private void actualizarSyncStatus() {
-        String last = Sync.getLast(this);
-        txtSyncStatus.setText(last.length() == 0 ? "Sin sincronizar todavía" : "Última sincronización: " + last);
-    }
-
-    private void sincronizarManual(final View v) {
-        final Button b = (Button) v;
-        b.setEnabled(false);
-        txtSyncStatus.setText("Sincronizando...");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final String res = Sync.sincronizar(ConfigActivity.this);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        b.setEnabled(true);
-                        Fmt.toast(ConfigActivity.this, res);
-                        actualizarSyncStatus();
-                    }
-                });
-            }
-        }).start();
     }
 
     private void aplicarPermisos() {

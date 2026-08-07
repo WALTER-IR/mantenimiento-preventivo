@@ -18,13 +18,6 @@
   let alertTab = "vencidos";
   let currentDetailId = null;
 
-  // Sincronización (servidor compartido con el APK)
-  let syncUrl = "";
-  let syncToken = CFG.SYNC_TOKEN;
-  let syncLast = null;
-  let syncTimer = null;
-  let syncing = false;
-
   // ---------------- Roles y sesión ----------------
   const ROL = { LECTURA: 0, EDICION: 1, ADMIN: 2 };
   const rolNombre = (r) => (r === 2 ? "Administrador" : r === 1 ? "Edición" : "Lectura");
@@ -95,244 +88,6 @@
       });
       auditoria = await DB.getAuditoria(300);
     } catch (e) { /* no bloquea la acción */ }
-  }
-
-  // ---------------- Sincronización (APK + web) ----------------
-  // El servidor guarda el formato del APK. Aquí traducimos el modelo de la
-  // web al del APK al publicar y de vuelta al descargar.
-  function hashId(str) {
-    let h = 5381;
-    const s = String(str);
-    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
-    return (h >>> 0) % 2147483647;
-  }
-
-  function apkUsuariosDePwa(pwaUsuarios) {
-    return pwaUsuarios.map((u) => ({
-      id: hashId(u.id),
-      nombre: u.nombre || "",
-      subdivision: "",
-      dni: u.dni || "",
-      ceco: "",
-      area: "",
-      cargo: "",
-      email: "",
-      zona: "",
-      clave: u.clave || u.dni || "",
-      rol: (u.rol === undefined || u.rol === null) ? ROL.EDICION : u.rol
-    }));
-  }
-
-  function apkEquiposDePwa(pwaEquipos, pwaUsuarios) {
-    const porNombre = {};
-    pwaUsuarios.forEach((u) => { porNombre[(u.nombre || "").toLowerCase()] = u; });
-    return pwaEquipos.map((e) => {
-      let usuarioId = 0;
-      const resp = porNombre[(e.responsable || "").toLowerCase()];
-      if (resp) usuarioId = hashId(resp.id);
-      return {
-        id: hashId(e.id),
-        usuario_id: usuarioId,
-        hostname: e.nombre || "",
-        ip: e.ip || "",
-        ubicacion: e.ubicacion || "",
-        equipo: e.nombre || "",
-        cod_inventario: "",
-        serie: e.serie || "",
-        marca: e.marca || "",
-        modelo: e.modelo || "",
-        contrato: e.notas || "",
-        status: e.departamento || ""
-      };
-    });
-  }
-
-  function apkMantenimientosDePwa(pwaMts) {
-    return pwaMts.map((m) => ({
-      id: hashId(m.id),
-      equipo_id: hashId(m.equipoId),
-      prioridad: "Media",
-      fecha_programada: m.fecha || "",
-      fecha_reprogramada: m.proxima || "",
-      fecha_real: m.fecha || "",
-      estado: "COMPLETADO",
-      observaciones: m.obs || ""
-    }));
-  }
-
-  function buildSnapshot() {
-    return {
-      app: CFG.APP_NAME,
-      version: 4,
-      exported: todayISO(),
-      usuarios: apkUsuariosDePwa(usuarios),
-      equipos: apkEquiposDePwa(equipos, usuarios),
-      mantenimientos: apkMantenimientosDePwa(mantenimientos)
-    };
-  }
-
-  function pwaEquiposDeApk(apkEquipos, apkUsuarios) {
-    const porId = {};
-    apkUsuarios.forEach((u) => { porId[u.id] = u; });
-    return apkEquipos.map((e) => {
-      const resp = porId[e.usuario_id];
-      return {
-        id: String(e.id),
-        nombre: e.hostname || e.equipo || ("Equipo " + e.id),
-        tipo: "laptop",
-        marca: e.marca || "",
-        modelo: e.modelo || "",
-        serie: e.serie || "",
-        departamento: e.status || "",
-        responsable: resp ? resp.nombre : "",
-        ubicacion: e.ubicacion || "",
-        so: "",
-        ip: e.ip || "",
-        fechaCompra: "",
-        intervalo: 90,
-        notas: e.contrato || "",
-        fechaUltimoMant: null,
-        fechaAlta: todayISO()
-      };
-    });
-  }
-
-  function pwaMantenimientosDeApk(apkMts) {
-    return apkMts.map((m) => ({
-      id: String(m.id),
-      equipoId: String(m.equipo_id),
-      fecha: m.fecha_real || m.fecha_programada || "",
-      tipo: "preventivo",
-      tecnico: "",
-      costo: 0,
-      proxima: m.fecha_reprogramada || "",
-      obs: m.observaciones || "",
-      tareas: []
-    }));
-  }
-
-  async function applyRemote(data) {
-    if (!data) return;
-    const newEquipos = pwaEquiposDeApk(data.equipos || [], data.usuarios || []);
-    const newMts = pwaMantenimientosDeApk(data.mantenimientos || []);
-    const newUsuarios = (data.usuarios || []).map((u) => ({
-      id: String(u.id),
-      nombre: u.nombre || "",
-      dni: u.dni || "",
-      clave: u.clave || u.dni || "",
-      rol: (u.rol === undefined || u.rol === null) ? ROL.EDICION : u.rol,
-      fechaAlta: todayISO()
-    }));
-    // último mantenimiento por equipo (para el cálculo de próxima fecha)
-    const ult = {};
-    newMts.forEach((m) => { if (m.fecha && (!ult[m.equipoId] || m.fecha > ult[m.equipoId])) ult[m.equipoId] = m.fecha; });
-    newEquipos.forEach((e) => { e.fechaUltimoMant = ult[e.id] || null; });
-
-    await DB.clear("equipos");
-    await DB.clear("mantenimientos");
-    await DB.clear("usuarios");
-    await DB.bulkPut("equipos", newEquipos);
-    await DB.bulkPut("mantenimientos", newMts);
-    await DB.bulkPut("usuarios", newUsuarios);
-    equipos = newEquipos;
-    mantenimientos = newMts;
-    usuarios = newUsuarios;
-    await ensureAdmin();
-    // re-resolver la sesión actual por nombre (los ids cambian tras el pull)
-    const cur = sesion ? sesion.nombre : "";
-    if (cur) {
-      const u = usuarios.find((x) => (x.nombre || "").toLowerCase() === cur.toLowerCase());
-      if (u) {
-        sesion = { id: u.id, nombre: u.nombre, dni: u.dni, rol: u.rol };
-        await DB.setSesion(sesion);
-      }
-    }
-  }
-
-  async function httpJson(method, url, token, body) {
-    const resp = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    return resp.json();
-  }
-
-  async function loadSyncCfg() {
-    const c = await DB.getConfig();
-    syncUrl = (c.sync_url || "").trim();
-    syncToken = (c.sync_token || "").trim() || CFG.SYNC_TOKEN;
-    syncLast = c.sync_last ? new Date(c.sync_last) : null;
-  }
-
-  async function saveSyncCfg() {
-    if (!esAdmin()) return toast("Solo el administrador", "err");
-    syncUrl = $("#syncUrl").value.trim();
-    syncToken = $("#syncToken").value.trim() || CFG.SYNC_TOKEN;
-    await DB.setConfig("sync_url", syncUrl);
-    await DB.setConfig("sync_token", syncToken);
-    toast("Configuración de sincronización guardada", "ok");
-    auditar("CONFIGURACION SYNC", "URL: " + (syncUrl || "(vacía)"));
-    renderConfig();
-    updateSyncBadge();
-  }
-
-  async function syncNow(manual) {
-    if (syncing || !sesion || !syncUrl) {
-      if (manual && !syncUrl) toast("No se configuró la URL de sincronización", "err");
-      return;
-    }
-    syncing = true;
-    const btn = $("#btnSyncNow");
-    const status = $("#syncStatus");
-    if (btn) btn.disabled = true;
-    if (status) status.textContent = "Sincronizando...";
-    try {
-      const base = syncUrl.replace(/\/+$/, "");
-      if (puedeEditar()) {
-        await httpJson("POST", base + "/api/sync", syncToken, { data: buildSnapshot() });
-      }
-      const resp = await httpJson("GET", base + "/api/sync", syncToken);
-      if (resp && resp.data) {
-        await applyRemote(resp.data);
-        await reload();
-      }
-      syncLast = new Date();
-      await DB.setConfig("sync_last", syncLast.toISOString());
-      updateSyncBadge();
-      if (status) status.textContent = "Última sincronización: " + syncLast.toLocaleString("es-ES");
-      if (manual) toast("Sincronizado correctamente", "ok");
-    } catch (e) {
-      const msg = "No se pudo sincronizar: " + e.message;
-      if (status) status.textContent = syncLast
-        ? msg + " · Última: " + syncLast.toLocaleString("es-ES")
-        : msg;
-      if (manual) toast(msg, "err");
-    } finally {
-      syncing = false;
-      if (btn) btn.disabled = false;
-    }
-  }
-
-  function startSyncTimer() {
-    if (syncTimer) clearInterval(syncTimer);
-    syncTimer = setInterval(() => syncNow(false), (CFG.SYNC_INTERVAL_MIN || 10) * 60 * 1000);
-  }
-
-  function updateSyncBadge() {
-    const el = $("#syncBadge");
-    if (!el) return;
-    el.textContent = navigator.onLine ? "● En línea" : "○ Sin conexión";
-    el.classList.toggle("offline", !navigator.onLine);
-    el.title = syncLast
-      ? "Última sincronización: " + syncLast.toLocaleString("es-ES")
-      : syncUrl
-        ? "Sincronización configurada, aún sin datos"
-        : "Sincronización no configurada";
   }
 
   // ---------------- Sesión / Login ----------------
@@ -825,16 +580,6 @@
     $("#cfgEmpresa").value = appConfig.empresa;
     $("#cfgIntervalo").value = appConfig.intervalo;
     $("#appVersion").textContent = CFG.APP_VERSION;
-    const su = $("#syncUrl");
-    if (su) su.value = syncUrl;
-    const stk = $("#syncToken");
-    if (stk) stk.value = syncToken;
-    const st = $("#syncStatus");
-    if (st) st.textContent = syncLast
-      ? "Última sincronización: " + syncLast.toLocaleString("es-ES")
-      : syncUrl
-        ? "Configurada, aún sin sincronizar"
-        : "Sin configurar (vacío = sincronización deshabilitada)";
     $("#brandName").textContent = appConfig.empresa === "Empresa" ? CFG.APP_NAME : appConfig.empresa;
     $("#brandSub").textContent = "Laptops y Computadoras";
     const info = $("#acercaInfo");
@@ -1036,7 +781,6 @@
     usuarios = await DB.getUsuarios();
     auditoria = await DB.getAuditoria(300);
     appConfig = await DB.getConfig();
-    await loadSyncCfg();
     renderConfig();
     setView(currentView);
   }
@@ -1067,10 +811,6 @@
     $("#btnGuardarMant").addEventListener("click", saveMant);
     $("#btnVerTodasAlertas").addEventListener("click", () => setView("alertas"));
     $("#btnGuardarConfig").addEventListener("click", saveConfig);
-    const btnGuardarSync = $("#btnGuardarSync");
-    if (btnGuardarSync) btnGuardarSync.addEventListener("click", saveSyncCfg);
-    const btnSyncNow = $("#btnSyncNow");
-    if (btnSyncNow) btnSyncNow.addEventListener("click", () => syncNow(true));
     $("#btnExportar").addEventListener("click", exportData);
     $("#btnImportar").addEventListener("click", () => $("#fileImport").click());
     $("#fileImport").addEventListener("change", (e) => {
@@ -1163,10 +903,8 @@
       });
     });
 
-    // estado de conexión y sincronización
-    window.addEventListener("online", () => { updateSyncBadge(); checkForUpdates(true); syncNow(false); });
-    window.addEventListener("offline", updateSyncBadge);
-    updateSyncBadge();
+    // estado de conexión
+    window.addEventListener("online", () => checkForUpdates(true));
   }
 
   function init() {
@@ -1182,8 +920,6 @@
         sesion = await DB.getSesion();
         window.__STORAGE_OK__ = true;
         applySessionUI();
-        startSyncTimer();
-        if (sesion) syncNow(false);
         if (sesion) {
           $("#loginScreen").classList.add("hidden");
           setView("dashboard");
