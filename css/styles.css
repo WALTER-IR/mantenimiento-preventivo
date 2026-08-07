@@ -117,9 +117,9 @@ body {
   font-size: 22px; color: #fff;
 }
 .item-body { flex: 1; min-width: 0; }
-.item-title { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-user { font-size: 13px; color: var(--rojo-600); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-title { font-weight: 600; font-size: 14px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-user { font-size: 12px; color: var(--rojo-600); margin-top: 3px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-meta { text-align: right; flex-shrink: 0; }
 .badge {
   display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px;

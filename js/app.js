@@ -329,9 +329,9 @@
         <div class="item-card" data-open-detail="${e.id}">
           <div class="item-avatar">${ico}</div>
           <div class="item-body">
-            <div class="item-title">${esc(e.nombre)}</div>
-            <div class="item-sub">${esc(e.marca || "—")} ${esc(e.modelo || "")} · ${esc(e.departamento || "Sin departamento")}</div>
             <div class="item-user">👤 ${esc(e.responsable || "Sin usuario asignado")}</div>
+            <div class="item-title">${esc(e.nombre)}</div>
+            <div class="item-sub">${esc(e.serie || "—")} · ${esc(e.marca || "")} ${esc(e.modelo || "")} · ${esc(e.departamento || "Sin departamento")}</div>
             <div class="due-line ${st.key === "vencido" ? "badge danger" : st.key === "proximo" ? "badge warn" : "badge ok"}">Próx. mant.: ${fmtDate(st.due)}</div>
           </div>
           <div class="item-meta">${badge}</div>

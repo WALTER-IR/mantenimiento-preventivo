@@ -1,6 +1,6 @@
 {
-  "version": "1.12.0",
+  "version": "1.12.1",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "La lista de equipos ahora muestra el nombre del usuario asignado y el campo se llama 'Usuario asignado'."
+  "changelog": "La lista de equipos muestra primero el usuario asignado, luego el nombre del equipo y la serie."
 }
