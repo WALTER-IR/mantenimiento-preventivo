@@ -1027,8 +1027,12 @@
     $("#filterEquipo").addEventListener("change", renderMantenimientos);
     $("#filterTipoMant").addEventListener("change", renderMantenimientos);
     $("#filterEstadoMant").addEventListener("change", renderMantenimientos);
-    $("#filterFechaDesde").addEventListener("change", renderMantenimientos);
-    $("#filterFechaHasta").addEventListener("change", renderMantenimientos);
+    $("#btnBuscarMant").addEventListener("click", renderMantenimientos);
+    $("#btnLimpiarMant").addEventListener("click", () => {
+      $("#filterFechaDesde").value = "";
+      $("#filterFechaHasta").value = "";
+      renderMantenimientos();
+    });
 
     // cierre de modales
     $$("[data-close]").forEach((b) => b.addEventListener("click", () => closeModal(b.dataset.close)));

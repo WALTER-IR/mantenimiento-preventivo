@@ -81,6 +81,21 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         setFilterDatePicker(filterDesde);
         setFilterDatePicker(filterHasta);
 
+        findViewById(R.id.btnBuscarMant).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                load();
+            }
+        });
+        findViewById(R.id.btnLimpiarMant).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                filterDesde.setText("");
+                filterHasta.setText("");
+                load();
+            }
+        });
+
         search.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int a, int b, int c) {
@@ -117,7 +132,6 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
             @Override
             public boolean onLongClick(View v) {
                 field.setText("");
-                load();
                 return true;
             }
         });
@@ -139,7 +153,6 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                         Calendar sel = Calendar.getInstance();
                         sel.set(year, month, day);
                         field.setText(Fmt.disp(Fmt.FMT.format(sel.getTime())));
-                        load();
                     }
                 },
                 c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));

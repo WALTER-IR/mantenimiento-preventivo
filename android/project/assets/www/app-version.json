@@ -1,6 +1,6 @@
 {
-  "version": "1.10.0",
+  "version": "1.11.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Nuevo botón 'Formato' en el detalle del equipo que genera el formato de mantenimiento TI-F016, con opciones de Enviar e Imprimir."
+  "changelog": "Botones Buscar y Limpiar para el filtro de fechas en el historial de mantenimientos (PWA y APK)."
 }

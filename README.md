@@ -7,8 +7,9 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.10.0
+## Versión actual: 1.11.0
 
+- **Buscar y Limpiar en el filtro de fechas**: el historial de mantenimientos (PWA y APK 3.14.0) ahora tiene botones "Buscar" y "Limpiar" para el rango de fechas.
 - **Formato de mantenimiento (TI-F016)**: nuevo botón "Formato" en el detalle del equipo que genera el formato oficial de mantenimiento con los datos del equipo, responsable, tareas de software y hardware. Incluye opciones de Enviar (compartir) e Imprimir.
 - **Formato en el APK (3.13.0)**: la app Android también genera el formato TI-F016 desde el detalle del equipo, con botones Enviar e Imprimir.
 - **Responsables solo para administrador**: la tarjeta de Responsables del panel de control ahora solo la ve el administrador.

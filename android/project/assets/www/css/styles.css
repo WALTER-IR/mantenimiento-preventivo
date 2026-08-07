@@ -186,6 +186,7 @@ body {
 .toolbar .input { margin-bottom: 0; flex: 1; min-width: 160px; }
 .toolbar .filter-label { align-self: center; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 .toolbar .input[type="date"] { flex: 0 1 auto; min-width: 130px; }
+.toolbar .btn { flex: 0 0 auto; align-self: center; }
 
 /* ---------------- Bottom nav ---------------- */
 .bottomnav {
