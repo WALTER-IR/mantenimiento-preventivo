@@ -9,6 +9,7 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 ## Versión actual: 1.13.0
 
+- **Nombres en el detalle de equipo (APK 3.19.0)**: en el "DETALLE DE EQUIPO" se muestra el nombre del **USUARIO ASIGNADO**, y en el "DETALLE DE RESPONSABLE" el nombre del **RESPONSABLE**.
 - **Detalle de equipo (APK 3.18.0)**: la vista del equipo ahora tiene dos secciones con cabeceras "DETALLE DE EQUIPO" (datos del equipo) y "DETALLE DE RESPONSABLE" (datos del responsable). El formulario de nuevo/editar responsable muestra la sección "EQUIPOS DEL RESPONSABLE" con los equipos asignados.
 - **Estados de mantenimiento unificados (APK 3.17.0)**: los estados del mantenimiento y su filtro ahora son **Programado / Reprogramado / Finalizado** (antes Pendiente / En proceso / Realizado), igual que en la PWA. Los registros antiguos se convierten automáticamente al abrir.
 - **Listado de responsables al registrar un equipo**: el campo "Usuario asignado" del formulario de equipos ahora carga la lista de responsables registrados (en la PWA). El APK ya lo hacía con un selector.

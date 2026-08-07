@@ -119,7 +119,7 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
         ((TextView) findViewById(R.id.detTitle)).setText(Db.equipoLabel(equipo));
 
         equipoCard.removeViews(1, equipoCard.getChildCount() - 1);
-        addRow(equipoCard, "USUARIO", equipo.responsable.length() > 0 ? equipo.responsable : "—");
+        addRow(equipoCard, "USUARIO ASIGNADO", equipo.responsable.length() > 0 ? equipo.responsable : "—");
         addRow(equipoCard, "HOSTNAME", equipo.hostname);
         addRow(equipoCard, "DIR. IP", equipo.ip);
         addRow(equipoCard, "UBICACIÓN FISICA", equipo.ubicacion);
@@ -132,6 +132,7 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
         addRow(equipoCard, "STATUS", equipo.status);
 
         respCard.removeViews(1, respCard.getChildCount() - 1);
+        addRow(respCard, "RESPONSABLE", equipo.responsable.length() > 0 ? equipo.responsable : "—");
         addRow(respCard, "ZONA", equipo.zona);
         addRow(respCard, "SUBDIVISION", equipo.subdivision);
         addRow(respCard, "DNI", equipo.dni);

@@ -22,6 +22,8 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 - 3.3.0 (vc18): login obligatorio con roles (Lectura / Edición / Administrador),
   configuración solo administrador, cambio de permisos (pulsación larga en la lista)
   y módulo de auditoría.
+- 3.19.0 (vc34): el "DETALLE DE EQUIPO" muestra el nombre del USUARIO ASIGNADO y
+  el "DETALLE DE RESPONSABLE" muestra el nombre del RESPONSABLE.
 - 3.18.0 (vc33): la vista de un equipo separa en dos secciones el "DETALLE DE EQUIPO"
   y el "DETALLE DE RESPONSABLE". El formulario de nuevo/editar responsable muestra la
   sección "EQUIPOS DEL RESPONSABLE" con los equipos asignados.
