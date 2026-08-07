@@ -159,6 +159,21 @@
                 android:inputType="textEmailAddress"
                 android:singleLine="true" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                style="@style/Section"
+                android:text="EQUIPOS DEL RESPONSABLE" />
+
+            <LinearLayout
+                android:id="@+id/usEquiposCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                style="@style/Card" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

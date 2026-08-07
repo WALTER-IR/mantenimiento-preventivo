@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -20,6 +21,7 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
     private EditText usNombre, usDni, usSubdivision, usCeco, usArea, usCargo, usEmail, usClave;
     private Spinner usZona, usRol;
     private Button btnEliminar;
+    private LinearLayout usEquiposCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,7 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
         usArea = (EditText) findViewById(R.id.usArea);
         usCargo = (EditText) findViewById(R.id.usCargo);
         usEmail = (EditText) findViewById(R.id.usEmail);
+        usEquiposCard = (LinearLayout) findViewById(R.id.usEquiposCard);
         btnEliminar = (Button) findViewById(R.id.btnEliminarUsuario);
 
         ArrayAdapter<String> zonas = new ArrayAdapter<>(this,
@@ -58,6 +61,29 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
         Bundle b = getIntent().getExtras();
         if (b != null) usuarioId = b.getLong("usuarioId", 0);
         if (usuarioId > 0) cargar();
+        cargarEquipos();
+    }
+
+    private void cargarEquipos() {
+        usEquiposCard.removeAllViews();
+        ArrayList<Equipo> es = usuarioId > 0 ? Db.equiposByUsuario(usuarioId) : new ArrayList<Equipo>();
+        if (es.isEmpty()) {
+            TextView t = new TextView(this);
+            t.setText("Sin equipos asignados");
+            t.setTextSize(14);
+            t.setTextColor(Ui.MUT);
+            t.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
+            usEquiposCard.addView(t);
+            return;
+        }
+        for (Equipo e : es) {
+            TextView t = new TextView(this);
+            t.setText("🔧 " + Db.equipoLabel(e) + (e.status.length() > 0 ? " · " + e.status : ""));
+            t.setTextSize(14);
+            t.setTextColor(Ui.TEXT);
+            t.setPadding(0, Ui.dp(this, 6), 0, Ui.dp(this, 6));
+            usEquiposCard.addView(t);
+        }
     }
 
     private void cargar() {
