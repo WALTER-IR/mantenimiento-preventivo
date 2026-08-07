@@ -234,6 +234,7 @@
 
     $("#statTotal").textContent = total;
     $("#statResp").textContent = usuarios.length;
+    $("#cardResp").classList.toggle("hidden", !esAdmin());
     $("#statVencidos").textContent = stats.vencidos;
     $("#statProximos").textContent = stats.proximos;
     $("#statMes").textContent = mes;

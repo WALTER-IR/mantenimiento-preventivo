@@ -125,6 +125,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         statProgramados.setText(String.valueOf(avance[0]));
                         statReprogramados.setText(String.valueOf(avance[1]));
                         statFinalizados.setText(String.valueOf(avance[2]));
+                        ((View) statResp.getParent()).setVisibility(Db.esAdmin() ? View.VISIBLE : View.GONE);
                         ((ListView) findViewById(R.id.listaAlertas)).setAdapter(new MantAlertAdapter(alertas, labels));
                         ((ListView) findViewById(R.id.listaRecientes)).setAdapter(new MantItemAdapter(recientes, labels));
                     }
