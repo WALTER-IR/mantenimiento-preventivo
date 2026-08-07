@@ -4,13 +4,14 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 
 - Funciona sin conexión (offline)
 - Se actualiza automáticamente por internet
-- Tema visual lila
+- Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.2.0
+## Versión actual: 1.3.0
 
+- **Tema visual rojo** en toda la aplicación.
+- **Credenciales de administrador restablecidas**: usuario `admin` / contraseña `admin` (al actualizar a esta versión).
 - **Login obligatorio** con permisos: Lectura / Edición / Administrador.
-- Usuario administrador inicial: `admin` / `admin`.
 - **Configuración solo administrador** (empresa, respaldo, actualizaciones).
 - **Usuarios y permisos**: agregar/editar responsables y cambiar permisos.
 - **Auditoría** de las últimas acciones (inicios de sesión, altas, bajas, cambios de permiso).

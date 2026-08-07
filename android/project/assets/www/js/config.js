@@ -8,7 +8,7 @@
 //  con los archivos locales y se actualizará cuando la publiques.
 // ============================================================
 window.APP_CONFIG = {
-  APP_VERSION: "1.2.0",
+  APP_VERSION: "1.3.0",
   APP_NAME: "Mantenimiento Preventivo",
   UPDATE_URL: "https://WALTER-IR.github.io/mantenimiento-preventivo/", // ej. "https://midominio.com/mantenimiento/"
   // Sincronización: URL de la API compartida con el APK (vacía = deshabilitada).

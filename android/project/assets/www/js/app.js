@@ -359,10 +359,26 @@
   }
 
   async function ensureAdmin() {
-    if (usuarios.some((u) => u.rol === ROL.ADMIN)) return;
-    const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
-    usuarios.push(a);
-    await DB.putUsuario(a);
+    const flag = "admin_reset_" + CFG.APP_VERSION;
+    const cfg = await DB.getConfig();
+    if (!usuarios.some((u) => u.rol === ROL.ADMIN)) {
+      const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
+      usuarios.push(a);
+      await DB.putUsuario(a);
+      await DB.setConfig(flag, true);
+      return;
+    }
+    if (!cfg[flag]) {
+      const admin = usuarios.find((u) => u.id === "us-admin") || usuarios.find((u) => u.rol === ROL.ADMIN);
+      admin.nombre = "admin";
+      admin.dni = "admin";
+      admin.clave = "admin";
+      admin.rol = ROL.ADMIN;
+      if (admin.id !== "us-admin") admin.id = "us-admin";
+      await DB.putUsuario(admin);
+      await DB.setConfig(flag, true);
+      auditar("RESTABLECER ADMIN", "Credenciales de administrador restablecidas");
+    }
   }
 
   async function doLogin() {
