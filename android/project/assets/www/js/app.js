@@ -328,7 +328,7 @@
       if (!esVisibleEquipo(e)) return false;
       if (tipo && e.tipo !== tipo) return false;
       if (!q) return true;
-      return [e.nombre, e.serie, e.marca, e.departamento, e.responsable, e.modelo]
+      return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.responsable, e.modelo]
         .join(" ").toLowerCase().includes(q);
     });
     list.sort((a, b) => (a.nombre < b.nombre ? -1 : 1));
@@ -346,8 +346,8 @@
           <div class="item-avatar">${ico}</div>
           <div class="item-body">
             <div class="item-user">👤 ${esc(e.responsable || "Sin usuario asignado")}</div>
-            <div class="item-title">${esc(e.nombre)}</div>
-            <div class="item-sub">${esc(e.serie || "—")} · ${esc(e.marca || "")} ${esc(e.modelo || "")} · ${esc(e.departamento || "Sin departamento")}</div>
+            <div class="item-title">${esc(e.serie || "—")} - ${esc(e.hostname || "—")}</div>
+            <div class="item-sub">${esc(e.nombre || "—")} - ${esc(e.ubicacion || "—")} - ${esc(e.ip || "—")}</div>
             <div class="due-line ${st.key === "vencido" ? "badge danger" : st.key === "proximo" ? "badge warn" : "badge ok"}">Próx. mant.: ${fmtDate(st.due)}</div>
           </div>
           <div class="item-meta">${badge}</div>
@@ -394,6 +394,7 @@
     $("#eqMarca").value = eq ? (eq.marca || "") : "";
     $("#eqModelo").value = eq ? (eq.modelo || "") : "";
     $("#eqSerie").value = eq ? (eq.serie || "") : "";
+    $("#eqHostname").value = eq ? (eq.hostname || "") : "";
     $("#eqDepartamento").value = eq ? (eq.departamento || "") : "";
     cargarSelectResponsables(eq);
     $("#eqUbicacion").value = eq ? (eq.ubicacion || "") : "";
@@ -426,6 +427,7 @@
       marca: $("#eqMarca").value.trim(),
       modelo: $("#eqModelo").value.trim(),
       serie: $("#eqSerie").value.trim(),
+      hostname: $("#eqHostname").value.trim(),
       departamento: $("#eqDepartamento").value.trim(),
       responsable: $("#eqResponsable").value.trim(),
       ubicacion: $("#eqUbicacion").value.trim(),
@@ -653,6 +655,7 @@
       ["Marca", eq.marca || "—"],
       ["Modelo", eq.modelo || "—"],
       ["No. serie", eq.serie || "—"],
+      ["Hostname", eq.hostname || "—"],
       ["Departamento", eq.departamento || "—"],
       ["Ubicación", eq.ubicacion || "—"],
       ["Sistema operativo", eq.so || "—"],

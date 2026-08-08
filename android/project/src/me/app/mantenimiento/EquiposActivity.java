@@ -161,26 +161,15 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             View v = convertView != null ? convertView
                     : getLayoutInflater().inflate(R.layout.item_equipo, parent, false);
             Equipo e = items.get(i);
+            TextView usr = (TextView) v.findViewById(R.id.itemUser);
             TextView nom = (TextView) v.findViewById(R.id.itemNombre);
             TextView sub = (TextView) v.findViewById(R.id.itemSub);
             TextView badge = (TextView) v.findViewById(R.id.itemBadge);
-            nom.setText(Db.equipoLabel(e));
 
-            StringBuilder sb = new StringBuilder();
-            if (e.responsable.length() > 0) sb.append("👤 ").append(e.responsable);
-            if (e.dni.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append("DNI: ").append(e.dni);
-            }
-            if (e.zona.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append(e.zona);
-            }
-            if (e.equipo.length() > 0) {
-                if (sb.length() > 0) sb.append("  ·  ");
-                sb.append(e.equipo);
-            }
-            sub.setText(sb.toString());
+            String asignado = e.usuarioAsignado.length() > 0 ? e.usuarioAsignado : e.responsable;
+            usr.setText(asignado.length() > 0 ? "👤 " + asignado : "👤 Sin usuario asignado");
+            nom.setText(linea(e.serie, e.hostname));
+            sub.setText(linea(e.equipo, e.ubicacion, e.ip));
 
             String st = e.status.length() > 0 ? e.status.toUpperCase() : "ACTIVO";
             badge.setText(st);
@@ -191,5 +180,16 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             badge.setTextColor(0xFFFFFFFF);
             return v;
         }
+    }
+
+    private String linea(String... partes) {
+        StringBuilder sb = new StringBuilder();
+        for (String p : partes) {
+            if (p == null) p = "";
+            if (p.length() == 0) continue;
+            if (sb.length() > 0) sb.append(" - ");
+            sb.append(p);
+        }
+        return sb.length() > 0 ? sb.toString() : "—";
     }
 }

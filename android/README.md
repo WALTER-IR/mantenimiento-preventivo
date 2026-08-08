@@ -19,6 +19,8 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.26.0 (vc41): la lista de equipos muestra el usuario asignado, la línea
+  serie - hostname y la línea equipo - ubicación física - dirección IP.
 - 3.25.0 (vc40): la búsqueda de mantenimientos por ubicación física ahora
   carga un listado desplegable con todas las ubicaciones registradas
   (con la opción "Todas las ubicaciones").

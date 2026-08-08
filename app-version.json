@@ -1,6 +1,6 @@
 {
-  "version": "1.14.3",
+  "version": "1.14.4",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "La búsqueda de mantenimientos por ubicación física ahora carga el listado de todas las ubicaciones registradas."
+  "changelog": "La lista de equipos muestra el usuario asignado, la serie y el hostname, y el equipo con su ubicación física y dirección IP. Se agregó el campo Hostname al registro de equipos."
 }
