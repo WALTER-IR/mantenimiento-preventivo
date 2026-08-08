@@ -1,6 +1,6 @@
 {
-  "version": "1.14.2",
+  "version": "1.14.3",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "Se quitó el botón para registrar mantenimiento desde el listado y se agregó una búsqueda por ubicación física del equipo."
+  "changelog": "La búsqueda de mantenimientos por ubicación física ahora carga el listado de todas las ubicaciones registradas."
 }

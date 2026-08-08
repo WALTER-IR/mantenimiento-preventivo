@@ -27,7 +27,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
 
     private ListView lv;
     private EditText search;
-    private EditText filterUbicacion;
+    private Spinner filterUbicacion;
     private TextView empty;
     private Spinner filterEstado;
     private EditText filterDesde, filterHasta;
@@ -54,7 +54,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
 
         lv = (ListView) findViewById(R.id.listaMantenimientos);
         search = (EditText) findViewById(R.id.searchMant);
-        filterUbicacion = (EditText) findViewById(R.id.filterUbicacion);
+        filterUbicacion = (Spinner) findViewById(R.id.filterUbicacion);
         empty = (TextView) findViewById(R.id.emptyMantenimientos);
         filterEstado = (Spinner) findViewById(R.id.filterEstado);
         filterDesde = (EditText) findViewById(R.id.filterDesde);
@@ -90,7 +90,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         findViewById(R.id.btnLimpiarMant).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filterUbicacion.setText("");
+                filterUbicacion.setSelection(0);
                 filterEstado.setSelection(1);
                 filterDesde.setText(Fmt.disp(Fmt.today()));
                 filterHasta.setText(Fmt.disp(Fmt.today()));
@@ -113,18 +113,15 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
             }
         });
 
-        filterUbicacion.addTextChangedListener(new TextWatcher() {
+        cargarUbicaciones();
+        filterUbicacion.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int a, int b, int c) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int a, int b, int c) {
+            public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
                 load();
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
+            public void onNothingSelected(AdapterView<?> p) {
             }
         });
 
@@ -176,6 +173,22 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         dlg.show();
     }
 
+    private void cargarUbicaciones() {
+        ArrayList<String> ubics = new ArrayList<>();
+        ubics.add("Todas las ubicaciones");
+        java.util.TreeSet<String> set = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Equipo e : Db.allEquipos()) {
+            String u = e.ubicacion == null ? "" : e.ubicacion.trim();
+            if (u.length() > 0) set.add(u);
+        }
+        ubics.addAll(set);
+        int sel = filterUbicacion.getSelectedItemPosition();
+        ArrayAdapter<String> ad = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, ubics);
+        filterUbicacion.setAdapter(ad);
+        if (sel > 0 && sel < ubics.size()) filterUbicacion.setSelection(sel);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -183,13 +196,14 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
             finish();
             return;
         }
+        cargarUbicaciones();
         load();
     }
 
     private void load() {
         final int seq = ++loadSeq;
         final String q = search == null ? "" : search.getText().toString().trim().toLowerCase(Locale.ROOT);
-        final String uq = filterUbicacion == null ? "" : filterUbicacion.getText().toString().trim().toLowerCase(Locale.ROOT);
+        final String uq = filterUbicacion == null ? "" : String.valueOf(filterUbicacion.getSelectedItem());
         final int estadoPos = filterEstado == null ? 0 : filterEstado.getSelectedItemPosition();
         final String desde = Fmt.canon(filterDesde == null ? "" : filterDesde.getText().toString());
         final String hasta = Fmt.canon(filterHasta == null ? "" : filterHasta.getText().toString());
@@ -208,7 +222,8 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                                 && !m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
                             continue;
                         }
-                        if (uq.length() > 0 && !m.ubicacion.toLowerCase(Locale.ROOT).contains(uq)) continue;
+                        if (uq.length() > 0 && !uq.equals("Todas las ubicaciones")
+                                && !m.ubicacion.trim().equalsIgnoreCase(uq)) continue;
                         if (estadoSel.length() > 0 && !m.estado.equalsIgnoreCase(estadoSel)) continue;
                         String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
                         if (desde.length() > 0 && eff.compareTo(desde) < 0) continue;

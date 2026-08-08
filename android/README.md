@@ -19,6 +19,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.25.0 (vc40): la búsqueda de mantenimientos por ubicación física ahora
+  carga un listado desplegable con todas las ubicaciones registradas
+  (con la opción "Todas las ubicaciones").
 - 3.24.0 (vc39): se quitó el botón "+ Nuevo" del listado de mantenimientos
   y se agregó un campo para buscar mantenimientos por la ubicación física
   del equipo. El botón "Limpiar" también vacía ese campo.

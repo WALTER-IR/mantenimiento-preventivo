@@ -553,7 +553,13 @@
   function renderMantenimientos() {
     const vis = equiposVisibles();
     const visIds = new Set(vis.map((e) => e.id));
-    const ubicMap = new Map(vis.map((e) => [e.id, (e.ubicacion || "").toLowerCase()]));
+    const ubicMap = new Map(vis.map((e) => [e.id, (e.ubicacion || "").trim()]));
+    const ubicSel = $("#filterUbicacion");
+    const curUbic = ubicSel.value;
+    const ubics = [...new Set(ubicMap.values())].filter(Boolean).sort();
+    ubicSel.innerHTML = `<option value="">Todas las ubicaciones</option>` +
+      ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+    if (ubics.includes(curUbic)) ubicSel.value = curUbic;
     const fSel = $("#filterEquipo");
     const cur = fSel.value;
     fSel.innerHTML = `<option value="">Todos los equipos</option>` +
@@ -562,12 +568,12 @@
     const fEq = fSel.value;
     const fTipo = $("#filterTipoMant").value;
     const fEstado = $("#filterEstadoMant").value;
-    const fUbic = ($("#filterUbicacion").value || "").trim().toLowerCase();
+    const fUbic = ubicSel.value;
     const fDesde = $("#filterFechaDesde").value;
     const fHasta = $("#filterFechaHasta").value;
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
-      if (fUbic && !(ubicMap.get(m.equipoId) || "").includes(fUbic)) return false;
+      if (fUbic && (ubicMap.get(m.equipoId) || "") !== fUbic) return false;
       if (fEq && m.equipoId !== fEq) return false;
       if (fTipo && m.tipo !== fTipo) return false;
       if (fEstado && estadoMant(m) !== fEstado) return false;
