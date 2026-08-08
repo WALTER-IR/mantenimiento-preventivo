@@ -14,6 +14,7 @@ public class Mantenimiento {
     public String serie = "";
     public String hostname = "";
     public String ubicacion = "";
+    public String usuarioAsignado = "";
 
     // datos del usuario responsable (JOIN)
     public String usuario = "";

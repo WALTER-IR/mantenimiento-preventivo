@@ -19,6 +19,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.27.0 (vc42): la lista de mantenimientos muestra el usuario asignado,
+  la línea serie - hostname, la fecha de programación con su prioridad y la
+  fecha de reprogramación.
 - 3.26.0 (vc41): la lista de equipos muestra el usuario asignado, la línea
   serie - hostname y la línea equipo - ubicación física - dirección IP.
 - 3.25.0 (vc40): la búsqueda de mantenimientos por ubicación física ahora

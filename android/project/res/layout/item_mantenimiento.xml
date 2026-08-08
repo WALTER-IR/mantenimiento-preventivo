@@ -17,7 +17,7 @@
         android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/mtEquipo"
+            android:id="@+id/mtUsuario"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -38,19 +38,26 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/mtUsuario"
+        android:id="@+id/mtNombre"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:textColor="@color/primary"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
 
     <TextView
         android:id="@+id/mtInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/mtReprog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:textColor="@color/text_secondary"
         android:textSize="12sp" />
 </LinearLayout>

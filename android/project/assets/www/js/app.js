@@ -484,6 +484,8 @@
       sel.value = mant.equipoId;
       $("#mtFecha").value = mant.fecha || todayISO();
       $("#mtTipo").value = mant.tipo || "preventivo";
+      $("#mtPrioridad").value = mant.prioridad || "";
+      $("#mtFechaReprog").value = mant.fechaReprogramada || "";
       $("#mtEstado").value = estadoMant(mant);
       $("#mtTecnico").value = mant.tecnico || "";
       $("#mtCosto").value = mant.costo || "";
@@ -495,6 +497,8 @@
       sel.value = vis[0] ? vis[0].id : "";
       $("#mtFecha").value = todayISO();
       $("#mtTipo").value = "preventivo";
+      $("#mtPrioridad").value = "";
+      $("#mtFechaReprog").value = "";
       $("#mtEstado").value = "finalizado";
       $("#mtTecnico").value = "";
       $("#mtCosto").value = "";
@@ -527,6 +531,8 @@
       fecha,
       tipo: $("#mtTipo").value,
       estado,
+      prioridad: $("#mtPrioridad").value.trim(),
+      fechaReprogramada: $("#mtFechaReprog").value,
       tecnico: $("#mtTecnico").value.trim(),
       costo: parseFloat($("#mtCosto").value) || 0,
       proxima: $("#mtProxima").value,
@@ -585,17 +591,25 @@
     });
     list.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 
-    $("#mantList").innerHTML = list.map((m) => `
+    $("#mantList").innerHTML = list.map((m) => {
+      const eq = equipos.find((x) => x.id === m.equipoId) || {};
+      const subSerie = [eq.serie, eq.hostname].filter(Boolean).join(" - ") || "—";
+      const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
+      const reprog = m.fechaReprogramada ? fmtDate(m.fechaReprogramada) : "—";
+      return `
       <div class="mant-row" data-open-detail="${m.equipoId}">
         <div class="mant-row-head">
-          <span class="mant-row-title">${esc(eqName(m.equipoId))}</span>
+          <span class="mant-row-title">👤 ${esc(eq.responsable || "Sin usuario asignado")}</span>
           ${estadoBadge(m)}
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
         </div>
-        <div class="mant-row-sub">${fmtDate(m.fecha)} · Técnico: ${esc(m.tecnico || "—")}${m.costo ? ` · Costo: $${m.costo}` : ""}</div>
+        <div class="mant-row-sub">${esc(subSerie)}</div>
+        <div class="mant-row-sub">${esc(prog)}</div>
+        <div class="mant-row-sub">${esc(reprog)}</div>
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
-      </div>`).join("");
+      </div>`;
+    }).join("");
     $("#mantEmpty").classList.toggle("hidden", list.length > 0);
   }
 

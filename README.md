@@ -7,8 +7,9 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.14.4
+## Versión actual: 1.14.5
 
+- **Lista de mantenimientos con usuario, serie-hostname y fechas (APK 3.27.0 / PWA 1.14.5)**: cada registro de mantenimiento muestra el **usuario asignado**, la línea **serie - hostname**, la **fecha de programación con su prioridad** y la **fecha de reprogramación**. La PWA ahora incluye los campos Prioridad y Fecha de reprogramación en el registro de mantenimientos.
 - **Lista de equipos con usuario, serie-hostname y ubicación (APK 3.26.0 / PWA 1.14.4)**: cada tarjeta de la lista de equipos muestra el **usuario asignado**, la línea **serie - hostname** y la línea **equipo - ubicación física - dirección IP**. La PWA ahora incluye el campo **Hostname** en el registro de equipos.
 - **Listado de ubicaciones físicas en la búsqueda (APK 3.25.0 / PWA 1.14.3)**: la búsqueda de mantenimientos por ubicación física ahora carga un listado desplegable con todas las ubicaciones registradas (con la opción "Todas las ubicaciones").
 - **Búsqueda por ubicación física y sin botón de nuevo mantenimiento (APK 3.24.0 / PWA 1.14.2)**: se quitó el botón "+ Registrar" del listado de mantenimientos y se agregó un campo para buscar mantenimientos por la **ubicación física** del equipo. El botón "Limpiar" también vacía este campo.
