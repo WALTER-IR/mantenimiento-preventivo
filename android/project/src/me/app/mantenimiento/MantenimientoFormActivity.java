@@ -22,7 +22,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
     private long mantId = 0;
     private long prefEquipoId = 0;
     private Spinner mtEquipo, mtPrioridad, mtEstado;
-    private EditText mtProgramada, mtReprogramada, mtReal, mtObs;
+    private EditText mtProgramada, mtReprogramada, mtReal, mtProxima, mtObs;
     private Button btnEliminar;
     private LinearLayout mtActividades;
     private ArrayList<CheckBox> actividadChecks = new ArrayList<>();
@@ -45,6 +45,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         mtProgramada = (EditText) findViewById(R.id.mtProgramada);
         mtReprogramada = (EditText) findViewById(R.id.mtReprogramada);
         mtReal = (EditText) findViewById(R.id.mtReal);
+        mtProxima = (EditText) findViewById(R.id.mtProxima);
         mtObs = (EditText) findViewById(R.id.mtObs);
         btnEliminar = (Button) findViewById(R.id.btnEliminarMant);
         mtActividades = (LinearLayout) findViewById(R.id.mtActividades);
@@ -56,9 +57,20 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
                 android.R.layout.simple_spinner_dropdown_item,
                 getResources().getStringArray(R.array.estados_mantenimiento)));
 
-        setDatePicker(mtProgramada, -1);
-        setDatePicker(mtReprogramada, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Reprogramado"));
-        setDatePicker(mtReal, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Finalizado"));
+        setDatePicker(mtProgramada, -1, null);
+        setDatePicker(mtReprogramada, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Reprogramado"), null);
+        setDatePicker(mtReal, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Finalizado"),
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // Al registrar la fecha real se genera automáticamente el próximo mantenimiento (anual).
+                        String real = Fmt.canon(mtReal.getText().toString().trim());
+                        if (real.length() > 0) {
+                            mtProxima.setText(Fmt.disp(Fmt.addDays(real, 365)));
+                        }
+                    }
+                });
+        setDatePicker(mtProxima, -1, null);
 
         findViewById(R.id.btnGuardarMant).setOnClickListener(this);
         btnEliminar.setOnClickListener(this);
@@ -73,7 +85,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
 
     // Al elegir una fecha, el estado se actualiza automáticamente:
     // fecha reprogramada -> Reprogramado ; fecha real -> Finalizado.
-    private void setDatePicker(final EditText target, final int estadoPos) {
+    private void setDatePicker(final EditText target, final int estadoPos, final Runnable onSet) {
         target.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,6 +94,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
                             @Override
                             public void run() {
                                 if (estadoPos >= 0) mtEstado.setSelection(estadoPos);
+                                if (onSet != null) onSet.run();
                             }
                         });
             }
@@ -160,6 +173,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
             mtProgramada.setText(Fmt.disp(m.fechaProgramada));
             mtReprogramada.setText(Fmt.disp(m.fechaReprogramada));
             mtReal.setText(Fmt.disp(m.fechaReal));
+            mtProxima.setText(Fmt.disp(m.proxima));
             marcarActividades(m.actividades);
             mtObs.setText(m.observaciones);
             btnEliminar.setVisibility(View.VISIBLE);
@@ -206,6 +220,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         m.fechaProgramada = Fmt.canon(mtProgramada.getText().toString().trim());
         m.fechaReprogramada = Fmt.canon(mtReprogramada.getText().toString().trim());
         m.fechaReal = Fmt.canon(mtReal.getText().toString().trim());
+        m.proxima = Fmt.canon(mtProxima.getText().toString().trim());
         m.actividades = actividadesSeleccionadas();
         m.observaciones = mtObs.getText().toString().trim();
 
@@ -213,6 +228,8 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         // fecha real -> Finalizado ; fecha reprogramada -> Reprogramado.
         if (m.fechaReal.length() > 0) {
             m.estado = "Finalizado";
+            // Próximo mantenimiento anual automático si no se especificó.
+            if (m.proxima.length() == 0) m.proxima = Fmt.addDays(m.fechaReal, 365);
         } else if (m.fechaReprogramada.length() > 0) {
             m.estado = "Reprogramado";
         }

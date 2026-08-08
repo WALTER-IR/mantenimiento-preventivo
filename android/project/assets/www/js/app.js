@@ -535,6 +535,9 @@
       : fechaReprogramada
         ? "reprogramado"
         : estadoMant({ estado: $("#mtEstado").value });
+    // Al registrar la fecha real se genera automáticamente el próximo mantenimiento anual.
+    let proxima = $("#mtProxima").value;
+    if (fechaReal && !proxima) proxima = addDays(fechaReal, 365);
     const data = {
       id: id || "mt-" + Date.now(),
       equipoId,
@@ -546,7 +549,7 @@
       fechaReal,
       tecnico: $("#mtTecnico").value.trim(),
       costo: parseFloat($("#mtCosto").value) || 0,
-      proxima: $("#mtProxima").value,
+      proxima: proxima,
       obs: $("#mtObs").value.trim(),
       tareas
     };
@@ -1155,7 +1158,11 @@
       if (e.target.value) $("#mtEstado").value = "reprogramado";
     });
     $("#mtFechaReal").addEventListener("change", (e) => {
-      if (e.target.value) $("#mtEstado").value = "finalizado";
+      if (e.target.value) {
+        $("#mtEstado").value = "finalizado";
+        // Al registrar la fecha real se genera automáticamente el próximo mantenimiento (anual).
+        $("#mtProxima").value = addDays(e.target.value, 365);
+      }
     });
 
     // delegación de clics

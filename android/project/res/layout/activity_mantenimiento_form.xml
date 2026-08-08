@@ -138,6 +138,23 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 style="@style/Label"
+                android:text="PRÓXIMO MANTENIMIENTO" />
+
+            <EditText
+                android:id="@+id/mtProxima"
+                style="@style/Input"
+                android:layout_marginTop="4dp"
+                android:hint="dd/MM/yyyy"
+                android:focusable="false"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
                 android:text="ACTIVIDADES REALIZADAS" />
 
             <LinearLayout

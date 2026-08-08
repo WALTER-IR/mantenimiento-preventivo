@@ -9,6 +9,7 @@ public class Mantenimiento {
     public String fechaReal = "";
     public String estado = "";
     public String actividades = "";
+    public String proxima = "";
     public String observaciones = "";
 
     // datos del equipo (JOIN)
