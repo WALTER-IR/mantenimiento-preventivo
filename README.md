@@ -7,8 +7,9 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.14.8
+## Versión actual: 1.14.9
 
+- **Formato TI-F016 versión 04 (APK 3.31.0 / PWA 1.14.9)**: el formato de mantenimiento ahora usa la versión 04 con fecha de aprobación **22/09/2025** e incluye los campos **NOMBRES, ÁREA, CARGO, DNI, UNIDAD DE PRODUCCIÓN, SERIE/CI, RESPONSABLE DE TI y FECHA DE MANTENIMIENTO** (con la **fecha real** del mantenimiento). Se agregó el campo **Cargo** en el registro de equipos. El texto de introducción y cierre del correo SGC aparece tanto en la impresión como en el envío.
 - **Próximo mantenimiento automático anual (APK 3.30.0 / PWA 1.14.8)**: al registrar la **fecha real** de un mantenimiento, la fecha del **próximo mantenimiento** se genera automáticamente (fecha real + 1 año). El campo **Próximo mantenimiento** ya está disponible en el registro y edición de mantenimientos de la app Android.
 - **Estado automático y actividades realizadas (APK 3.29.0 / PWA 1.14.7)**: al editar un mantenimiento, el estado se actualiza automáticamente según la fecha registrada: al poner la **fecha de reprogramación** el estado cambia a **Reprogramado** y al poner la **fecha real** cambia a **Finalizado**. Se agregó el listado de **actividades realizadas** (checklist) en el registro y edición de mantenimientos, junto con el campo **fecha real**, tanto en el APK como en la PWA.
 - **Limpiar borra todos los filtros y correcciones en el detalle (APK 3.28.0 / PWA 1.14.6)**: el botón **Limpiar** del listado de mantenimientos ahora vacía todos los campos (ubicación, estado, fechas y búsqueda). Corrección: al abrir un registro de mantenimiento o una alerta, la aplicación ya no se cuelga y el **historial de mantenimientos del equipo** se carga correctamente con las tarjetas de usuario, serie - hostname, fecha - prioridad y fecha de reprogramación.

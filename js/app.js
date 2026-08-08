@@ -328,7 +328,7 @@
       if (!esVisibleEquipo(e)) return false;
       if (tipo && e.tipo !== tipo) return false;
       if (!q) return true;
-      return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.responsable, e.modelo]
+      return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.cargo, e.responsable, e.modelo]
         .join(" ").toLowerCase().includes(q);
     });
     list.sort((a, b) => (a.nombre < b.nombre ? -1 : 1));
@@ -396,6 +396,7 @@
     $("#eqSerie").value = eq ? (eq.serie || "") : "";
     $("#eqHostname").value = eq ? (eq.hostname || "") : "";
     $("#eqDepartamento").value = eq ? (eq.departamento || "") : "";
+    $("#eqCargo").value = eq ? (eq.cargo || "") : "";
     cargarSelectResponsables(eq);
     $("#eqUbicacion").value = eq ? (eq.ubicacion || "") : "";
     $("#eqSO").value = eq ? (eq.so || "") : "";
@@ -429,6 +430,7 @@
       serie: $("#eqSerie").value.trim(),
       hostname: $("#eqHostname").value.trim(),
       departamento: $("#eqDepartamento").value.trim(),
+      cargo: $("#eqCargo").value.trim(),
       responsable: $("#eqResponsable").value.trim(),
       ubicacion: $("#eqUbicacion").value.trim(),
       so: $("#eqSO").value.trim(),
@@ -686,6 +688,7 @@
       ["No. serie", eq.serie || "—"],
       ["Hostname", eq.hostname || "—"],
       ["Departamento", eq.departamento || "—"],
+      ["Cargo", eq.cargo || "—"],
       ["Ubicación", eq.ubicacion || "—"],
       ["Sistema operativo", eq.so || "—"],
       ["Dirección IP", eq.ip || "—"],
@@ -756,7 +759,7 @@
     const { soft, hard } = splitTareas(m ? m.tareas : []);
     const d = {
       eq, resp,
-      fechaMant: m ? fmtDate(m.fecha) : todayISO(),
+      fechaMant: m ? (m.fechaReal || m.fecha) : todayISO(),
       centro: eq.ubicacion || eq.departamento || "—",
       area: eq.departamento || "—",
       tec: sesion ? sesion.nombre : "—",
@@ -778,32 +781,41 @@
       ? arr.map((t) => `<div class="f-item">• ${esc(t)}</div>`).join("")
       : `<div class="f-item">—</div>`;
     $("#formatoContenido").innerHTML = `
+      <div class="formato-intro">Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. <b>TI-F016</b></div>
       <div class="formato-head">
         <div class="formato-title">FORMATO DE MANTENIMIENTO</div>
         <div class="formato-meta">
           <span>Código: <b>TI-F016</b></span>
-          <span>Versión: <b>02</b></span>
-          <span>Fecha de Aprobación: <b>01/03/2023</b></span>
-          <span>Nº CC:</span>
+          <span>Versión: <b>04</b></span>
+          <span>Fecha de Aprobación: <b>22/09/2025</b></span>
         </div>
       </div>
       <table class="formato-fields">
-        ${field("Apellidos y nombres:", d.resp.nombre)}
-        ${field("DNI:", d.resp.dni)}
-        ${field("Cargo:", "")}
-        ${field("Área:", d.area)}
-        ${field("Fecha Mantenimiento:", d.fechaMant)}
-        ${field("Serie/CI:", d.eq.serie)}
-        ${field("Centro de trabajo:", d.centro)}
-        ${field("Responsable de TI:", d.tec)}
+        ${field("NOMBRES", d.resp.nombre)}
+        ${field("ÁREA", d.area)}
+        ${field("CARGO", d.eq.cargo)}
+        ${field("DNI", d.resp.dni)}
+        ${field("UNIDAD DE PRODUCCIÓN", d.centro)}
+        ${field("SERIE/CI", d.eq.serie)}
+        ${field("RESPONSABLE DE TI", d.tec)}
+        ${field("FECHA DE MANTENIMIENTO", d.fechaMant)}
       </table>
       <div class="formato-act">
-        <h4>Actividades Realizadas:</h4>
+        <h4>ACTIVIDADES REALIZADAS:</h4>
         <p>A continuación, se detallan los mantenimientos:</p>
         <h5>Mantenimiento de Software</h5>
         ${items(d.soft)}
         <h5>Mantenimiento de Hardware</h5>
         ${items(d.hard)}
+      </div>
+      <div class="formato-obs">
+        <h4>Observaciones:</h4>
+        <p>&nbsp;</p>
+      </div>
+      <div class="formato-cierre">
+        Mediante el presente correo se deja constancia de su aprobación del formato.<br />
+        Agradecemos su colaboración.<br />
+        Saludos cordiales.
       </div>`;
   }
 
@@ -812,27 +824,35 @@
     if (!d) return "";
     const items = (arr) => arr.length ? arr.map((t) => "• " + t).join("\n") : "—";
     return [
+      "Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. TI-F016",
+      "",
       "FORMATO DE MANTENIMIENTO",
-      "Código: TI-F016 | Versión: 02 | Fecha de Aprobación: 01/03/2023",
-      "Nº CC:",
+      "Código: TI-F016 /Versión: 04 /Fecha de Aprobación: 22/09/2025",
       "",
-      "Apellidos y nombres: " + (d.resp.nombre || ""),
+      "NOMBRES: " + (d.resp.nombre || ""),
+      "ÁREA: " + (d.area || ""),
+      "CARGO: " + (d.eq.cargo || ""),
       "DNI: " + (d.resp.dni || ""),
-      "Cargo: ",
-      "Área: " + (d.area || ""),
-      "Fecha Mantenimiento: " + d.fechaMant,
-      "Serie/CI: " + (d.eq.serie || ""),
-      "Centro de trabajo: " + (d.centro || ""),
-      "Responsable de TI: " + (d.tec || ""),
+      "UNIDAD DE PRODUCCIÓN: " + (d.centro || ""),
+      "SERIE/CI: " + (d.eq.serie || ""),
       "",
-      "Actividades Realizadas:",
+      "RESPONSABLE DE TI: " + (d.tec || ""),
+      "FECHA DE MANTENIMIENTO: " + d.fechaMant,
+      "",
+      "ACTIVIDADES REALIZADAS:",
       "A continuación, se detallan los mantenimientos:",
       "",
       "Mantenimiento de Software",
       items(d.soft),
       "",
       "Mantenimiento de Hardware",
-      items(d.hard)
+      items(d.hard),
+      "",
+      "Observaciones:",
+      "",
+      "Mediante el presente correo se deja constancia de su aprobación del formato.",
+      "Agradecemos su colaboración.",
+      "Saludos cordiales."
     ].join("\n");
   }
 

@@ -106,18 +106,19 @@ public class FormatoActivity extends Activity implements View.OnClickListener {
         }
 
         StringBuilder sb = new StringBuilder();
+        sb.append("Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. TI-F016\n\n");
         sb.append("FORMATO DE MANTENIMIENTO\n");
-        sb.append("Código: TI-F016 | Versión: 02 | Fecha de Aprobación: 01/03/2023\n");
-        sb.append("Nº CC:\n\n");
-        linea(sb, "Apellidos y nombres:", e.responsable);
+        sb.append("Código: TI-F016 /Versión: 04 /Fecha de Aprobación: 22/09/2025\n\n");
+        linea(sb, "NOMBRES:", e.responsable);
+        linea(sb, "ÁREA:", e.area);
+        linea(sb, "CARGO:", e.cargo);
         linea(sb, "DNI:", e.dni);
-        linea(sb, "Cargo:", e.cargo);
-        linea(sb, "Área:", e.area);
-        linea(sb, "Fecha Mantenimiento:", Fmt.disp(fechaMant));
-        linea(sb, "Serie/CI:", e.serie);
-        linea(sb, "Centro de trabajo:", e.ubicacion);
-        linea(sb, "Responsable de TI:", Db.getSesionNombre());
-        sb.append("\nActividades Realizadas:\n");
+        linea(sb, "UNIDAD DE PRODUCCIÓN:", e.ubicacion);
+        linea(sb, "SERIE/CI:", e.serie);
+        sb.append("\n");
+        linea(sb, "RESPONSABLE DE TI:", Db.getSesionNombre());
+        linea(sb, "FECHA DE MANTENIMIENTO:", fechaMant);
+        sb.append("\nACTIVIDADES REALIZADAS:\n");
         sb.append("A continuación, se detallan los mantenimientos:\n\n");
         sb.append("Mantenimiento de Software\n");
         if (soft.isEmpty()) sb.append("—\n");
@@ -125,6 +126,10 @@ public class FormatoActivity extends Activity implements View.OnClickListener {
         sb.append("\nMantenimiento de Hardware\n");
         if (hard.isEmpty()) sb.append("—\n");
         else for (String s : hard) sb.append("• ").append(s).append("\n");
+        sb.append("\nObservaciones:\n\n");
+        sb.append("Mediante el presente correo se deja constancia de su aprobación del formato.\n");
+        sb.append("Agradecemos su colaboración.\n");
+        sb.append("Saludos cordiales.");
         return sb.toString().trim();
     }
 
