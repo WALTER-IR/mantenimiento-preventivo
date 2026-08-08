@@ -19,6 +19,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.23.0 (vc38): el filtro de mantenimientos carga por defecto la fecha del
+  día en curso en "desde" y "hasta", y el estado **Programado** como
+  predeterminado. El botón "Limpiar" restaura esos valores.
 - 3.22.0 (vc37): configuración disponible para todos los usuarios con las
   opciones Cargas masivas, Responsables, Copia de seguridad y Acerca de
   (las opciones de administrador siguen siendo solo para él). El panel

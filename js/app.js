@@ -1084,8 +1084,9 @@
     $("#filterEstadoMant").addEventListener("change", renderMantenimientos);
     $("#btnBuscarMant").addEventListener("click", renderMantenimientos);
     $("#btnLimpiarMant").addEventListener("click", () => {
-      $("#filterFechaDesde").value = "";
-      $("#filterFechaHasta").value = "";
+      $("#filterFechaDesde").value = todayISO();
+      $("#filterFechaHasta").value = todayISO();
+      $("#filterEstadoMant").value = "programado";
       renderMantenimientos();
     });
 
@@ -1171,6 +1172,11 @@
   function init() {
     bindEvents();
     window.__APP_OK__ = true;
+
+    // Filtro de mantenimientos: por defecto hoy (inicio y final) y estado Programado.
+    $("#filterFechaDesde").value = todayISO();
+    $("#filterFechaHasta").value = todayISO();
+    $("#filterEstadoMant").value = "programado";
 
     // el splash siempre se oculta, aunque el almacenamiento falle
     setTimeout(() => $("#splash").classList.add("gone"), 350);

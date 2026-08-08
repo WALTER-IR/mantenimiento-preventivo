@@ -67,6 +67,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         filterEstado.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item,
                 getResources().getStringArray(R.array.filtros_estado_mant)));
+        filterEstado.setSelection(1);
         filterEstado.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
@@ -78,6 +79,9 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
             }
         });
 
+        String hoy = Fmt.disp(Fmt.today());
+        filterDesde.setText(hoy);
+        filterHasta.setText(hoy);
         setFilterDatePicker(filterDesde);
         setFilterDatePicker(filterHasta);
 
@@ -90,8 +94,9 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         findViewById(R.id.btnLimpiarMant).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filterDesde.setText("");
-                filterHasta.setText("");
+                filterEstado.setSelection(1);
+                filterDesde.setText(Fmt.disp(Fmt.today()));
+                filterHasta.setText(Fmt.disp(Fmt.today()));
                 load();
             }
         });

@@ -1,6 +1,6 @@
 {
-  "version": "1.14.0",
+  "version": "1.14.1",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-08",
-  "changelog": "Panel de control con equipos atrasados; detalle de equipo muestra el usuario asignado; la configuración ahora está disponible para todos los usuarios (cargas masivas, responsables, copia de seguridad y acerca de)."
+  "updated": "2026-08-07",
+  "changelog": "El filtro de mantenimientos ahora carga por defecto la fecha de hoy en inicio y fin, y el estado Programado."
 }

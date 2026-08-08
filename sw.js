@@ -1,7 +1,7 @@
 // ============================================================
 //  Service Worker - actualización por internet y modo offline
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v16";
+const CACHE_NAME = "mantenimiento-pwa-v17";
 
 const CORE_ASSETS = [
   "./",
