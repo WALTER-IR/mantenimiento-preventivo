@@ -25,13 +25,10 @@ public class UsuariosActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Db.init(this);
-        if (!Db.esAdmin()) {
-            Fmt.toast(this, "Solo el administrador puede gestionar usuarios y permisos");
-            finish();
-            return;
-        }
         setContentView(R.layout.activity_usuarios);
 
+        findViewById(R.id.btnNuevoUsuario).setVisibility(Db.esAdmin() ? View.VISIBLE : View.GONE);
+        findViewById(R.id.btnCargaResponsables).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
         findViewById(R.id.btnNuevoUsuario).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,6 +49,7 @@ public class UsuariosActivity extends Activity implements View.OnClickListener {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> p, View v, int i, long id) {
+                if (!Db.esAdmin()) return;
                 startActivity(new Intent(UsuariosActivity.this, UsuarioFormActivity.class)
                         .putExtra("usuarioId", items.get(i).id));
             }
@@ -59,6 +57,7 @@ public class UsuariosActivity extends Activity implements View.OnClickListener {
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> p, View v, int i, long id) {
+                if (!Db.esAdmin()) return false;
                 cambiarPermiso(items.get(i));
                 return true;
             }
@@ -100,6 +99,12 @@ public class UsuariosActivity extends Activity implements View.OnClickListener {
         items = Db.allUsuarios();
         lv.setAdapter(new Adapter());
         empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+        TextView hint = (TextView) findViewById(R.id.usuHint);
+        if (hint != null) {
+            hint.setText(Db.esAdmin()
+                    ? "Toca para editar · Mantén pulsado para cambiar permisos"
+                    : "Lista de responsables (solo lectura)");
+        }
     }
 
     @Override

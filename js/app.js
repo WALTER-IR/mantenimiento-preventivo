@@ -131,7 +131,7 @@
     $("#btnNuevoEquipo").classList.toggle("hidden", !canEdit);
     $("#btnNuevoMantenimiento").classList.toggle("hidden", !canEdit);
     const navConfig = $$(".nav-item").find((b) => b.dataset.view === "config");
-    if (navConfig) navConfig.classList.toggle("hidden", !esAdmin());
+    if (navConfig) navConfig.classList.toggle("hidden", !sesion);
   }
 
   async function ensureAdmin() {
@@ -200,10 +200,6 @@
 
   // ---------------- Navegación ----------------
   function setView(view) {
-    if (view === "config" && !esAdmin()) {
-      toast("La configuración es solo del administrador", "err");
-      view = "dashboard";
-    }
     currentView = view;
     $$(".view").forEach((v) => v.classList.add("hidden"));
     $("#view-" + view).classList.remove("hidden");
@@ -256,6 +252,13 @@
     $("#alertList").innerHTML = alerts.slice(0, 6).map(alertHTML).join("");
     $("#alertEmpty").classList.toggle("hidden", alerts.length > 0);
 
+    const atrasados = vis
+      .map((e) => ({ eq: e, st: statusOf(e) }))
+      .filter((x) => x.st.key === "vencido")
+      .sort((a, b) => (a.st.days - b.st.days));
+    $("#atrasadosList").innerHTML = atrasados.slice(0, 10).map(atrasadoHTML).join("");
+    $("#atrasadosEmpty").classList.toggle("hidden", atrasados.length > 0);
+
     const recent = [...mantenimientos]
       .filter((m) => visIds.has(m.equipoId))
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
@@ -281,6 +284,20 @@
         </div>
         <div class="alert-sub">${esc(eq.marca || "Sin marca")} · ${esc(eq.tipo === "desktop" ? "Escritorio" : eq.tipo)}</div>
         <div class="alert-sub">Vence: <b>${fmtDate(st.due)}</b> (${days} día${days === 1 ? "" : "s"})</div>
+      </div>`;
+  }
+
+  function atrasadoHTML({ eq, st }) {
+    const days = Math.abs(st.days);
+    return `
+      <div class="item-card" data-open-detail="${eq.id}">
+        <div class="item-avatar">⏰</div>
+        <div class="item-body">
+          <div class="item-user">👤 ${esc(eq.responsable || "Sin usuario asignado")}</div>
+          <div class="item-title">${esc(eq.nombre)}</div>
+          <div class="item-sub">${esc(eq.serie || "—")} · ${esc(eq.marca || "")} ${esc(eq.modelo || "")}</div>
+        </div>
+        <div class="item-meta"><span class="badge danger">${days} día${days === 1 ? "" : "s"} atrasado</span></div>
       </div>`;
   }
 
@@ -623,12 +640,12 @@
 
     $("#detalleTitle").innerHTML = `${esc(eq.nombre)} ${badge}`;
     const cells = [
+      ["Usuario asignado", eq.responsable || "—"],
       ["Tipo", tipoLabel(eq.tipo)],
       ["Marca", eq.marca || "—"],
       ["Modelo", eq.modelo || "—"],
       ["No. serie", eq.serie || "—"],
       ["Departamento", eq.departamento || "—"],
-      ["Usuario asignado", eq.responsable || "—"],
       ["Ubicación", eq.ubicacion || "—"],
       ["Sistema operativo", eq.so || "—"],
       ["Dirección IP", eq.ip || "—"],
@@ -811,27 +828,35 @@
       const ua = (navigator.userAgent || "").replace(/Chrom\w*\/(\d+)\.[\d.]+.*/i, "…Chromium/$1");
       info.textContent = "Almacenamiento: " + (window.__STORAGE_OK__ ? "funcionando ✓" : "NO disponible ⚠") + " · " + ua.slice(0, 90);
     }
-    if (esAdmin()) {
-      renderUsuarios();
-      renderAuditoria();
-    }
+    const admin = esAdmin();
+    $("#cardEmpresa").classList.toggle("hidden", !admin);
+    $("#cardAuditoria").classList.toggle("hidden", !admin);
+    $("#btnNuevoUsuario").classList.toggle("hidden", !admin);
+    renderUsuarios();
+    if (admin) renderAuditoria();
   }
 
   // ---------------- Usuarios y permisos ----------------
   function renderUsuarios() {
-    $("#usuariosList").innerHTML = usuarios.map((u) => `
+    const admin = esAdmin();
+    $("#usuariosList").innerHTML = usuarios.map((u) => {
+      const controls = admin
+        ? `<select class="input select user-rol" data-usuario="${esc(u.id)}">
+             <option value="0" ${u.rol === 0 ? "selected" : ""}>Lectura</option>
+             <option value="1" ${u.rol === 1 ? "selected" : ""}>Edición</option>
+             <option value="2" ${u.rol === 2 ? "selected" : ""}>Administrador</option>
+           </select>
+           <button class="btn btn-ghost" data-edit-usuario="${esc(u.id)}">Editar</button>`
+        : `<span class="badge ok">${esc(rolNombre(u.rol))}</span>`;
+      return `
       <div class="user-row">
         <div class="user-info">
           <div class="user-name">${esc(u.nombre)}</div>
           <div class="user-sub">DNI: ${esc(u.dni)}</div>
         </div>
-        <select class="input select user-rol" data-usuario="${esc(u.id)}">
-          <option value="0" ${u.rol === 0 ? "selected" : ""}>Lectura</option>
-          <option value="1" ${u.rol === 1 ? "selected" : ""}>Edición</option>
-          <option value="2" ${u.rol === 2 ? "selected" : ""}>Administrador</option>
-        </select>
-        <button class="btn btn-ghost" data-edit-usuario="${esc(u.id)}">Editar</button>
-      </div>`).join("");
+        ${controls}
+      </div>`;
+    }).join("");
   }
 
   function openUsuarioModal(u) {
@@ -920,7 +945,7 @@
 
   // ---------------- Export / Import ----------------
   function exportData() {
-    if (!esAdmin()) return toast("Solo el administrador", "err");
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const payload = {
       app: CFG.APP_NAME,
       version: CFG.APP_VERSION,
@@ -940,7 +965,7 @@
   }
 
   function importData(file) {
-    if (!esAdmin()) return toast("Solo el administrador", "err");
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const reader = new FileReader();
     reader.onload = async () => {
       try {

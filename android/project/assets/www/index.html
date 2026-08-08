@@ -98,6 +98,15 @@
       </div>
 
       <div class="section-head">
+        <h3>Equipos atrasados</h3>
+      </div>
+      <div id="atrasadosList" class="recent-list"></div>
+      <div id="atrasadosEmpty" class="empty-state hidden">
+        <div class="empty-icon">⏰</div>
+        <p>No hay equipos atrasados.</p>
+      </div>
+
+      <div class="section-head">
         <h3>Alertas de mantenimiento</h3>
         <button class="btn btn-ghost" id="btnVerTodasAlertas">Ver todas</button>
       </div>
@@ -195,7 +204,7 @@
     <section id="view-config" class="view hidden">
       <h2 class="view-title">Configuración</h2>
 
-      <div class="card">
+      <div class="card" id="cardEmpresa">
         <h3 class="card-title">Datos de la empresa</h3>
         <label class="field-label" for="cfgEmpresa">Nombre de la empresa / departamento</label>
         <input type="text" id="cfgEmpresa" class="input" placeholder="Ej. TI Corporativo" />
@@ -218,7 +227,7 @@
         <p id="auditoriaEmpty" class="card-text">Sin registros aún.</p>
       </div>
 
-      <div class="card">
+      <div class="card" id="cardBackup">
         <h3 class="card-title">Copia de seguridad</h3>
         <p class="card-text">Descarga una copia de toda tu información o restaura desde un archivo.</p>
         <div class="btn-row">
@@ -228,7 +237,7 @@
         <input type="file" id="fileImport" class="hidden" accept="application/json" />
       </div>
 
-      <div class="card">
+      <div class="card" id="cardActualizaciones">
         <h3 class="card-title">Actualizaciones</h3>
         <p class="card-text">La aplicación se actualiza automáticamente por internet cuando hay una nueva versión disponible.</p>
         <div class="btn-row">
@@ -237,7 +246,7 @@
         <p id="updateStatus" class="update-status">Versión <span id="appVersion">1.0.0</span></p>
       </div>
 
-      <div class="card">
+      <div class="card" id="cardAcerca">
         <h3 class="card-title">Acerca de</h3>
         <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión y se actualiza automáticamente por internet.</p>
         <p class="update-status" id="acercaInfo">❤️ Hecho con ❤️ · v1.0.0</p>

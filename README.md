@@ -7,8 +7,11 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.13.0
+## Versión actual: 1.14.0
 
+- **Configuración para todos los usuarios (APK 3.22.0 / PWA 1.14.0)**: el menú "Ajustes" ahora está disponible para todos los usuarios con las opciones Cargas masivas, Responsables, Copia de seguridad y Acerca de. Las opciones de administrador (auditoría, vaciar base de datos, empresa, permisos) solo las ve el administrador.
+- **Equipos atrasados en el panel (APK 3.22.0 / PWA 1.14.0)**: el panel de control muestra la lista de equipos con mantenimiento vencido (serie, usuario asignado y días de atraso).
+- **Detalle de equipo con usuario asignado (APK 3.22.0 / PWA 1.14.0)**: el detalle del equipo muestra el nombre del usuario asignado (propietario físico) de forma destacada.
 - **Carga masiva de equipos corregida (APK 3.21.0)**: al importar equipos ya no se crea un usuario por cada "USUARIO ASIGNADO" distinto (eso mezclaba los datos del responsable con la serie de otro equipo). Ahora cada equipo se asigna a su **RESPONSABLE** (los 4 usuarios registrados), resuelto por la columna RESPONSABLE o DNI (que trae el nombre del responsable). El "USUARIO ASIGNADO" (propietario físico) se guarda como dato propio del equipo y se muestra en su detalle.
 - **Carga masiva más robusta (APK 3.20.0)**: el lector de Excel del APK ahora tolera archivos cuyas celdas no traen la referencia de columna (A/B/C) —común en exportaciones de ERP/SAP convertidas a XLSX— y descarta filas totalmente vacías, evitando que la importación de responsables, equipos y mantenimientos registre datos desordenados o de más.
 - **Nombres en el detalle de equipo (APK 3.19.0)**: en el "DETALLE DE EQUIPO" se muestra el nombre del **USUARIO ASIGNADO**, y en el "DETALLE DE RESPONSABLE" el nombre del **RESPONSABLE**.

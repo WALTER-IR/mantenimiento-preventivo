@@ -19,6 +19,12 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.22.0 (vc37): configuración disponible para todos los usuarios con las
+  opciones Cargas masivas, Responsables, Copia de seguridad y Acerca de
+  (las opciones de administrador siguen siendo solo para él). El panel
+  muestra la lista de "Equipos atrasados" (serie, usuario asignado y días
+  de atraso) y el detalle del equipo muestra el usuario asignado de forma
+  destacada.
 - 3.21.0 (vc36): la carga masiva de equipos ya no crea un usuario por cada
   "USUARIO ASIGNADO" distinto (eso mezclaba los datos del responsable con la
   serie de otro equipo). Cada equipo se asigna a su RESPONSABLE (los usuarios

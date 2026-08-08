@@ -18,6 +18,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private TextView statResp, statEquipos, statVencidos, statProximos, lblEmpresa;
     private TextView statProgramados, statReprogramados, statFinalizados;
+    private TextView emptyAtrasados;
     private int loadSeq = 0;
 
     @Override
@@ -34,6 +35,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         statProgramados = (TextView) findViewById(R.id.statProgramados);
         statReprogramados = (TextView) findViewById(R.id.statReprogramados);
         statFinalizados = (TextView) findViewById(R.id.statFinalizados);
+        emptyAtrasados = (TextView) findViewById(R.id.emptyAtrasados);
 
         findViewById(R.id.navEquipos).setOnClickListener(this);
         findViewById(R.id.navMantenimientos).setOnClickListener(this);
@@ -42,6 +44,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Ui.ajustarNav(this);
         findViewById(R.id.navPanel).setOnClickListener(this);
         findViewById(R.id.btnVerAlertas).setOnClickListener(this);
+        findViewById(R.id.btnVerAtrasados).setOnClickListener(this);
+
+        ((ListView) findViewById(R.id.listaAtrasados)).setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> p, View v, int i, long id) {
+                Equipo e = (Equipo) p.getAdapter().getItem(i);
+                startActivity(new Intent(MainActivity.this, EquipoDetailActivity.class)
+                        .putExtra("equipoId", e.id));
+            }
+        });
 
         ((ListView) findViewById(R.id.listaAlertas)).setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -92,6 +104,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 final int r1, r2, r3, r4;
                 final int[] avance;
                 final ArrayList<Mantenimiento> alertas, recientes;
+                final ArrayList<Equipo> atrasados;
                 final HashMap<Long, String> labels = new HashMap<>();
                 try {
                     r1 = Db.countUsuarios();
@@ -99,6 +112,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     r3 = Db.countVencidos();
                     r4 = Db.countProximos();
                     avance = Db.avanceMantenimiento();
+                    atrasados = Db.equiposAtrasados();
                     for (Equipo e : Db.allEquipos()) labels.put(e.id, Db.equipoLabel(e));
                     alertas = new ArrayList<>();
                     alertas.addAll(Db.alertas(0));
@@ -126,6 +140,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         statReprogramados.setText(String.valueOf(avance[1]));
                         statFinalizados.setText(String.valueOf(avance[2]));
                         ((View) statResp.getParent()).setVisibility(Db.esAdmin() ? View.VISIBLE : View.GONE);
+                        emptyAtrasados.setVisibility(atrasados.isEmpty() ? View.VISIBLE : View.GONE);
+                        ((ListView) findViewById(R.id.listaAtrasados)).setAdapter(new EquipoAtrasadoAdapter(atrasados));
                         ((ListView) findViewById(R.id.listaAlertas)).setAdapter(new MantAlertAdapter(alertas, labels));
                         ((ListView) findViewById(R.id.listaRecientes)).setAdapter(new MantItemAdapter(recientes, labels));
                     }
@@ -143,7 +159,51 @@ public class MainActivity extends Activity implements View.OnClickListener {
         else if (id == R.id.navAlertas) target = AlertasActivity.class;
         else if (id == R.id.navConfig) target = ConfigActivity.class;
         else if (id == R.id.btnVerAlertas) target = AlertasActivity.class;
+        else if (id == R.id.btnVerAtrasados) target = AlertasActivity.class;
         if (target != null) startActivity(new Intent(this, target));
+    }
+
+    class EquipoAtrasadoAdapter extends BaseAdapter {
+        private final ArrayList<Equipo> items;
+
+        EquipoAtrasadoAdapter(ArrayList<Equipo> items) {
+            this.items = items;
+        }
+
+        @Override
+        public int getCount() {
+            return items.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return items.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return items.get(i).id;
+        }
+
+        @Override
+        public View getView(int i, View convertView, ViewGroup parent) {
+            View v = convertView != null ? convertView
+                    : getLayoutInflater().inflate(R.layout.item_alert, parent, false);
+            try {
+                Equipo e = items.get(i);
+                TextView nom = (TextView) v.findViewById(R.id.alNombre);
+                TextView usuario = (TextView) v.findViewById(R.id.alUsuario);
+                TextView info = (TextView) v.findViewById(R.id.alInfo);
+                TextView dias = (TextView) v.findViewById(R.id.alDias);
+                nom.setText(Db.equipoLabel(e));
+                String prop = e.usuarioAsignado.length() > 0 ? e.usuarioAsignado : e.responsable;
+                usuario.setText(prop.length() > 0 ? "👤 " + prop : "");
+                info.setText("Responsable: " + (e.responsable.length() > 0 ? e.responsable : "—"));
+                setBadge(dias, Db.diasAtrasoEquipo(e.id) + " días atrasado", Ui.BAD);
+            } catch (Exception ignored) {
+            }
+            return v;
+        }
     }
 
     private void setBadge(TextView t, String text, int color) {

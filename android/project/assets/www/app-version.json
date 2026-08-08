@@ -1,6 +1,6 @@
 {
-  "version": "1.13.0",
+  "version": "1.14.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-07",
-  "changelog": "Al registrar un equipo, el campo 'Usuario asignado' ahora carga la lista de responsables registrados."
+  "updated": "2026-08-08",
+  "changelog": "Panel de control con equipos atrasados; detalle de equipo muestra el usuario asignado; la configuración ahora está disponible para todos los usuarios (cargas masivas, responsables, copia de seguridad y acerca de)."
 }

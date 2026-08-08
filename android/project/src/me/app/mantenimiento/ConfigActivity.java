@@ -30,12 +30,6 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
             irALogin();
             return;
         }
-        if (!Db.esAdmin()) {
-            Fmt.toast(this, "La configuración es solo del administrador");
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-            return;
-        }
         setContentView(R.layout.activity_config);
 
         findViewById(R.id.navPanel).setOnClickListener(this);
@@ -207,12 +201,6 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
             irALogin();
             return;
         }
-        if (!Db.esAdmin()) {
-            Fmt.toast(this, "La configuración es solo del administrador");
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-            return;
-        }
         cfgEmpresa.setText(Db.getEmpresa(this));
         txtSesion.setText("Sesión: " + Db.getSesionNombre() + "  ·  " + Db.rolNombre(Db.getSesionRol()));
         aplicarPermisos();
@@ -224,14 +212,14 @@ public class ConfigActivity extends Activity implements View.OnClickListener {
         set(R.id.btnCargarResponsables, edicion);
         set(R.id.btnCargarEquipos, edicion);
         set(R.id.btnCargarMantenimientos, edicion);
-        set(R.id.btnExportar, edicion);
+        set(R.id.btnExportar, true);
         set(R.id.btnImportar, edicion);
-        set(R.id.btnActivar2026, edicion);
-        set(R.id.btnGuardarConfig, edicion);
-        findViewById(R.id.cfgEmpresa).setEnabled(edicion);
-        set(R.id.btnVerResponsables, admin);
+        set(R.id.btnVerResponsables, true);
+        set(R.id.cardEmpresa, admin);
+        set(R.id.btnActivar2026, admin);
+        set(R.id.cardMant2026, admin);
+        set(R.id.cardDatos, admin);
         set(R.id.btnAuditoria, admin);
-        set(R.id.btnVaciarBd, admin);
     }
 
     private void set(int id, boolean visible) {

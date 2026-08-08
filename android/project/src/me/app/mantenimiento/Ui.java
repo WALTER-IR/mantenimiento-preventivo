@@ -32,7 +32,7 @@ public final class Ui {
 
     public static void ajustarNav(Activity a) {
         View tab = a.findViewById(R.id.navConfig);
-        if (tab != null) tab.setVisibility(Db.esAdmin() ? View.VISIBLE : View.GONE);
+        if (tab != null) tab.setVisibility(View.VISIBLE);
     }
 
     public static TextView title(ViewGroup parent) {

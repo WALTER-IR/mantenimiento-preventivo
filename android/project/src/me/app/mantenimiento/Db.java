@@ -768,6 +768,31 @@ public final class Db {
         return alertas(1).size();
     }
 
+    // Equipos con al menos un mantenimiento vencido (no finalizado),
+    // visibles para el usuario de la sesión.
+    public static ArrayList<Equipo> equiposAtrasados() {
+        ArrayList<Equipo> out = new ArrayList<>();
+        HashMap<Long, Boolean> vencidos = new HashMap<>();
+        for (Mantenimiento m : alertas(0)) vencidos.put(m.equipoId, Boolean.TRUE);
+        for (Equipo e : allEquipos()) {
+            if (vencidos.containsKey(e.id) && puedeVerEquipo(e)) out.add(e);
+        }
+        return out;
+    }
+
+    // Días de atraso del mantenimiento vencido más antiguo del equipo (0 si no tiene vencidos).
+    public static long diasAtrasoEquipo(long equipoId) {
+        String today = Fmt.today();
+        long max = 0;
+        for (Mantenimiento m : alertas(0)) {
+            if (m.equipoId != equipoId) continue;
+            String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
+            long d = -Fmt.daysUntil(today, eff);
+            if (d > max) max = d;
+        }
+        return max;
+    }
+
     // Avance del mantenimiento: programados (pendientes sin reprogramar),
     // reprogramados (pendientes con fecha reprogramada) y finalizados.
     public static int[] avanceMantenimiento() {
