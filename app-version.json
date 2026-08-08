@@ -1,6 +1,6 @@
 {
-  "version": "1.14.6",
+  "version": "1.14.7",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "El botón Limpiar del listado de mantenimientos ahora limpia todos los filtros (ubicación, estado, fechas y búsqueda). Corrección: el historial de mantenimientos de un equipo ya carga correctamente y la aplicación ya no se cuelga al abrir o editar un registro de mantenimiento."
+  "changelog": "Al editar un mantenimiento, el estado se actualiza automáticamente según la fecha registrada: al poner la fecha de reprogramación el estado cambia a Reprogramado y al poner la fecha real cambia a Finalizado. Se agregó el listado de actividades realizadas (checklist) en el registro y edición de mantenimientos, junto con la fecha real."
 }

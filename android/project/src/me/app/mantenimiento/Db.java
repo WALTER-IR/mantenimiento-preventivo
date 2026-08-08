@@ -60,7 +60,7 @@ public final class Db {
 
     private static class Helper extends SQLiteOpenHelper {
         Helper(Context c) {
-            super(c, "mantenimiento.db", null, 5);
+            super(c, "mantenimiento.db", null, 6);
         }
 
         @Override
@@ -99,6 +99,7 @@ public final class Db {
                     "fecha_reprogramada TEXT DEFAULT ''," +
                     "fecha_real TEXT DEFAULT ''," +
                     "estado TEXT DEFAULT ''," +
+                    "actividades TEXT DEFAULT ''," +
                     "observaciones TEXT DEFAULT '')");
             db.execSQL("CREATE TABLE auditoria (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -116,6 +117,12 @@ public final class Db {
             if (oldVersion < 5) {
                 try {
                     db.execSQL("ALTER TABLE equipos ADD COLUMN usuario_asignado TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 6) {
+                try {
+                    db.execSQL("ALTER TABLE mantenimientos ADD COLUMN actividades TEXT DEFAULT ''");
                 } catch (Exception ignored) {
                 }
             }
@@ -617,6 +624,7 @@ public final class Db {
         v.put("fecha_reprogramada", m.fechaReprogramada);
         v.put("fecha_real", m.fechaReal);
         v.put("estado", m.estado);
+        v.put("actividades", m.actividades);
         v.put("observaciones", m.observaciones);
         boolean editando = m.id > 0;
         if (editando) {
@@ -694,6 +702,7 @@ public final class Db {
         m.fechaReprogramada = s(c, "fecha_reprogramada");
         m.fechaReal = s(c, "fecha_real");
         m.estado = estadoNorm(s(c, "estado"));
+        m.actividades = s(c, "actividades");
         m.observaciones = s(c, "observaciones");
         m.serie = s(c, "m_serie");
         m.hostname = s(c, "m_hostname");
@@ -1036,6 +1045,7 @@ public final class Db {
         int colReal = findCol(headers, "FECHA REAL");
         int colEstado = findCol(headers, "ESTADO");
         int colObs = findCol(headers, "OBSERVACIONES");
+        int colAct = findCol(headers, "ACTIVIDADES REALIZADAS", "ACTIVIDADES");
 
         if (colSerie < 0) {
             errores.add("Falta la columna SERIE DE EQUIPO.");
@@ -1064,6 +1074,7 @@ public final class Db {
             m.fechaReprogramada = toDate(val(f, colRepro));
             m.fechaReal = toDate(val(f, colReal));
             m.estado = estadoNorm(val(f, colEstado));
+            m.actividades = val(f, colAct);
             m.observaciones = val(f, colObs);
             saveMant(m);
             ok++;
@@ -1187,6 +1198,7 @@ public final class Db {
             o.put("fecha_reprogramada", m.fechaReprogramada);
             o.put("fecha_real", m.fechaReal);
             o.put("estado", m.estado);
+            o.put("actividades", m.actividades);
             o.put("observaciones", m.observaciones);
             mts.put(o);
         }
@@ -1283,6 +1295,7 @@ public final class Db {
                     m.fechaReprogramada = o.optString("fecha_reprogramada");
                     m.fechaReal = o.optString("fecha_real");
                     m.estado = estadoNorm(o.optString("estado"));
+                    m.actividades = o.optString("actividades");
                     m.observaciones = o.optString("observaciones");
                     ContentValues v = new ContentValues();
                     v.put("equipo_id", m.equipoId);
@@ -1291,6 +1304,7 @@ public final class Db {
                     v.put("fecha_reprogramada", m.fechaReprogramada);
                     v.put("fecha_real", m.fechaReal);
                     v.put("estado", m.estado);
+                    v.put("actividades", m.actividades);
                     v.put("observaciones", m.observaciones);
                     db.insert("mantenimientos", null, v);
                 }

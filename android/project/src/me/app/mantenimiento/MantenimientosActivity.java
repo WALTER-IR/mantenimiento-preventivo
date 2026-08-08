@@ -304,6 +304,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                 TextView badge = (TextView) v.findViewById(R.id.mtBadge);
                 TextView info = (TextView) v.findViewById(R.id.mtInfo);
                 TextView reprog = (TextView) v.findViewById(R.id.mtReprog);
+                TextView act = (TextView) v.findViewById(R.id.mtAct);
                 String asignado = m.usuarioAsignado.length() > 0 ? m.usuarioAsignado : m.usuario;
                 usr.setText(asignado.length() > 0 ? "👤 " + asignado : "👤 Sin usuario asignado");
                 nom.setText(linea(m.serie, m.hostname));
@@ -313,6 +314,9 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                 info.setText(linea(Fmt.disp(m.fechaProgramada), m.prioridad));
                 reprog.setText(m.fechaReprogramada.length() > 0
                         ? Fmt.disp(m.fechaReprogramada) : "—");
+                act.setText(m.actividades.length() > 0
+                        ? "✓ " + m.actividades.replace("|", " · ") : "");
+                act.setVisibility(m.actividades.length() > 0 ? View.VISIBLE : View.GONE);
             } catch (Exception ignored) {
             }
             return v;

@@ -403,12 +403,20 @@
             <input type="date" id="mtFechaReprog" class="input" />
           </div>
         </div>
-        <label class="field-label" for="mtEstado">Estado</label>
-        <select id="mtEstado" class="input select">
-          <option value="finalizado">Finalizado</option>
-          <option value="programado">Programado</option>
-          <option value="reprogramado">Reprogramado</option>
-        </select>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="mtFechaReal">Fecha real</label>
+            <input type="date" id="mtFechaReal" class="input" />
+          </div>
+          <div>
+            <label class="field-label" for="mtEstado">Estado</label>
+            <select id="mtEstado" class="input select">
+              <option value="finalizado">Finalizado</option>
+              <option value="programado">Programado</option>
+              <option value="reprogramado">Reprogramado</option>
+            </select>
+          </div>
+        </div>
         <label class="field-label">Actividades realizadas</label>
         <div id="checklist" class="checklist"></div>
         <div class="field-row">

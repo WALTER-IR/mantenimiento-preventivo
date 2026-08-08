@@ -19,6 +19,11 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.29.0 (vc44): al editar un mantenimiento, el estado se actualiza
+  automáticamente según la fecha registrada: fecha de reprogramación ->
+  Reprogramado; fecha real -> Finalizado. Se agregó el checklist de
+  actividades realizadas en el registro y edición de mantenimientos, junto
+  con el campo fecha real.
 - 3.28.0 (vc43): el botón "Limpiar" del listado de mantenimientos ahora
   vacía todos los campos (ubicación, estado, fechas y búsqueda). Corrección:
   al abrir un registro de mantenimiento o una alerta ya no se cuelga la

@@ -8,6 +8,7 @@ public class Mantenimiento {
     public String fechaReprogramada = "";
     public String fechaReal = "";
     public String estado = "";
+    public String actividades = "";
     public String observaciones = "";
 
     // datos del equipo (JOIN)

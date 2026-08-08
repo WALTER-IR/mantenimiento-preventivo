@@ -7,12 +7,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class MantenimientoFormActivity extends Activity implements View.OnClickListener {
 
@@ -21,6 +24,8 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
     private Spinner mtEquipo, mtPrioridad, mtEstado;
     private EditText mtProgramada, mtReprogramada, mtReal, mtObs;
     private Button btnEliminar;
+    private LinearLayout mtActividades;
+    private ArrayList<CheckBox> actividadChecks = new ArrayList<>();
     private ArrayList<Long> equipoIds = new ArrayList<>();
 
     @Override
@@ -42,6 +47,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         mtReal = (EditText) findViewById(R.id.mtReal);
         mtObs = (EditText) findViewById(R.id.mtObs);
         btnEliminar = (Button) findViewById(R.id.btnEliminarMant);
+        mtActividades = (LinearLayout) findViewById(R.id.mtActividades);
 
         mtPrioridad.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -50,9 +56,9 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
                 android.R.layout.simple_spinner_dropdown_item,
                 getResources().getStringArray(R.array.estados_mantenimiento)));
 
-        setDatePicker(mtProgramada);
-        setDatePicker(mtReprogramada);
-        setDatePicker(mtReal);
+        setDatePicker(mtProgramada, -1);
+        setDatePicker(mtReprogramada, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Reprogramado"));
+        setDatePicker(mtReal, indexOf(getResources().getStringArray(R.array.estados_mantenimiento), "Finalizado"));
 
         findViewById(R.id.btnGuardarMant).setOnClickListener(this);
         btnEliminar.setOnClickListener(this);
@@ -65,13 +71,53 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         cargar();
     }
 
-    private void setDatePicker(final EditText target) {
+    // Al elegir una fecha, el estado se actualiza automáticamente:
+    // fecha reprogramada -> Reprogramado ; fecha real -> Finalizado.
+    private void setDatePicker(final EditText target, final int estadoPos) {
         target.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fmt.pickDate(MantenimientoFormActivity.this, target, target.getText().toString());
+                Fmt.pickDate(MantenimientoFormActivity.this, target,
+                        target.getText().toString(), new Runnable() {
+                            @Override
+                            public void run() {
+                                if (estadoPos >= 0) mtEstado.setSelection(estadoPos);
+                            }
+                        });
             }
         });
+    }
+
+    private void construirActividades() {
+        actividadChecks.clear();
+        mtActividades.removeAllViews();
+        String[] items = getResources().getStringArray(R.array.actividades_mantenimiento);
+        for (String item : items) {
+            CheckBox cb = new CheckBox(this);
+            cb.setText(item);
+            cb.setTextSize(13);
+            mtActividades.addView(cb);
+            actividadChecks.add(cb);
+        }
+    }
+
+    private void marcarActividades(String actividades) {
+        if (actividades == null || actividades.length() == 0) return;
+        HashSet<String> sel = new HashSet<>(Arrays.asList(actividades.split("\\|")));
+        for (CheckBox cb : actividadChecks) {
+            cb.setChecked(sel.contains(cb.getText().toString()));
+        }
+    }
+
+    private String actividadesSeleccionadas() {
+        StringBuilder sb = new StringBuilder();
+        for (CheckBox cb : actividadChecks) {
+            if (cb.isChecked()) {
+                if (sb.length() > 0) sb.append("|");
+                sb.append(cb.getText().toString());
+            }
+        }
+        return sb.toString();
     }
 
     private void cargarEquipos() {
@@ -92,6 +138,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
 
     private void cargar() {
         cargarEquipos();
+        construirActividades();
         if (equipoIds.isEmpty()) {
             Fmt.toast(this, "Primero registra equipos");
             finish();
@@ -113,6 +160,7 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
             mtProgramada.setText(Fmt.disp(m.fechaProgramada));
             mtReprogramada.setText(Fmt.disp(m.fechaReprogramada));
             mtReal.setText(Fmt.disp(m.fechaReal));
+            marcarActividades(m.actividades);
             mtObs.setText(m.observaciones);
             btnEliminar.setVisibility(View.VISIBLE);
         } else {
@@ -158,7 +206,16 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         m.fechaProgramada = Fmt.canon(mtProgramada.getText().toString().trim());
         m.fechaReprogramada = Fmt.canon(mtReprogramada.getText().toString().trim());
         m.fechaReal = Fmt.canon(mtReal.getText().toString().trim());
+        m.actividades = actividadesSeleccionadas();
         m.observaciones = mtObs.getText().toString().trim();
+
+        // El estado se actualiza según las fechas registradas:
+        // fecha real -> Finalizado ; fecha reprogramada -> Reprogramado.
+        if (m.fechaReal.length() > 0) {
+            m.estado = "Finalizado";
+        } else if (m.fechaReprogramada.length() > 0) {
+            m.estado = "Reprogramado";
+        }
 
         Db.saveMant(m);
         Fmt.toast(this, "Mantenimiento guardado");

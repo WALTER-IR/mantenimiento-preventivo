@@ -60,4 +60,12 @@
         android:layout_marginTop="2dp"
         android:textColor="@color/text_secondary"
         android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/mtAct"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
 </LinearLayout>

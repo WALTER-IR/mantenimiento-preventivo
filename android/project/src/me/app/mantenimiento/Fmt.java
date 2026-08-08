@@ -86,6 +86,10 @@ public final class Fmt {
     }
 
     public static void pickDate(final Context context, final EditText target, String initial) {
+        pickDate(context, target, initial, null);
+    }
+
+    public static void pickDate(final Context context, final EditText target, String initial, final Runnable onSet) {
         Calendar c = Calendar.getInstance();
         Date d = null;
         String canon = canon(initial);
@@ -101,6 +105,7 @@ public final class Fmt {
                         Calendar sel = Calendar.getInstance();
                         sel.set(year, monthOfYear, dayOfMonth);
                         target.setText(disp(FMT.format(sel.getTime())));
+                        if (onSet != null) onSet.run();
                     }
                 },
                 c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));

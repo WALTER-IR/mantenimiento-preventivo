@@ -138,6 +138,20 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 style="@style/Label"
+                android:text="ACTIVIDADES REALIZADAS" />
+
+            <LinearLayout
+                android:id="@+id/mtActividades"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/Label"
                 android:text="OBSERVACIONES" />
 
             <EditText

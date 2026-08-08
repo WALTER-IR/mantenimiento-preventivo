@@ -486,6 +486,7 @@
       $("#mtTipo").value = mant.tipo || "preventivo";
       $("#mtPrioridad").value = mant.prioridad || "";
       $("#mtFechaReprog").value = mant.fechaReprogramada || "";
+      $("#mtFechaReal").value = mant.fechaReal || "";
       $("#mtEstado").value = estadoMant(mant);
       $("#mtTecnico").value = mant.tecnico || "";
       $("#mtCosto").value = mant.costo || "";
@@ -499,7 +500,8 @@
       $("#mtTipo").value = "preventivo";
       $("#mtPrioridad").value = "";
       $("#mtFechaReprog").value = "";
-      $("#mtEstado").value = "finalizado";
+      $("#mtFechaReal").value = "";
+      $("#mtEstado").value = "programado";
       $("#mtTecnico").value = "";
       $("#mtCosto").value = "";
       $("#mtProxima").value = "";
@@ -524,7 +526,15 @@
     if (!equipoId || !fecha) return toast("Equipo y fecha son obligatorios", "err");
     const id = $("#mtId").value;
     const tareas = $$("#checklist input:checked").map((i) => i.value);
-    const estado = estadoMant({ estado: $("#mtEstado").value });
+    const fechaReal = $("#mtFechaReal").value;
+    const fechaReprogramada = $("#mtFechaReprog").value;
+    // El estado se actualiza según las fechas registradas:
+    // fecha real -> Finalizado ; fecha reprogramada -> Reprogramado.
+    const estado = fechaReal
+      ? "finalizado"
+      : fechaReprogramada
+        ? "reprogramado"
+        : estadoMant({ estado: $("#mtEstado").value });
     const data = {
       id: id || "mt-" + Date.now(),
       equipoId,
@@ -532,7 +542,8 @@
       tipo: $("#mtTipo").value,
       estado,
       prioridad: $("#mtPrioridad").value.trim(),
-      fechaReprogramada: $("#mtFechaReprog").value,
+      fechaReprogramada,
+      fechaReal,
       tecnico: $("#mtTecnico").value.trim(),
       costo: parseFloat($("#mtCosto").value) || 0,
       proxima: $("#mtProxima").value,
@@ -606,6 +617,7 @@
         <div class="mant-row-sub">${esc(subSerie)}</div>
         <div class="mant-row-sub">${esc(prog)}</div>
         <div class="mant-row-sub">${esc(reprog)}</div>
+        ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
       </div>`;
@@ -696,6 +708,7 @@
             <button class="btn btn-ghost" data-del-mant="${m.id}" style="color:var(--danger)">Eliminar</button>
           </div>` : ""}
         </div>
+        ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
       </div>`).join("");
@@ -1135,6 +1148,14 @@
     $("#mtFecha").addEventListener("change", () => {
       const e = equipos.find((x) => x.id === $("#mtEquipo").value);
       if (e) $("#mtProxima").value = addDays($("#mtFecha").value || todayISO(), e.intervalo || appConfig.intervalo);
+    });
+
+    // auto-estado según fechas: reprogramada -> reprogramado, real -> finalizado
+    $("#mtFechaReprog").addEventListener("change", (e) => {
+      if (e.target.value) $("#mtEstado").value = "reprogramado";
+    });
+    $("#mtFechaReal").addEventListener("change", (e) => {
+      if (e.target.value) $("#mtEstado").value = "finalizado";
     });
 
     // delegación de clics

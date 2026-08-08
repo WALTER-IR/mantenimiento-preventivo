@@ -21,6 +21,18 @@
         <item>Finalizado</item>
     </string-array>
 
+    <string-array name="actividades_mantenimiento">
+        <item>Desfragmentación de disco duro</item>
+        <item>Limpieza de temporales</item>
+        <item>Liberación de espacio en el disco duro</item>
+        <item>Limpieza de papelera de reciclaje</item>
+        <item>Limpieza de RAM</item>
+        <item>Limpieza de Disco Duro</item>
+        <item>Limpieza de Placa y disipador</item>
+        <item>Se añadió pasta térmica al procesador</item>
+        <item>Limpieza de Fuente de poder</item>
+    </string-array>
+
     <string-array name="zonas">
         <item>Norte</item>
         <item>Sur</item>
