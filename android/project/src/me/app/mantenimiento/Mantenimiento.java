@@ -13,6 +13,7 @@ public class Mantenimiento {
     // datos del equipo (JOIN)
     public String serie = "";
     public String hostname = "";
+    public String ubicacion = "";
 
     // datos del usuario responsable (JOIN)
     public String usuario = "";

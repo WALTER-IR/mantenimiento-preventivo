@@ -129,7 +129,6 @@
     }
     const canEdit = puedeEditar();
     $("#btnNuevoEquipo").classList.toggle("hidden", !canEdit);
-    $("#btnNuevoMantenimiento").classList.toggle("hidden", !canEdit);
     const navConfig = $$(".nav-item").find((b) => b.dataset.view === "config");
     if (navConfig) navConfig.classList.toggle("hidden", !sesion);
   }
@@ -554,6 +553,7 @@
   function renderMantenimientos() {
     const vis = equiposVisibles();
     const visIds = new Set(vis.map((e) => e.id));
+    const ubicMap = new Map(vis.map((e) => [e.id, (e.ubicacion || "").toLowerCase()]));
     const fSel = $("#filterEquipo");
     const cur = fSel.value;
     fSel.innerHTML = `<option value="">Todos los equipos</option>` +
@@ -562,10 +562,12 @@
     const fEq = fSel.value;
     const fTipo = $("#filterTipoMant").value;
     const fEstado = $("#filterEstadoMant").value;
+    const fUbic = ($("#filterUbicacion").value || "").trim().toLowerCase();
     const fDesde = $("#filterFechaDesde").value;
     const fHasta = $("#filterFechaHasta").value;
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
+      if (fUbic && !(ubicMap.get(m.equipoId) || "").includes(fUbic)) return false;
       if (fEq && m.equipoId !== fEq) return false;
       if (fTipo && m.tipo !== fTipo) return false;
       if (fEstado && estadoMant(m) !== fEstado) return false;
@@ -1056,7 +1058,6 @@
     // botones
     $("#btnNuevoEquipo").addEventListener("click", () => openEquipoModal(null));
     $("#btnGuardarEquipo").addEventListener("click", saveEquipo);
-    $("#btnNuevoMantenimiento").addEventListener("click", () => openMantModal(null));
     $("#btnGuardarMant").addEventListener("click", saveMant);
     $("#btnVerTodasAlertas").addEventListener("click", () => setView("alertas"));
     $("#btnGuardarConfig").addEventListener("click", saveConfig);
@@ -1084,6 +1085,7 @@
     $("#filterEstadoMant").addEventListener("change", renderMantenimientos);
     $("#btnBuscarMant").addEventListener("click", renderMantenimientos);
     $("#btnLimpiarMant").addEventListener("click", () => {
+      $("#filterUbicacion").value = "";
       $("#filterFechaDesde").value = todayISO();
       $("#filterFechaHasta").value = todayISO();
       $("#filterEstadoMant").value = "programado";

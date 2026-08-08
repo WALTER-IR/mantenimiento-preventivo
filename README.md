@@ -7,8 +7,9 @@ Aplicación web (PWA) para el control de mantenimientos preventivos de laptops y
 - Tema visual rojo
 - Datos guardados en el dispositivo (IndexedDB)
 
-## Versión actual: 1.14.1
+## Versión actual: 1.14.2
 
+- **Búsqueda por ubicación física y sin botón de nuevo mantenimiento (APK 3.24.0 / PWA 1.14.2)**: se quitó el botón "+ Registrar" del listado de mantenimientos y se agregó un campo para buscar mantenimientos por la **ubicación física** del equipo. El botón "Limpiar" también vacía este campo.
 - **Filtro de mantenimientos con fecha de hoy y estado Programado (APK 3.23.0 / PWA 1.14.1)**: el filtro de búsqueda de mantenimientos carga por defecto la fecha del día en curso en "desde" y "hasta", y el estado **Programado**. El botón "Limpiar" restaura esos valores predeterminados.
 - **Configuración para todos los usuarios (APK 3.22.0 / PWA 1.14.0)**: el menú "Ajustes" ahora está disponible para todos los usuarios con las opciones Cargas masivas, Responsables, Copia de seguridad y Acerca de. Las opciones de administrador (auditoría, vaciar base de datos, empresa, permisos) solo las ve el administrador.
 - **Equipos atrasados en el panel (APK 3.22.0 / PWA 1.14.0)**: el panel de control muestra la lista de equipos con mantenimiento vencido (serie, usuario asignado y días de atraso).

@@ -19,13 +19,6 @@
             android:layout_weight="1"
             style="@style/Title"
             android:text="Mantenimientos" />
-
-        <Button
-            android:id="@+id/btnNuevoMantenimiento"
-            style="@style/BtnPrimary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+ Nuevo" />
     </LinearLayout>
 
     <EditText
@@ -35,6 +28,16 @@
         android:layout_marginRight="14dp"
         android:layout_marginBottom="6dp"
         android:hint="Buscar por usuario, serie, hostname..."
+        android:singleLine="true"
+        android:imeOptions="actionSearch" />
+
+    <EditText
+        android:id="@+id/filterUbicacion"
+        style="@style/Input"
+        android:layout_marginLeft="14dp"
+        android:layout_marginRight="14dp"
+        android:layout_marginBottom="6dp"
+        android:hint="Buscar por ubicación física..."
         android:singleLine="true"
         android:imeOptions="actionSearch" />
 

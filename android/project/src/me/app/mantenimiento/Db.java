@@ -658,6 +658,7 @@ public final class Db {
     public static ArrayList<Mantenimiento> allMants(long equipoId) {
         ArrayList<Mantenimiento> out = new ArrayList<>();
         String sql = "SELECT m.*, e.serie AS m_serie, e.hostname AS m_hostname, " +
+                "e.ubicacion AS m_ubicacion, " +
                 "u.nombre AS m_usuario " +
                 "FROM mantenimientos m " +
                 "LEFT JOIN equipos e ON e.id = m.equipo_id " +
@@ -695,6 +696,7 @@ public final class Db {
         m.observaciones = s(c, "observaciones");
         m.serie = s(c, "m_serie");
         m.hostname = s(c, "m_hostname");
+        m.ubicacion = s(c, "m_ubicacion");
         m.usuario = s(c, "m_usuario");
         return m;
     }

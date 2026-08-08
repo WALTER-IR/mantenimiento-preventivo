@@ -19,6 +19,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.24.0 (vc39): se quitó el botón "+ Nuevo" del listado de mantenimientos
+  y se agregó un campo para buscar mantenimientos por la ubicación física
+  del equipo. El botón "Limpiar" también vacía ese campo.
 - 3.23.0 (vc38): el filtro de mantenimientos carga por defecto la fecha del
   día en curso en "desde" y "hasta", y el estado **Programado** como
   predeterminado. El botón "Limpiar" restaura esos valores.

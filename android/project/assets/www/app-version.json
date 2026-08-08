@@ -1,6 +1,6 @@
 {
-  "version": "1.14.1",
+  "version": "1.14.2",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "El filtro de mantenimientos ahora carga por defecto la fecha de hoy en inicio y fin, y el estado Programado."
+  "changelog": "Se quitó el botón para registrar mantenimiento desde el listado y se agregó una búsqueda por ubicación física del equipo."
 }
