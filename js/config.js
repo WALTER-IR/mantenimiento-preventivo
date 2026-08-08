@@ -8,7 +8,7 @@
 //  con los archivos locales y se actualizará cuando la publiques.
 // ============================================================
 window.APP_CONFIG = {
-  APP_VERSION: "1.14.5",
+  APP_VERSION: "1.14.6",
   APP_NAME: "Mantenimiento Preventivo",
   UPDATE_URL: "https://WALTER-IR.github.io/mantenimiento-preventivo/", // ej. "https://midominio.com/mantenimiento/"
   CHECKLIST_DEFAULT: [

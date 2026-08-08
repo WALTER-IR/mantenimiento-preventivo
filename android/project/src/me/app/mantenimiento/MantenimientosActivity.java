@@ -34,6 +34,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
     private ArrayList<Mantenimiento> items = new ArrayList<>();
     private HashMap<Long, String> labels = new HashMap<>();
     private int loadSeq = 0;
+    private boolean limpiando = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         filterEstado.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
+                if (limpiando) return;
                 load();
             }
 
@@ -90,10 +92,13 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         findViewById(R.id.btnLimpiarMant).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                limpiando = true;
+                search.setText("");
                 filterUbicacion.setSelection(0);
-                filterEstado.setSelection(1);
-                filterDesde.setText(Fmt.disp(Fmt.today()));
-                filterHasta.setText(Fmt.disp(Fmt.today()));
+                filterEstado.setSelection(0);
+                filterDesde.setText("");
+                filterHasta.setText("");
+                limpiando = false;
                 load();
             }
         });
@@ -105,6 +110,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
 
             @Override
             public void onTextChanged(CharSequence s, int a, int b, int c) {
+                if (limpiando) return;
                 load();
             }
 
@@ -117,6 +123,7 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
         filterUbicacion.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
+                if (limpiando) return;
                 load();
             }
 

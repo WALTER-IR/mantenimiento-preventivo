@@ -1109,9 +1109,11 @@
     $("#btnBuscarMant").addEventListener("click", renderMantenimientos);
     $("#btnLimpiarMant").addEventListener("click", () => {
       $("#filterUbicacion").value = "";
-      $("#filterFechaDesde").value = todayISO();
-      $("#filterFechaHasta").value = todayISO();
-      $("#filterEstadoMant").value = "programado";
+      $("#filterEquipo").value = "";
+      $("#filterTipoMant").value = "";
+      $("#filterEstadoMant").value = "";
+      $("#filterFechaDesde").value = "";
+      $("#filterFechaHasta").value = "";
       renderMantenimientos();
     });
 

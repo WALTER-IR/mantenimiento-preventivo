@@ -1,6 +1,6 @@
 {
-  "version": "1.14.5",
+  "version": "1.14.6",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-07",
-  "changelog": "La lista de mantenimientos muestra el usuario asignado, la serie y el hostname, la fecha de programación con su prioridad y la fecha de reprogramación. Se agregaron los campos Prioridad y Fecha de reprogramación al registro de mantenimientos."
+  "changelog": "El botón Limpiar del listado de mantenimientos ahora limpia todos los filtros (ubicación, estado, fechas y búsqueda). Corrección: el historial de mantenimientos de un equipo ya carga correctamente y la aplicación ya no se cuelga al abrir o editar un registro de mantenimiento."
 }

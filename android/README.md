@@ -19,6 +19,12 @@ powershell -ExecutionPolicy Bypass -File scripts\build-apk.ps1
 
 ## Versiones
 
+- 3.28.0 (vc43): el botón "Limpiar" del listado de mantenimientos ahora
+  vacía todos los campos (ubicación, estado, fechas y búsqueda). Corrección:
+  al abrir un registro de mantenimiento o una alerta ya no se cuelga la
+  aplicación y el historial de mantenimientos del equipo se carga con las
+  tarjetas de usuario, serie - hostname, fecha - prioridad y fecha de
+  reprogramación.
 - 3.27.0 (vc42): la lista de mantenimientos muestra el usuario asignado,
   la línea serie - hostname, la fecha de programación con su prioridad y la
   fecha de reprogramación.

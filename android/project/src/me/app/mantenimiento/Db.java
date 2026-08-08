@@ -638,6 +638,7 @@ public final class Db {
 
     public static Mantenimiento getMant(long id) {
         Cursor c = r().rawQuery("SELECT m.*, e.serie AS m_serie, e.hostname AS m_hostname, " +
+                "e.ubicacion AS m_ubicacion, e.usuario_asignado AS m_usuario_asignado, " +
                 "u.nombre AS m_usuario " +
                 "FROM mantenimientos m " +
                 "LEFT JOIN equipos e ON e.id = m.equipo_id " +

@@ -206,13 +206,14 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
                     : getLayoutInflater().inflate(R.layout.item_mantenimiento, parent, false);
             try {
                 Mantenimiento m = items.get(i);
-                TextView eq = (TextView) v.findViewById(R.id.mtEquipo);
-                TextView usuario = (TextView) v.findViewById(R.id.mtUsuario);
+                TextView usr = (TextView) v.findViewById(R.id.mtUsuario);
+                TextView nom = (TextView) v.findViewById(R.id.mtNombre);
                 TextView badge = (TextView) v.findViewById(R.id.mtBadge);
                 TextView info = (TextView) v.findViewById(R.id.mtInfo);
-                eq.setText((m.prioridad.length() > 0 ? m.prioridad + " · " : "") +
-                        (m.fechaProgramada.length() > 0 ? "Programado: " + Fmt.disp(m.fechaProgramada) : ""));
-                usuario.setText(m.usuario.length() > 0 ? "👤 " + m.usuario : "");
+                TextView reprog = (TextView) v.findViewById(R.id.mtReprog);
+                String asignado = m.usuarioAsignado.length() > 0 ? m.usuarioAsignado : m.usuario;
+                usr.setText(asignado.length() > 0 ? "👤 " + asignado : "👤 Sin usuario asignado");
+                nom.setText(linea(m.serie, m.hostname));
                 String estado = m.estado.length() > 0 ? m.estado : "Programado";
                 int color = Db.estadoFinal(m.estado) ? Ui.OK : Ui.WARN;
                 badge.setText(estado.toUpperCase());
@@ -221,20 +222,23 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
                 g.setCornerRadius(Ui.dp(EquipoDetailActivity.this, 10));
                 badge.setBackgroundDrawable(g);
                 badge.setTextColor(0xFFFFFFFF);
-                StringBuilder sb = new StringBuilder();
-                if (m.fechaReprogramada.length() > 0) sb.append("Reprogramado: ").append(Fmt.disp(m.fechaReprogramada));
-                if (m.fechaReal.length() > 0) {
-                    if (sb.length() > 0) sb.append("\n");
-                    sb.append("Real: ").append(Fmt.disp(m.fechaReal));
-                }
-                if (m.observaciones.length() > 0) {
-                    if (sb.length() > 0) sb.append("\n");
-                    sb.append(m.observaciones);
-                }
-                info.setText(sb.toString());
+                info.setText(linea(Fmt.disp(m.fechaProgramada), m.prioridad));
+                reprog.setText(m.fechaReprogramada.length() > 0
+                        ? Fmt.disp(m.fechaReprogramada) : "—");
             } catch (Exception ignored) {
             }
             return v;
+        }
+
+        private String linea(String... partes) {
+            StringBuilder sb = new StringBuilder();
+            for (String p : partes) {
+                if (p == null) p = "";
+                if (p.length() == 0) continue;
+                if (sb.length() > 0) sb.append(" - ");
+                sb.append(p);
+            }
+            return sb.length() > 0 ? sb.toString() : "—";
         }
     }
 }
