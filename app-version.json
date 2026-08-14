@@ -1,6 +1,6 @@
 {
-  "version": "1.19.1",
+  "version": "1.19.2",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Configuracion: la tarjeta 'Cargas masivas (Excel)' queda siempre visible para cualquier sesion; los botones validan permiso al usarlos."
+  "changelog": "Carga masiva de equipos: si el responsable del DNI no existe, se crea automaticamente con permiso de edicion y se informa en el resultado. Correccion del error 'no se encontro el responsable'."
 }

@@ -1728,11 +1728,12 @@
         else r = await importarMantenimientos(filas, errores);
         await reload();
         let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
+        if (r[2]) txt += "\nResponsables creados automáticamente: " + r[2];
         if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
         res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") + "\n\n" + txt;
         if (r[0] > 0) {
           toast("Se importaron " + r[0] + " registros", "ok");
-          auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1]);
+          auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1] + (r[2] ? " · Responsables creados: " + r[2] : ""));
         }
       } catch (e) {
         res.textContent += "\nError: " + e.message;
@@ -1907,7 +1908,7 @@
     const seriesUsadas = new Set();
     equipos.forEach((e) => { if (e.serie) seriesUsadas.add(keyOf(e.serie)); });
 
-    let ok = 0, err = 0;
+    let ok = 0, err = 0, creados = 0;
     for (let i = 0; i < filas.length; i++) {
       const f = filas[i];
       if (!Array.isArray(f)) continue;
@@ -1931,10 +1932,28 @@
         u = usuarios.find((x) => keyOf(x.nombre || "") === keyOf(asignado)) || null;
       }
       if (!u) {
-        err++;
-        const criterio = dniText || nombreResp || asignado;
-        addError(errores, i, "no se encontró el responsable: " + (criterio || "—"));
-        continue;
+        // Si el responsable no existe, se crea automáticamente con permiso de edición.
+        const nombreNuevo = (nombreResp || asignado).trim();
+        const dniValido = dniText && esNumero(dniText);
+        if (nombreNuevo && dniValido) {
+          const nu = {
+            id: "us-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+            nombre: nombreNuevo,
+            dni: dniText,
+            clave: dniText,
+            rol: ROL.EDICION,
+            fechaAlta: todayISO()
+          };
+          await DB.putUsuario(nu);
+          usuarios.push(nu);
+          u = nu;
+          creados++;
+        } else {
+          err++;
+          const criterio = dniText || nombreResp || asignado;
+          addError(errores, i, "no se encontró el responsable y no hay datos para crearlo: " + (criterio || "—"));
+          continue;
+        }
       }
 
       const e = {
@@ -1964,7 +1983,7 @@
       seriesUsadas.add(keyOf(serie));
       ok++;
     }
-    return [ok, err];
+    return [ok, err, creados];
   }
 
   // Registra mantenimientos para la serie de equipo indicada. Devuelve [importados, inválidos].
