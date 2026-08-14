@@ -1,6 +1,6 @@
 {
-  "version": "1.19.8",
+  "version": "1.19.9",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Carga masiva: si el archivo seleccionado tiene muy pocas filas con datos, la app muestra una advertencia para confirmar que se eligio el archivo correcto."
+  "changelog": "Carga de equipos: el error ahora muestra el nombre del responsable (y su DNI), y al final del resultado se listan los responsables existentes en la web para saber si falta importar el archivo de responsables."
 }

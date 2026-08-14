@@ -1768,6 +1768,11 @@
         await reload();
         let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
         if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
+        if (tipo === "equipos" && r[1] > 0) {
+          txt += "\n\nResponsables existentes en la web: " +
+            (usuarios.map((x) => x.nombre).filter(Boolean).join(", ") || "(ninguno)") +
+            ".\nSi no aparecen tus responsables, importa primero el archivo de responsables.";
+        }
         res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") +
           "\nHoja: " + elegida.hoja + " · Filas con datos: " + filas.length + "\n\n" + txt;
         if (filas.length < 10) {
@@ -1978,7 +1983,9 @@
         // Igual que la app móvil: NO se crean usuarios nuevos. El responsable debe
         // existir como usuario (importa primero el archivo de responsables).
         err++;
-        const criterio = dniText || nombreResp || asignado;
+        const criterio = nombreResp
+          ? (nombreResp + (dniText ? " · DNI " + dniText : ""))
+          : (dniText || asignado);
         addError(errores, i, "no se encontró el responsable: " + (criterio || "—") + " (importa primero el archivo de responsables)");
         continue;
       }
