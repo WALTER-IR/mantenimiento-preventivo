@@ -4,7 +4,7 @@
 //  nada externamente. La app solo se actualiza cuando el
 //  usuario lo pide explícitamente.
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v37";
+const CACHE_NAME = "mantenimiento-pwa-v38";
 
 const CORE_ASSETS = [
   "./",
@@ -60,6 +60,30 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // El código de la app (index.html, *.js, *.css) se sirve RED PRIMERO: si hay
+  // internet siempre se usa la versión más reciente y se actualiza la caché.
+  // Sin conexión se usa la caché como respaldo.
+  const esCodigo = event.request.mode === "navigate" || /\.(js|css|html)$/.test(url.pathname);
+  if (esCodigo) {
+    event.respondWith(
+      fetch(event.request)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return resp;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            if (event.request.mode === "navigate") return caches.match("./index.html");
+            return new Response("", { status: 200, statusText: "ok" });
+          })
+        )
+    );
+    return;
+  }
+
+  // Cache-only para el resto (offline).
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
