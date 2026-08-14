@@ -1,6 +1,6 @@
 {
-  "version": "1.18.0",
+  "version": "1.19.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-12",
-  "changelog": "Configuración: nueva opción 'Correo de programación' que permite redactar el texto del correo manualmente y envía el detalle de los equipos cargado automáticamente por ubicación."
+  "updated": "2026-08-13",
+  "changelog": "Configuracion: nueva opcion 'Cargas masivas (Excel)' para importar responsables, equipos y mantenimientos con validacion, 'Activar mantenimientos 2026', 'Vaciar base de datos' y 'Ver errores guardados'."
 }

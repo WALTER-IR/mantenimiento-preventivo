@@ -209,6 +209,16 @@
         <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
       </div>
 
+      <div class="card hidden" id="cardCargaMasiva">
+        <h3 class="card-title">Cargas masivas (Excel)</h3>
+        <p class="card-text">Importa responsables, equipos y mantenimientos desde un archivo Excel (.xlsx) con validación. Requiere internet la primera vez.</p>
+        <button class="btn btn-outline btn-block" id="btnCargarResponsables">⬆ Cargar responsables</button>
+        <button class="btn btn-outline btn-block" id="btnCargarEquipos">⬆ Cargar equipos</button>
+        <button class="btn btn-outline btn-block" id="btnCargarMantenimientos">⬆ Cargar mantenimientos</button>
+        <pre id="masivaResultado" class="masiva-result hidden"></pre>
+        <input type="file" id="fileMasiva" class="hidden" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+      </div>
+
       <div class="card" id="cardEmpresa">
         <h3 class="card-title">Datos de la empresa</h3>
         <label class="field-label" for="cfgEmpresa">Nombre de la empresa / departamento</label>
@@ -297,6 +307,19 @@ Atentamente,</textarea>
         </div>
         <button class="btn btn-primary btn-block" id="btnExportarExcel">⬇ Exportar a Excel</button>
         <input type="file" id="fileImport" class="hidden" accept="application/json" />
+      </div>
+
+      <div class="card hidden" id="cardMant2026">
+        <h3 class="card-title">Mantenimientos 2026</h3>
+        <p class="card-text">Deja como pendientes (PROGRAMADO) todos los mantenimientos programados para 2026 para que aparezcan activos en Alertas.</p>
+        <button class="btn btn-primary btn-block" id="btnActivar2026">Activar mantenimientos 2026</button>
+      </div>
+
+      <div class="card hidden" id="cardDatos">
+        <h3 class="card-title">Datos</h3>
+        <p class="card-text">Borra todos los responsables, equipos y mantenimientos. Esta acción no se puede deshacer.</p>
+        <button class="btn btn-danger btn-block" id="btnVaciarBd">Vaciar base de datos</button>
+        <button class="btn btn-outline btn-block" id="btnVerErrores">Ver errores guardados</button>
       </div>
 
       <div class="card" id="cardActualizaciones">
@@ -594,6 +617,23 @@ Atentamente,</textarea>
         <button class="btn btn-danger" id="btnEliminarUsuario">Eliminar</button>
         <button class="btn btn-outline" data-close="modalUsuario">Cancelar</button>
         <button class="btn btn-primary" id="btnGuardarUsuario">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ MODAL ERRORES GUARDADOS ============================ -->
+  <div id="modalErrores" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Errores guardados</h3>
+        <button class="modal-close" data-close="modalErrores">✕</button>
+      </div>
+      <div class="modal-body">
+        <pre id="erroresTexto" class="masiva-result"></pre>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-close="modalErrores">Cerrar</button>
+        <button class="btn btn-primary" id="btnCopiarErrores">Copiar</button>
       </div>
     </div>
   </div>

@@ -1150,6 +1150,9 @@
     $("#btnNuevoUsuario").classList.toggle("hidden", !admin);
     $("#cardProgramacion").classList.toggle("hidden", !admin);
     $("#cardCorreo").classList.toggle("hidden", !edicion);
+    $("#cardCargaMasiva").classList.toggle("hidden", !edicion);
+    $("#cardMant2026").classList.toggle("hidden", !admin);
+    $("#cardDatos").classList.toggle("hidden", !admin);
     if (admin) {
       renderFeriados();
     }
@@ -1669,6 +1672,356 @@
     reader.readAsText(file);
   }
 
+  // ---------------- Cargas masivas (Excel) ----------------
+  const LIB_XLSX = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+  const COLUMNAS_MASIVA = {
+    responsables: "RESPONSABLE (o NOMBRE); DNI; ZONA; SUBDIVISION; CECO SAP; AREA; CARGO; EMAIL; CLAVE",
+    equipos: "SERIE DE EQUIPO; USUARIO ASIGNADO; RESPONSABLE; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS; AREA; CARGO",
+    mantenimientos: "SERIE DE EQUIPO; PRIORIDAD; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES; ACTIVIDADES REALIZADAS; PROXIMO MANTENIMIENTO"
+  };
+
+  function cargarLibreriaXlsx() {
+    if (typeof XLSX !== "undefined") return Promise.resolve();
+    toast("Cargando librería de Excel (requiere internet)…");
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = LIB_XLSX;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("No se pudo cargar la librería de Excel"));
+      document.head.appendChild(s);
+    });
+  }
+
+  function abrirMasiva(tipo) {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    const input = $("#fileMasiva");
+    input.dataset.tipo = tipo;
+    input.click();
+  }
+
+  async function procesarMasiva(file, tipo) {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    const res = $("#masivaResultado");
+    res.classList.remove("hidden");
+    res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") + "\n\nLeyendo archivo...";
+    try {
+      await cargarLibreriaXlsx();
+    } catch (e) {
+      res.textContent += "\nError: " + e.message;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        const filas = aoa.filter((r) => Array.isArray(r) &&
+          r.some((c) => String(c == null ? "" : c).trim() !== ""));
+        if (filas.length < 2) {
+          res.textContent += "\nEl archivo no tiene filas con datos.";
+          return;
+        }
+        const errores = [];
+        let r;
+        if (tipo === "responsables") r = await importarResponsables(filas, errores);
+        else if (tipo === "equipos") r = await importarEquipos(filas, errores);
+        else r = await importarMantenimientos(filas, errores);
+        await reload();
+        let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
+        if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
+        res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") + "\n\n" + txt;
+        if (r[0] > 0) {
+          toast("Se importaron " + r[0] + " registros", "ok");
+          auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1]);
+        }
+      } catch (e) {
+        res.textContent += "\nError: " + e.message;
+        toast("No se pudo leer el archivo Excel", "err");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Normaliza "SERIE" -> "SERIE", quita acentos, espacios y símbolos, a mayúsculas.
+  function keyOf(s) {
+    return String(s == null ? "" : s).normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  }
+
+  // Busca una columna por nombre exacto (pass 0) o por prefijo largo (pass 1).
+  function findCol(headers, ...names) {
+    const targets = names.map((n) => keyOf(n));
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < headers.length; i++) {
+        const h = keyOf(headers[i]);
+        if (!h) continue;
+        for (const t of targets) {
+          if (!t) continue;
+          if (pass === 0 && h === t) return i;
+          if (pass === 1 && t.length >= 4 && h.startsWith(t)) return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  const valCelda = (f, col) => (col < 0 || col >= f.length)
+    ? "" : String(f[col] == null ? "" : f[col]).trim();
+
+  const esNumero = (s) => /^\d+$/.test(String(s || "").trim());
+
+  function addError(errores, row, motivo) {
+    if (errores.length < 12) errores.push("Fila " + (row + 2) + ": " + motivo);
+  }
+
+  // Convierte fechas de Excel (serial, Date o texto DD/MM/YYYY) a yyyy-MM-dd.
+  function xlsxToDate(v) {
+    if (v == null) return "";
+    if (v instanceof Date) {
+      if (isNaN(v.getTime())) return "";
+      const off = v.getTimezoneOffset();
+      return new Date(v.getTime() - off * 60000).toISOString().slice(0, 10);
+    }
+    if (typeof v === "number") {
+      if (!isFinite(v) || v <= 0) return "";
+      const d = new Date(Math.round((v - 25569) * 86400000));
+      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+    }
+    const s = String(v).trim();
+    if (!s) return "";
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+      const p = s.split("-");
+      return p[0] + "-" + ("0" + p[1]).slice(-2) + "-" + ("0" + p[2]).slice(-2);
+    }
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+      const p = s.split("/");
+      return p[2] + "-" + ("0" + p[1]).slice(-2) + "-" + ("0" + p[0]).slice(-2);
+    }
+    return s;
+  }
+
+  // Normaliza el estado al formato interno de la app (minúsculas).
+  function estadoNorm(s) {
+    if (s == null) return "";
+    const e = String(s).trim().toLowerCase();
+    if (e.indexOf("reprogram") >= 0) return "reprogramado";
+    if (e.indexOf("program") >= 0) return "programado";
+    if (e.indexOf("final") >= 0 || e.indexOf("realizado") >= 0) return "finalizado";
+    if (e.indexOf("pendiente") >= 0 || e.indexOf("en proceso") >= 0) return "programado";
+    return e;
+  }
+
+  // Crea usuarios (rol edición) desde el Excel. Devuelve [importados, inválidos].
+  async function importarResponsables(aoa, errores) {
+    const headers = aoa[0].map((h) => String(h == null ? "" : h).trim());
+    const filas = aoa.slice(1);
+    const colNombre = findCol(headers, "RESPONSABLE", "NOMBRE Y APELLIDOS", "NOMBRE");
+    const colDni = findCol(headers, "DNI");
+    const colZona = findCol(headers, "ZONA");
+    const colSub = findCol(headers, "SUBDIVISION");
+    const colCeco = findCol(headers, "CECO SAP", "CECO");
+    const colArea = findCol(headers, "AREA");
+    const colCargo = findCol(headers, "CARGO");
+    const colEmail = findCol(headers, "EMAIL");
+    const colClave = findCol(headers, "CLAVE");
+
+    if (colNombre < 0) {
+      errores.push("Falta la columna RESPONSABLE (o NOMBRE Y APELLIDOS).");
+      return [0, filas.length];
+    }
+    if (colDni < 0) {
+      errores.push("Falta la columna DNI.");
+      return [0, filas.length];
+    }
+
+    const existentes = new Set();
+    usuarios.forEach((u) => {
+      if (u.nombre) existentes.add(keyOf(u.nombre));
+      if (u.dni) existentes.add(keyOf(u.dni));
+    });
+
+    let ok = 0, err = 0;
+    for (let i = 0; i < filas.length; i++) {
+      const f = filas[i];
+      if (!Array.isArray(f)) continue;
+      if (!f.some((c) => String(c == null ? "" : c).trim() !== "")) continue;
+      const nombre = valCelda(f, colNombre);
+      if (!nombre) { err++; addError(errores, i, "responsable sin nombre"); continue; }
+      const dni = valCelda(f, colDni);
+      if (!dni) { err++; addError(errores, i, "falta DNI"); continue; }
+      if (existentes.has(keyOf(nombre))) { err++; addError(errores, i, "responsable duplicado: " + nombre); continue; }
+      if (existentes.has(keyOf(dni))) { err++; addError(errores, i, "DNI duplicado: " + dni); continue; }
+      const claveExcel = valCelda(f, colClave);
+      const u = {
+        id: "us-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        nombre,
+        dni,
+        clave: claveExcel || dni,
+        rol: ROL.EDICION,
+        fechaAlta: todayISO(),
+        zona: valCelda(f, colZona),
+        subdivision: valCelda(f, colSub),
+        ceco: valCelda(f, colCeco),
+        area: valCelda(f, colArea),
+        cargo: valCelda(f, colCargo),
+        email: valCelda(f, colEmail)
+      };
+      await DB.putUsuario(u);
+      usuarios.push(u);
+      existentes.add(keyOf(nombre));
+      existentes.add(keyOf(dni));
+      ok++;
+    }
+    return [ok, err];
+  }
+
+  // Crea equipos vinculados a responsables ya existentes. Devuelve [importados, inválidos].
+  async function importarEquipos(aoa, errores) {
+    const headers = aoa[0].map((h) => String(h == null ? "" : h).trim());
+    const filas = aoa.slice(1);
+    const colAsignado = findCol(headers, "USUARIO ASIGNADO", "USUARIO");
+    const colResp = findCol(headers, "RESPONSABLE");
+    const colDni = findCol(headers, "DNI");
+    const colHost = findCol(headers, "HOSTNAME", "NEW HOSTNAME");
+    const colIp = findCol(headers, "DIR. IP", "IP");
+    const colUbic = findCol(headers, "UBICACIÓN FISICA", "UBICACION", "UBICACIÓN");
+    const colEquipo = findCol(headers, "EQUIPO");
+    const colCod = findCol(headers, "COD. INVENTARIO", "COD");
+    const colSerie = findCol(headers, "SERIE DE EQUIPO", "SERIE");
+    const colMarca = findCol(headers, "MARCA");
+    const colModelo = findCol(headers, "MODELO");
+    const colContrato = findCol(headers, "CONTRATO DE ARRENDAMIENTO", "CONTRATO");
+    const colStatus = findCol(headers, "STATUS");
+    const colArea = findCol(headers, "AREA");
+    const colCargo = findCol(headers, "CARGO");
+
+    if (colSerie < 0 && colHost < 0) {
+      errores.push("Faltan las columnas SERIE DE EQUIPO / HOSTNAME.");
+      return [0, filas.length];
+    }
+    if (colResp < 0 && colDni < 0 && colAsignado < 0) {
+      errores.push("Falta la columna RESPONSABLE, DNI o USUARIO ASIGNADO para vincular el equipo.");
+      return [0, filas.length];
+    }
+
+    const seriesUsadas = new Set();
+    equipos.forEach((e) => { if (e.serie) seriesUsadas.add(keyOf(e.serie)); });
+
+    let ok = 0, err = 0;
+    for (let i = 0; i < filas.length; i++) {
+      const f = filas[i];
+      if (!Array.isArray(f)) continue;
+      if (!f.some((c) => String(c == null ? "" : c).trim() !== "")) continue;
+      let serie = valCelda(f, colSerie);
+      if (!serie) serie = valCelda(f, colHost);
+      if (!serie) { err++; addError(errores, i, "equipo sin serie / hostname"); continue; }
+      if (seriesUsadas.has(keyOf(serie))) { err++; addError(errores, i, "serie duplicada: " + serie); continue; }
+
+      const asignado = valCelda(f, colAsignado);
+      const dniText = valCelda(f, colDni);
+      const nombreResp = valCelda(f, colResp);
+      let u = null;
+      if (dniText && esNumero(dniText)) {
+        u = usuarios.find((x) => (x.dni || "").toLowerCase() === dniText.toLowerCase()) || null;
+      }
+      if (!u && nombreResp) {
+        u = usuarios.find((x) => keyOf(x.nombre || "") === keyOf(nombreResp)) || null;
+      }
+      if (!u && asignado) {
+        u = usuarios.find((x) => keyOf(x.nombre || "") === keyOf(asignado)) || null;
+      }
+      if (!u) {
+        err++;
+        const criterio = dniText || nombreResp || asignado;
+        addError(errores, i, "no se encontró el responsable: " + (criterio || "—"));
+        continue;
+      }
+
+      const e = {
+        id: "eq-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        nombre: valCelda(f, colEquipo) || serie,
+        tipo: "laptop",
+        marca: valCelda(f, colMarca),
+        modelo: valCelda(f, colModelo),
+        serie,
+        hostname: valCelda(f, colHost),
+        ip: valCelda(f, colIp),
+        ubicacion: valCelda(f, colUbic),
+        usuarioAsignado: asignado,
+        responsable: u.nombre,
+        dni: dniText && esNumero(dniText) ? dniText : "",
+        area: valCelda(f, colArea),
+        cargo: valCelda(f, colCargo),
+        codInventario: valCelda(f, colCod),
+        contrato: valCelda(f, colContrato),
+        status: valCelda(f, colStatus),
+        intervalo: appConfig.intervalo,
+        fechaUltimoMant: null,
+        fechaAlta: todayISO()
+      };
+      await DB.put("equipos", e);
+      equipos.push(e);
+      seriesUsadas.add(keyOf(serie));
+      ok++;
+    }
+    return [ok, err];
+  }
+
+  // Registra mantenimientos para la serie de equipo indicada. Devuelve [importados, inválidos].
+  async function importarMantenimientos(aoa, errores) {
+    const headers = aoa[0].map((h) => String(h == null ? "" : h).trim());
+    const filas = aoa.slice(1);
+    const colSerie = findCol(headers, "SERIE DE EQUIPO", "SERIE");
+    const colPrioridad = findCol(headers, "PRIORIDAD");
+    const colProg = findCol(headers, "FECHA PROGRAMADA");
+    const colRepro = findCol(headers, "FECHA REPROGRAMADA");
+    const colReal = findCol(headers, "FECHA REAL");
+    const colEstado = findCol(headers, "ESTADO");
+    const colObs = findCol(headers, "OBSERVACIONES");
+    const colAct = findCol(headers, "ACTIVIDADES REALIZADAS", "ACTIVIDADES");
+    const colProx = findCol(headers, "PROXIMO MANTENIMIENTO", "PRÓXIMO MANTENIMIENTO", "PROXIMA");
+
+    if (colSerie < 0) {
+      errores.push("Falta la columna SERIE DE EQUIPO.");
+      return [0, filas.length];
+    }
+
+    let ok = 0, err = 0;
+    for (let i = 0; i < filas.length; i++) {
+      const f = filas[i];
+      if (!Array.isArray(f)) continue;
+      if (!f.some((c) => String(c == null ? "" : c).trim() !== "")) continue;
+      const serie = valCelda(f, colSerie);
+      if (!serie) { err++; addError(errores, i, "serie vacía"); continue; }
+      const eq = equipos.find((x) => (x.serie || "").trim() === serie) ||
+        equipos.find((x) => keyOf(x.serie || "") === keyOf(serie)) || null;
+      if (!eq) { err++; addError(errores, i, "serie no existe: " + serie); continue; }
+
+      const act = valCelda(f, colAct);
+      const tareas = act ? act.split(/[\r\n,;]+/).map((t) => t.trim()).filter(Boolean) : [];
+      const m = {
+        id: "mt-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        equipoId: eq.id,
+        fecha: xlsxToDate(valCelda(f, colProg)),
+        tipo: "preventivo",
+        estado: estadoNorm(valCelda(f, colEstado)),
+        prioridad: valCelda(f, colPrioridad),
+        fechaReprogramada: xlsxToDate(valCelda(f, colRepro)),
+        fechaReal: xlsxToDate(valCelda(f, colReal)),
+        tecnico: "",
+        costo: 0,
+        proxima: xlsxToDate(valCelda(f, colProx)),
+        obs: valCelda(f, colObs),
+        tareas
+      };
+      await DB.put("mantenimientos", m);
+      mantenimientos.push(m);
+      ok++;
+    }
+    return [ok, err];
+  }
+
   // ============================================================
   //  ACTUALIZACIÓN POR INTERNET (solo bajo petición explícita)
   // ============================================================
@@ -1770,6 +2123,23 @@
     $("#btnProgramar").addEventListener("click", programarMantenimientos);
     $("#correoUbicacion").addEventListener("change", renderCorreo);
     $("#btnEnviarCorreo").addEventListener("click", enviarCorreo);
+
+    // cargas masivas (Excel)
+    $("#btnCargarResponsables").addEventListener("click", () => abrirMasiva("responsables"));
+    $("#btnCargarEquipos").addEventListener("click", () => abrirMasiva("equipos"));
+    $("#btnCargarMantenimientos").addEventListener("click", () => abrirMasiva("mantenimientos"));
+    $("#fileMasiva").addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      const tipo = e.target.dataset.tipo;
+      if (f && tipo) procesarMasiva(f, tipo);
+      e.target.value = "";
+    });
+
+    // datos y mantenimientos 2026
+    $("#btnActivar2026").addEventListener("click", activarMantenimientos2026);
+    $("#btnVaciarBd").addEventListener("click", vaciarBaseDatos);
+    $("#btnVerErrores").addEventListener("click", verErroresGuardados);
+    $("#btnCopiarErrores").addEventListener("click", copiarErrores);
 
     // usuarios y permisos
     $("#btnNuevoUsuario").addEventListener("click", () => openUsuarioModal(null));
@@ -1942,6 +2312,71 @@
   // Restore logo preview on load
   const savedLogo = getLogoData();
   if (savedLogo) { $("#logoPreview").src = savedLogo; $("#logoPreview").classList.remove("hidden"); }
+
+  // ---------------- Errores guardados ----------------
+  const ERR_KEY = "errores_guardados";
+  function registrarError(texto) {
+    try {
+      const arr = JSON.parse(localStorage.getItem(ERR_KEY) || "[]");
+      arr.push(new Date().toISOString() + " · " + texto);
+      if (arr.length > 50) arr.splice(0, arr.length - 50);
+      localStorage.setItem(ERR_KEY, JSON.stringify(arr));
+    } catch (e) { /* ignora */ }
+  }
+  window.addEventListener("error", (e) => registrarError(e.message || "error de página"));
+  window.addEventListener("unhandledrejection", (e) => registrarError(String((e && e.reason) || "promesa rechazada")));
+
+  function verErroresGuardados() {
+    const arr = JSON.parse(localStorage.getItem(ERR_KEY) || "[]");
+    $("#erroresTexto").textContent = arr.length ? arr.join("\n") : "Sin errores registrados.";
+    openModal("modalErrores");
+  }
+
+  function copiarErrores() {
+    const txt = $("#erroresTexto").textContent || "";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => toast("Texto copiado", "ok")).catch(() => {});
+    } else {
+      toast("No se pudo copiar", "err");
+    }
+  }
+
+  async function vaciarBaseDatos() {
+    if (!esAdmin()) return toast("Solo el administrador", "err");
+    if (!confirm("Se borrarán todos los responsables, equipos y mantenimientos. ¿Continuar?")) return;
+    await DB.clear("mantenimientos");
+    await DB.clear("equipos");
+    await DB.clear("usuarios");
+    await DB.clear("feriados");
+    await reload();
+    await ensureAdmin();
+    await reload();
+    toast("Base de datos vaciada", "ok");
+    auditar("VACIAR BASE DE DATOS", "Se eliminaron todos los registros");
+  }
+
+  // Deja como programados todos los mantenimientos de 2026,
+  // borrando su fecha real/reprogramada para que aparezcan activos en Alertas.
+  async function activarMantenimientos2026() {
+    if (!esAdmin()) return toast("Solo el administrador", "err");
+    if (!confirm("Se pondrán como PROGRAMADO (pendiente) todos los mantenimientos programados para 2026, borrando su fecha real, para que aparezcan activos en Alertas. ¿Continuar?")) return;
+    let n = 0;
+    for (const m of mantenimientos) {
+      const prog = (m.fecha || "").indexOf("2026-") === 0;
+      const reprog = (m.fechaReprogramada || "").indexOf("2026-") === 0;
+      if (prog || reprog) {
+        m.estado = "programado";
+        m.fechaReal = "";
+        m.fechaReprogramada = "";
+        await DB.put("mantenimientos", m);
+        n++;
+      }
+    }
+    mantenimientos = await DB.getAll("mantenimientos");
+    toast(n + " mantenimiento(s) activado(s)", "ok");
+    auditar("ACTIVAR MANTENIMIENTOS 2026", n + " mantenimiento(s) activado(s)");
+    renderConfig();
+  }
 
   function init() {
     bindEvents();
