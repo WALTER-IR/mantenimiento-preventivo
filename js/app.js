@@ -1691,6 +1691,47 @@
     });
   }
 
+  // Devuelve el rango real de celdas con contenido (no confía en el !ref del archivo,
+  // que a veces queda desactualizado y hace que solo se lean unas pocas filas).
+  function rangoRealHoja(ws) {
+    let maxR = -1, maxC = -1;
+    for (const k of Object.keys(ws)) {
+      if (k[0] === "!") continue;
+      const a = XLSX.utils.decode_cell(k);
+      if (a.r > maxR) maxR = a.r;
+      if (a.c > maxC) maxC = a.c;
+    }
+    if (maxR < 0) return null;
+    return XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxR, c: maxC } });
+  }
+
+  // Lee una hoja como filas (arrays) incluyendo celdas vacías.
+  function leerHoja(ws) {
+    const rango = rangoRealHoja(ws) || ws["!ref"];
+    return XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", range: rango });
+  }
+
+  // Elige la hoja que mejor coincide con las columnas esperadas; entre empates, la de más filas.
+  function elegirHoja(wb, tipo) {
+    const objetivo = COLUMNAS_MASIVA[tipo].split(";")
+      .map((s) => s.split("(")[0].trim()).filter(Boolean);
+    let mejor = null;
+    for (const nombre of wb.SheetNames) {
+      const aoa = leerHoja(wb.Sheets[nombre]);
+      const filas = aoa.filter((r) => Array.isArray(r) &&
+        r.some((c) => String(c == null ? "" : c).trim() !== ""));
+      if (filas.length < 2) continue;
+      const headers = (filas[0] || []).map((h) => String(h == null ? "" : h).trim());
+      let score = 0;
+      for (const t of objetivo) if (findCol(headers, t) >= 0) score++;
+      if (!mejor || score > mejor.score ||
+          (score === mejor.score && filas.length > mejor.filas.length)) {
+        mejor = { hoja: nombre, filas, score };
+      }
+    }
+    return mejor;
+  }
+
   function abrirMasiva(tipo) {
     if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const input = $("#fileMasiva");
@@ -1713,14 +1754,12 @@
     reader.onload = async () => {
       try {
         const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        const filas = aoa.filter((r) => Array.isArray(r) &&
-          r.some((c) => String(c == null ? "" : c).trim() !== ""));
-        if (filas.length < 2) {
+        const elegida = elegirHoja(wb, tipo);
+        if (!elegida) {
           res.textContent += "\nEl archivo no tiene filas con datos.";
           return;
         }
+        const filas = elegida.filas;
         const errores = [];
         let r;
         if (tipo === "responsables") r = await importarResponsables(filas, errores);
@@ -1730,7 +1769,8 @@
         let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
         if (r[2]) txt += "\nResponsables creados automáticamente: " + r[2];
         if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
-        res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") + "\n\n" + txt;
+        res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") +
+          "\nHoja: " + elegida.hoja + " · Filas con datos: " + filas.length + "\n\n" + txt;
         if (r[0] > 0) {
           toast("Se importaron " + r[0] + " registros", "ok");
           auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1] + (r[2] ? " · Responsables creados: " + r[2] : ""));
