@@ -5,7 +5,7 @@
   "use strict";
 
   const DB_NAME = "mantenimiento-pwa";
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
 
   let _db = null;
 
@@ -36,6 +36,10 @@
         }
         if (!db.objectStoreNames.contains("sesion")) {
           db.createObjectStore("sesion", { keyPath: "key" });
+        }
+        if (!db.objectStoreNames.contains("feriados")) {
+          const s = db.createObjectStore("feriados", { keyPath: "id" });
+          s.createIndex("fecha", "fecha");
         }
       };
       req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };

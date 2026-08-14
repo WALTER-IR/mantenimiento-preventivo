@@ -1,7 +1,7 @@
 {
   "name": "Mantenimiento Preventivo",
   "short_name": "Mantenimiento",
-  "description": "Control de mantenimientos preventivos para laptops y computadoras. Funciona sin conexión y se actualiza por internet.",
+  "description": "Control de mantenimientos preventivos para laptops y computadoras. Funciona sin conexión.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

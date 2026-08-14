@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class EquipoFormActivity extends Activity implements View.OnClickListener {
 
@@ -56,6 +57,8 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
 
         findViewById(R.id.btnGuardarEquipo).setOnClickListener(this);
         btnEliminar.setOnClickListener(this);
+        // Los usuarios con permiso de edición no pueden eliminar equipos.
+        if (!Db.esAdmin()) btnEliminar.setEnabled(false);
 
         Bundle b = getIntent().getExtras();
         if (b != null) equipoId = b.getLong("equipoId", 0);
@@ -114,7 +117,12 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
             return;
         }
         ((TextView) findViewById(R.id.formEquipoTitle)).setText("Editar equipo");
+        // Seleccionar el usuario asignado (por nombre); si no coincide, usar el responsable.
         int idx = usuarioIds.indexOf(e.usuarioId);
+        if (e.usuarioAsignado != null && e.usuarioAsignado.trim().length() > 0) {
+            int ai = indexUsuarioNombre(e.usuarioAsignado);
+            if (ai >= 0) idx = ai;
+        }
         if (idx >= 0) eqResponsable.setSelection(idx);
         eqHostname.setText(e.hostname);
         eqIp.setText(e.ip);
@@ -134,6 +142,19 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
             if (arr[i].equals(v)) return i;
         }
         return 0;
+    }
+
+    private int indexUsuarioNombre(String nombre) {
+        if (nombre == null) return -1;
+        String n = nombre.trim().toLowerCase(Locale.ROOT);
+        for (int i = 0; i < usuarioIds.size(); i++) {
+            long uid = usuarioIds.get(i);
+            if (uid <= 0) continue;
+            Usuario u = Db.getUsuario(uid);
+            if (u != null && u.nombre != null
+                    && u.nombre.trim().toLowerCase(Locale.ROOT).equals(n)) return i;
+        }
+        return -1;
     }
 
     @Override
@@ -171,11 +192,9 @@ public class EquipoFormActivity extends Activity implements View.OnClickListener
 
         Equipo e = new Equipo();
         e.id = equipoId;
-        if (equipoId > 0) {
-            Equipo prev = Db.getEquipo(equipoId);
-            if (prev != null) e.usuarioAsignado = prev.usuarioAsignado;
-        }
         e.usuarioId = usuarioId;
+        // El usuario asignado se mantiene en sincronía con la selección del formulario.
+        if (u != null) e.usuarioAsignado = u.nombre.trim();
         e.hostname = eqHostname.getText().toString().trim();
         e.ip = eqIp.getText().toString().trim();
         e.serie = serie;

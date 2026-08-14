@@ -68,6 +68,16 @@ public final class Ui {
         v.setBackgroundDrawable(g);
     }
 
+    // Siempre muestra el usuario asignado; si existe un responsable distinto, lo agrega.
+    public static String usuariosLabel(String asignado, String responsable) {
+        String a = asignado == null ? "" : asignado.trim();
+        String r = responsable == null ? "" : responsable.trim();
+        if (a.length() == 0 && r.length() == 0) return "";
+        if (a.length() == 0) return r;
+        if (r.length() == 0 || a.equalsIgnoreCase(r)) return a;
+        return a + " (resp: " + r + ")";
+    }
+
     public static void setTint(View v, int color) {
         v.setBackgroundTintList(ColorStateList.valueOf(color));
     }

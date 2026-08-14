@@ -1,6 +1,6 @@
 {
-  "version": "1.14.9",
+  "version": "1.18.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-07",
-  "changelog": "Formato TI-F016 versión 04: se actualizó el formato de mantenimiento con la fecha de aprobación 22/09/2025, campos NOMBRES, ÁREA, CARGO, DNI, UNIDAD DE PRODUCCIÓN, SERIE/CI, RESPONSABLE DE TI y FECHA DE MANTENIMIENTO (fecha real). Se agregó el campo Cargo en el registro de equipos. El texto de introducción y cierre del correo SGC se incluye en el formato impreso y enviado."
+  "updated": "2026-08-12",
+  "changelog": "Configuración: nueva opción 'Correo de programación' que permite redactar el texto del correo manualmente y envía el detalle de los equipos cargado automáticamente por ubicación."
 }

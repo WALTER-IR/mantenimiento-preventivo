@@ -21,7 +21,7 @@
         android:layout_marginLeft="14dp"
         android:layout_marginRight="14dp"
         android:layout_marginBottom="10dp"
-        android:hint="Buscar por usuario..."
+        android:hint="Buscar por usuario asignado, serie o hostname..."
         android:singleLine="true"
         android:drawableLeft="@android:drawable/ic_menu_search"
         android:drawablePadding="8dp" />
@@ -30,30 +30,39 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingLeft="14dp"
         android:paddingRight="14dp">
 
         <Button
             android:id="@+id/btnVencidos"
             style="@style/Chip"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginRight="6dp"
+            android:layout_marginRight="10dp"
             android:background="@drawable/bg_chip_active"
             android:text="Vencidos"
             android:textColor="#FFFFFF" />
 
-        <Button
-            android:id="@+id/btnProximos"
-            style="@style/Chip"
+        <Spinner
+            android:id="@+id/spinnerAlertas"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/bg_chip_inactive"
-            android:text="Próximos 30 días"
-            android:textColor="@color/text_primary" />
+            android:layout_weight="1" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/alertCounter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:text="" />
 
     <ListView
         android:id="@+id/listaAlertas"

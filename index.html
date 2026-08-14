@@ -98,15 +98,6 @@
       </div>
 
       <div class="section-head">
-        <h3>Equipos atrasados</h3>
-      </div>
-      <div id="atrasadosList" class="recent-list"></div>
-      <div id="atrasadosEmpty" class="empty-state hidden">
-        <div class="empty-icon">⏰</div>
-        <p>No hay equipos atrasados.</p>
-      </div>
-
-      <div class="section-head">
         <h3>Alertas de mantenimiento</h3>
         <button class="btn btn-ghost" id="btnVerTodasAlertas">Ver todas</button>
       </div>
@@ -155,6 +146,7 @@
         <h2 class="view-title">Mantenimientos</h2>
       </div>
       <div class="toolbar">
+        <input type="search" id="filterUsuarioMant" class="input" placeholder="Buscar por usuario..." />
         <select id="filterUbicacion" class="input select">
           <option value="">Todas las ubicaciones</option>
         </select>
@@ -192,8 +184,13 @@
         <h2 class="view-title">Alertas</h2>
       </div>
       <div class="alert-tabs">
-        <button class="chip active" data-alerttab="vencidos">Vencidos</button>
-        <button class="chip" data-alerttab="proximos">Próximos 30 días</button>
+        <button class="chip active" id="btnAlertVencidos" type="button">Vencidos</button>
+        <select id="filterAlertaTipo" class="input select">
+          <option value="7">Próximos 7 días</option>
+          <option value="15">Próximos 15 días</option>
+          <option value="30">Próximos 30 días</option>
+        </select>
+        <input type="search" id="searchAlerta" class="input" placeholder="Buscar por usuario asignado, serie o hostname..." />
       </div>
       <div id="alertFullList" class="alert-list"></div>
       <div id="alertFullEmpty" class="empty-state hidden">
@@ -205,6 +202,12 @@
     <!-- ============================ CONFIGURACIÓN ============================ -->
     <section id="view-config" class="view hidden">
       <h2 class="view-title">Configuración</h2>
+
+      <div class="card" id="cardMiCuenta">
+        <h3 class="card-title">Mi cuenta</h3>
+        <p class="card-text" id="miCuentaInfo"></p>
+        <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
+      </div>
 
       <div class="card" id="cardEmpresa">
         <h3 class="card-title">Datos de la empresa</h3>
@@ -222,6 +225,62 @@
         <div id="usuariosList" class="usuarios-list"></div>
       </div>
 
+      <div class="card hidden" id="cardProgramacion">
+        <h3 class="card-title">Programación de mantenimientos</h3>
+        <p class="card-text">Registra los días feriados y programa las fechas de mantenimiento desde una fecha inicial: solo días laborales (lun-vie, sin feriados), con máximo 3 equipos por día y por responsable.</p>
+
+        <h4 class="card-subtitle">Días feriados</h4>
+        <label class="field-label" for="fdFecha">Fecha del feriado</label>
+        <input type="date" id="fdFecha" class="input" />
+        <label class="field-label" for="fdMotivo">Motivo (ej. Navidad)</label>
+        <input type="text" id="fdMotivo" class="input" placeholder="Motivo" />
+        <button class="btn btn-primary" id="btnAgregarFeriado">Agregar feriado</button>
+        <div id="feriadosList" class="usuarios-list"></div>
+
+        <h4 class="card-subtitle">Programar mantenimientos</h4>
+        <label class="field-label" for="progFechaInicial">Fecha inicial</label>
+        <input type="date" id="progFechaInicial" class="input" />
+        <button class="btn btn-primary btn-block" id="btnProgramar">Programar mantenimientos</button>
+      </div>
+
+      <div class="card hidden" id="cardCorreo">
+        <h3 class="card-title">Correo de programación</h3>
+        <p class="card-text">Redacta el correo que notificará la programación de mantenimientos. El detalle de los equipos se carga automáticamente según la ubicación.</p>
+        <label class="field-label" for="correoAsunto">Asunto</label>
+        <input type="text" id="correoAsunto" class="input" value="Programación de Mantenimiento de Equipos de Computo" />
+        <label class="field-label" for="correoCuerpo">Texto del correo</label>
+        <textarea id="correoCuerpo" class="input textarea" rows="10">Estimados señores:
+
+Por medio de la presente, les informamos que se ha programado una jornada de mantenimiento preventivo con el objetivo de garantizar el correcto funcionamiento de los equipos de cómputo y minimizar la probabilidad de fallas. A continuación se detallan las acciones previstas para la intervención.
+
+Detalle de equipos programados:
+
+Recomendaciones para los usuarios:
+  * Guardar su información importante.
+  * Cerrar sesión antes de la intervención.
+  * Informarnos en caso de requerir reprogramación.
+
+Si tiene dudas o necesita más información, no dude en contactarnos.
+Atentamente,</textarea>
+        <label class="field-label" for="correoUbicacion">Ubicación</label>
+        <select id="correoUbicacion" class="input select"></select>
+        <h4 class="card-subtitle">Equipos incluidos</h4>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Usuario asignado</th>
+                <th>Ubicación</th>
+                <th>Responsable</th>
+                <th>Fecha programada</th>
+              </tr>
+            </thead>
+            <tbody id="correoTbody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary btn-block" id="btnEnviarCorreo">Enviar correo</button>
+      </div>
+
       <div class="card" id="cardAuditoria">
         <h3 class="card-title">Auditoría</h3>
         <p class="card-text">Registro de las últimas acciones realizadas en la aplicación.</p>
@@ -236,21 +295,32 @@
           <button class="btn btn-outline" id="btnExportar">⬇ Exportar datos</button>
           <button class="btn btn-outline" id="btnImportar">⬆ Importar datos</button>
         </div>
+        <button class="btn btn-primary btn-block" id="btnExportarExcel">⬇ Exportar a Excel</button>
         <input type="file" id="fileImport" class="hidden" accept="application/json" />
       </div>
 
       <div class="card" id="cardActualizaciones">
         <h3 class="card-title">Actualizaciones</h3>
-        <p class="card-text">La aplicación se actualiza automáticamente por internet cuando hay una nueva versión disponible.</p>
+        <p class="card-text">La aplicación funciona sin conexión. Solo se conecta a internet cuando usted pulsa "Buscar actualizaciones".</p>
         <div class="btn-row">
           <button class="btn btn-outline" id="btnCheckUpdate">🔄 Buscar actualizaciones</button>
         </div>
         <p id="updateStatus" class="update-status">Versión <span id="appVersion">1.0.0</span></p>
       </div>
 
+      <div class="card" id="cardLogo">
+        <h3 class="card-title">Logo para el PDF</h3>
+        <p class="card-text">Seleccione un logotipo para aparecer en el encabezado del formato TI-F016.</p>
+        <div class="logo-upload-row">
+          <input type="file" id="logoInput" class="input" accept="image/*" />
+          <img id="logoPreview" class="logo-preview hidden" alt="Logo preview" />
+          <button class="btn btn-ghost btn-sm" id="btnClearLogo">✕ Quitar logo</button>
+        </div>
+      </div>
+
       <div class="card" id="cardAcerca">
         <h3 class="card-title">Acerca de</h3>
-        <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión y se actualiza automáticamente por internet.</p>
+        <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión. Solo se conecta a internet cuando usted lo solicita.</p>
         <p class="update-status" id="acercaInfo">❤️ Hecho con ❤️ · v1.0.0</p>
       </div>
     </section>
@@ -264,6 +334,7 @@
       <div class="formato" id="formatoContenido"></div>
       <div class="btn-row">
         <button class="btn btn-outline" id="btnEnviarFormato">📤 Enviar</button>
+        <button class="btn btn-outline" id="btnPdfFormato">📄 PDF</button>
         <button class="btn btn-primary" id="btnImprimirFormato">🖨 Imprimir</button>
       </div>
     </section>
@@ -305,9 +376,14 @@
         </div>
         <div class="field-row">
           <div>
-            <label class="field-label" for="eqModelo">Modelo</label>
-            <input type="text" id="eqModelo" class="input" placeholder="Ej. ThinkPad T14" />
+            <label class="field-label" for="eqCodInventario">Cod. Inventario</label>
+            <input type="text" id="eqCodInventario" class="input" placeholder="Ej. INV-2024-001" />
           </div>
+          <div>
+            <label class="field-label" for="eqDni">DNI</label>
+            <input type="text" id="eqDni" class="input" placeholder="Ej. 71913151" />
+          </div>
+        </div>
           <div>
             <label class="field-label" for="eqSerie">No. de serie</label>
             <input type="text" id="eqSerie" class="input" placeholder="S/N" />
@@ -335,6 +411,20 @@
           <div>
             <label class="field-label" for="eqCargo">Cargo</label>
             <input type="text" id="eqCargo" class="input" placeholder="Ej. Analista de Producción" />
+          </div>
+          <div>
+            <label class="field-label" for="eqUsuarioAsignado">Usuario asignado (propietario)</label>
+            <input type="text" id="eqUsuarioAsignado" class="input" placeholder="Ej. Fred Vega Ramos" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="eqArea">Área</label>
+            <input type="text" id="eqArea" class="input" placeholder="Ej. Contabilidad" />
+          </div>
+          <div>
+            <label class="field-label" for="eqCodInventario">Cod. Inventario</label>
+            <input type="text" id="eqCodInventario" class="input" placeholder="Ej. INV-2024-001" />
           </div>
         </div>
         <div class="field-row">
@@ -423,8 +513,15 @@
             </select>
           </div>
         </div>
-        <label class="field-label">Actividades realizadas</label>
-        <div id="checklist" class="checklist"></div>
+        <label class="field-label"><strong>Actividades realizadas</strong></label>
+        <div class="checklist-section">
+          <h5><strong>Mantenimiento de Software</strong></h5>
+          <div id="checklistSoft" class="checklist"></div>
+        </div>
+        <div class="checklist-section">
+          <h5><strong>Mantenimiento de Hardware</strong></h5>
+          <div id="checklistHard" class="checklist"></div>
+        </div>
         <div class="field-row">
           <div>
             <label class="field-label" for="mtTecnico">Técnico</label>
@@ -437,7 +534,7 @@
         </div>
         <label class="field-label" for="mtProxima">Próximo mantenimiento</label>
         <input type="date" id="mtProxima" class="input" />
-        <label class="field-label" for="mtObs">Observaciones</label>
+        <label class="field-label" for="mtObs"><strong>Observaciones</strong></label>
         <textarea id="mtObs" class="input textarea" rows="2" placeholder="Detalles del mantenimiento"></textarea>
       </div>
       <div class="modal-foot">
@@ -486,7 +583,7 @@
         <input type="text" id="usDni" class="input" placeholder="DNI" />
         <label class="field-label" for="usClave">Contraseña (vacía = DNI)</label>
         <input type="text" id="usClave" class="input" placeholder="Contraseña" />
-        <label class="field-label" for="usRol">Permiso</label>
+        <label class="field-label" for="usRol" id="usRolLabel">Permiso</label>
         <select id="usRol" class="input select">
           <option value="0">Lectura</option>
           <option value="1">Edición</option>

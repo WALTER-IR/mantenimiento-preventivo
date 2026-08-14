@@ -1,7 +1,10 @@
 // ============================================================
-//  Service Worker - actualización por internet y modo offline
+//  Service Worker - SOLO CACHÉ (sin conexión a internet)
+//  Mantiene el funcionamiento sin conexión pero NO sincroniza
+//  nada externamente. La app solo se actualiza cuando el
+//  usuario lo pide explícitamente.
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v25";
+const CACHE_NAME = "mantenimiento-pwa-v30";
 
 const CORE_ASSETS = [
   "./",
@@ -36,14 +39,15 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
+// Cache-only: NUNCA se conecta a la red. Todo se sirve desde la caché local.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
-  // navegación: red primero, caché como respaldo (así se ven las
-  // actualizaciones publicadas por internet inmediatamente)
-  if (event.request.mode === "navigate") {
+  // app-version.json se consulta solo cuando el usuario pulsa "Buscar actualizaciones":
+  // red primero (para detectar la versión nueva) y caché como respaldo sin conexión.
+  if (url.pathname.endsWith("/app-version.json")) {
     event.respondWith(
       fetch(event.request)
         .then((resp) => {
@@ -51,24 +55,16 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return resp;
         })
-        .catch(() => caches.match(event.request).then((r) => r || caches.match("./index.html")))
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // recursos estáticos: caché primero, actualización en segundo plano
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((resp) => {
-          if (resp && resp.ok) {
-            const copy = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return resp;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
+      if (cached) return cached;
+      if (event.request.mode === "navigate") return caches.match("./index.html");
+      return new Response("", { status: 200, statusText: "ok" });
     })
   );
 });

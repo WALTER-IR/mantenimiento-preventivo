@@ -46,16 +46,16 @@ public class CargaMasivaActivity extends Activity {
 
         if (tipo.equals(TIPO_RESPONSABLES)) {
             title.setText("Cargar responsables");
-            desc.setText("Cada fila creará un responsable con su ZONA. Columnas: DNI, ZONA, RESPONSABLE.");
-            columnas.setText("DNI; ZONA; RESPONSABLE; SUBDIVISION; CeCo SAP; AREA; CARGO; EMAIL");
+            desc.setText("Cada fila crea un responsable. Columnas OBLIGATORIAS: RESPONSABLE (o NOMBRE) y DNI.");
+            columnas.setText("RESPONSABLE; DNI; ZONA; SUBDIVISION; CECO SAP; AREA; CARGO; EMAIL; CLAVE");
         } else if (tipo.equals(TIPO_MANTENIMIENTOS)) {
             title.setText("Cargar mantenimientos");
-            desc.setText("Cada fila registrará un mantenimiento para la SERIE DE EQUIPO indicada. El equipo debe existir.");
-            columnas.setText("SERIE DE EQUIPO; Prioridad; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES");
+            desc.setText("Cada fila registra un mantenimiento para la SERIE DE EQUIPO indicada (el equipo debe existir).");
+            columnas.setText("SERIE DE EQUIPO; PRIORIDAD; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES; ACTIVIDADES REALIZADAS; PROXIMO MANTENIMIENTO");
         } else {
             title.setText("Cargar equipos");
-            desc.setText("Cada fila crea un equipo asignado al RESPONSABLE indicado (columna RESPONSABLE, o DNI si trae un nombre, o USUARIO ASIGNADO). El USUARIO ASIGNADO se guarda como propietario del equipo. No se crean usuarios automáticamente.");
-            columnas.setText("USUARIO ASIGNADO; RESPONSABLE; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; SERIE DE EQUIPO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS");
+            desc.setText("Cada fila crea un equipo. Necesita SERIE DE EQUIPO y un responsable (RESPONSABLE, DNI o USUARIO ASIGNADO). No crea usuarios nuevos.");
+            columnas.setText("SERIE DE EQUIPO; USUARIO ASIGNADO; RESPONSABLE; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS; AREA; CARGO");
         }
 
         Button btn = (Button) findViewById(R.id.btnSeleccionar);

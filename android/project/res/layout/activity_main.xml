@@ -271,48 +271,6 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     style="@style/Section"
-                    android:text="Equipos atrasados" />
-
-                <Button
-                    android:id="@+id/btnVerAtrasados"
-                    style="@style/BtnOutline"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ver todos"
-                    android:textSize="13sp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
-            </LinearLayout>
-
-            <ListView
-                android:id="@+id/listaAtrasados"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:divider="@null"
-                android:dividerHeight="4dp" />
-
-            <TextView
-                android:id="@+id/emptyAtrasados"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Sin equipos atrasados"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    style="@style/Section"
                     android:text="Alertas de mantenimiento" />
 
                 <Button
@@ -341,12 +299,22 @@
                 style="@style/Section"
                 android:text="Actividad reciente" />
 
-            <ListView
-                android:id="@+id/listaRecientes"
+            <LinearLayout
+                android:id="@+id/lstRecientes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:divider="@null"
-                android:dividerHeight="4dp" />
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/txtRecientesVacio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:gravity="center"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:text="Aún no hay mantenimientos finalizados." />
         </LinearLayout>
     </ScrollView>
 

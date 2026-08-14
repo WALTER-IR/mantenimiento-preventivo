@@ -1,6 +1,6 @@
 {
-  "version": "1.14.7",
+  "version": "1.18.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-07",
-  "changelog": "Al editar un mantenimiento, el estado se actualiza automáticamente según la fecha registrada: al poner la fecha de reprogramación el estado cambia a Reprogramado y al poner la fecha real cambia a Finalizado. Se agregó el listado de actividades realizadas (checklist) en el registro y edición de mantenimientos, junto con la fecha real."
+  "updated": "2026-08-12",
+  "changelog": "Configuración: nueva opción 'Correo de programación' que permite redactar el texto del correo manualmente y envía el detalle de los equipos cargado automáticamente por ubicación."
 }

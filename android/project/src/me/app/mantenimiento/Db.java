@@ -13,8 +13,12 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -60,7 +64,7 @@ public final class Db {
 
     private static class Helper extends SQLiteOpenHelper {
         Helper(Context c) {
-            super(c, "mantenimiento.db", null, 7);
+              super(c, "mantenimiento.db", null, 13);
         }
 
         @Override
@@ -90,7 +94,10 @@ public final class Db {
                     "marca TEXT DEFAULT ''," +
                     "modelo TEXT DEFAULT ''," +
                     "contrato TEXT DEFAULT ''," +
-                    "status TEXT DEFAULT '')");
+                     "status TEXT DEFAULT ''," +
+                     "area TEXT DEFAULT ''," +
+                     "cargo TEXT DEFAULT ''," +
+                     "dni TEXT DEFAULT '')");
             db.execSQL("CREATE TABLE mantenimientos (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "equipo_id INTEGER NOT NULL," +
@@ -101,7 +108,8 @@ public final class Db {
                     "estado TEXT DEFAULT ''," +
                     "actividades TEXT DEFAULT ''," +
                     "proxima TEXT DEFAULT ''," +
-                    "observaciones TEXT DEFAULT '')");
+                    "observaciones TEXT DEFAULT ''," +
+                    "finalizado_en TEXT DEFAULT '')");
             db.execSQL("CREATE TABLE auditoria (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "fecha TEXT DEFAULT ''," +
@@ -110,6 +118,10 @@ public final class Db {
                     "rol TEXT DEFAULT ''," +
                     "accion TEXT DEFAULT ''," +
                     "detalle TEXT DEFAULT '')");
+            db.execSQL("CREATE TABLE feriados (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "fecha TEXT DEFAULT ''," +
+                    "motivo TEXT DEFAULT '')");
         }
 
         @Override
@@ -130,6 +142,54 @@ public final class Db {
             if (oldVersion < 7) {
                 try {
                     db.execSQL("ALTER TABLE mantenimientos ADD COLUMN proxima TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 8) {
+                try {
+                    db.execSQL("ALTER TABLE equipos ADD COLUMN cargo TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 9) {
+                try {
+                    db.execSQL("ALTER TABLE equipos ADD COLUMN area TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 10) {
+                try {
+                    db.execSQL("ALTER TABLE equipos ADD COLUMN dni TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 11) {
+                // Si un equipo no tiene usuario asignado, tomar el nombre del responsable vinculado.
+                try {
+                    db.execSQL("UPDATE equipos SET usuario_asignado = " +
+                            "(SELECT nombre FROM usuarios WHERE id = equipos.usuario_id) " +
+                            "WHERE usuario_asignado = '' OR usuario_asignado IS NULL");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 12) {
+                try {
+                    db.execSQL("CREATE TABLE IF NOT EXISTS feriados (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "fecha TEXT DEFAULT ''," +
+                            "motivo TEXT DEFAULT '')");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 13) {
+                try {
+                    db.execSQL("ALTER TABLE mantenimientos ADD COLUMN finalizado_en TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+                // Los registros ya finalizados conservan su orden por fecha real.
+                try {
+                    db.execSQL("UPDATE mantenimientos SET finalizado_en = fecha_real " +
+                            "WHERE finalizado_en = '' AND fecha_real != ''");
                 } catch (Exception ignored) {
                 }
             }
@@ -495,6 +555,9 @@ public final class Db {
         v.put("modelo", e.modelo);
         v.put("contrato", e.contrato);
         v.put("status", e.status);
+        v.put("area", e.area);
+        v.put("cargo", e.cargo);
+        v.put("dni", e.dni);
         boolean editando = e.id > 0;
         if (editando) {
             w().update("equipos", v, "id=?", new String[]{String.valueOf(e.id)});
@@ -613,17 +676,36 @@ public final class Db {
         e.responsable = s(c, "u_nombre");
         e.zona = s(c, "u_zona");
         e.subdivision = s(c, "u_subdivision");
-        e.dni = s(c, "u_dni");
+        e.dni = s(c, "dni").length() > 0 ? s(c, "dni") : s(c, "u_dni");
         e.ceco = s(c, "u_ceco");
-        e.area = s(c, "u_area");
-        e.cargo = s(c, "u_cargo");
+        e.area = s(c, "area");
+        e.cargo = s(c, "cargo").length() > 0 ? s(c, "cargo") : s(c, "u_cargo");
+        e.cargoResponsable = s(c, "u_cargo");
         e.email = s(c, "u_email");
         return e;
     }
 
     // ---------- mantenimientos ----------
 
+    // Marca de tiempo (yyyy-MM-dd HH:mm:ss) del momento en que se finaliza.
+    private static String nowStamp() {
+        return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                .format(new java.util.Date());
+    }
+
     public static long saveMant(Mantenimiento m) {
+        boolean finaliza = m.fechaReal.length() > 0 || estadoFinal(m.estado);
+        String fe = m.finalizadoEn == null ? "" : m.finalizadoEn.trim();
+        if (finaliza) {
+            if (fe.length() == 0) {
+                Mantenimiento prev = m.id > 0 ? getMant(m.id) : null;
+                fe = (prev != null && prev.finalizadoEn.length() > 0)
+                        ? prev.finalizadoEn : nowStamp();
+            }
+        } else {
+            fe = "";
+        }
+        m.finalizadoEn = fe;
         ContentValues v = new ContentValues();
         v.put("equipo_id", m.equipoId);
         v.put("prioridad", m.prioridad);
@@ -634,6 +716,7 @@ public final class Db {
         v.put("actividades", m.actividades);
         v.put("proxima", m.proxima);
         v.put("observaciones", m.observaciones);
+        v.put("finalizado_en", fe);
         boolean editando = m.id > 0;
         if (editando) {
             w().update("mantenimientos", v, "id=?", new String[]{String.valueOf(m.id)});
@@ -713,6 +796,7 @@ public final class Db {
         m.actividades = s(c, "actividades");
         m.proxima = s(c, "proxima");
         m.observaciones = s(c, "observaciones");
+        m.finalizadoEn = s(c, "finalizado_en");
         m.serie = s(c, "m_serie");
         m.hostname = s(c, "m_hostname");
         m.ubicacion = s(c, "m_ubicacion");
@@ -743,6 +827,18 @@ public final class Db {
         return sb.toString();
     }
 
+    // Clasifica una actividad como hardware (true) o software (false).
+    public static boolean esHardware(String t) {
+        String s = t.toLowerCase(Locale.US);
+        return s.contains("limpieza de disco") || s.contains("ram") || s.contains("placa")
+                || s.contains("disipador") || s.contains("pasta") || s.contains("fuente")
+                || s.contains("ventilador") || s.contains("cpu") || s.contains("gpu")
+                || s.contains("bater") || s.contains("tarjeta") || s.contains("hardware")
+                || s.contains("cableado") || s.contains("puertos") || s.contains("ssd")
+                || s.contains("hdd") || s.contains("teclado") || s.contains("pantalla")
+                || s.contains("limpieza interna") || s.contains("disco f");
+    }
+
     // ---------- alertas ----------
 
     public static boolean estadoFinal(String estado) {
@@ -771,13 +867,17 @@ public final class Db {
     public static ArrayList<Mantenimiento> alertas(int tipo) {
         ArrayList<Mantenimiento> out = new ArrayList<>();
         String today = Fmt.today();
-        String lim = Fmt.addDays(today, 30);
+        String lim7 = Fmt.addDays(today, 7);
+        String lim15 = Fmt.addDays(today, 15);
+        String lim30 = Fmt.addDays(today, 30);
         for (Mantenimiento m : allMants()) {
             if (m.fechaReal.length() > 0 || estadoFinal(m.estado)) continue;
             String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
             if (eff.length() == 0) continue;
-            if (tipo == 0 && eff.compareTo(today) < 0) out.add(m);
-            else if (tipo == 1 && eff.compareTo(today) >= 0 && eff.compareTo(lim) <= 0) out.add(m);
+            if (tipo == 0 && eff.compareTo(today) < 0) out.add(m); // vencidos
+            else if (tipo == 1 && eff.compareTo(today) >= 0 && eff.compareTo(lim7) <= 0) out.add(m); // 7 dias
+            else if (tipo == 2 && eff.compareTo(today) >= 0 && eff.compareTo(lim15) <= 0) out.add(m); // 15 dias
+            else if (tipo == 3 && eff.compareTo(today) >= 0 && eff.compareTo(lim30) <= 0) out.add(m); // 30 dias
         }
         return out;
     }
@@ -792,29 +892,6 @@ public final class Db {
 
     // Equipos con al menos un mantenimiento vencido (no finalizado),
     // visibles para el usuario de la sesión.
-    public static ArrayList<Equipo> equiposAtrasados() {
-        ArrayList<Equipo> out = new ArrayList<>();
-        HashMap<Long, Boolean> vencidos = new HashMap<>();
-        for (Mantenimiento m : alertas(0)) vencidos.put(m.equipoId, Boolean.TRUE);
-        for (Equipo e : allEquipos()) {
-            if (vencidos.containsKey(e.id) && puedeVerEquipo(e)) out.add(e);
-        }
-        return out;
-    }
-
-    // Días de atraso del mantenimiento vencido más antiguo del equipo (0 si no tiene vencidos).
-    public static long diasAtrasoEquipo(long equipoId) {
-        String today = Fmt.today();
-        long max = 0;
-        for (Mantenimiento m : alertas(0)) {
-            if (m.equipoId != equipoId) continue;
-            String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
-            long d = -Fmt.daysUntil(today, eff);
-            if (d > max) max = d;
-        }
-        return max;
-    }
-
     // Avance del mantenimiento: programados (pendientes sin reprogramar),
     // reprogramados (pendientes con fecha reprogramada) y finalizados.
     public static int[] avanceMantenimiento() {
@@ -831,11 +908,33 @@ public final class Db {
         return new int[]{prog, reprog, fin};
     }
 
+    // Últimos mantenimientos finalizados (los finalizados más recientes primero).
     public static ArrayList<Mantenimiento> recent(int n) {
         ArrayList<Mantenimiento> all = allMants();
         ArrayList<Mantenimiento> out = new ArrayList<>();
-        for (int i = 0; i < all.size() && i < n; i++) out.add(all.get(i));
+        Collections.sort(all, new Comparator<Mantenimiento>() {
+            @Override
+            public int compare(Mantenimiento a, Mantenimiento b) {
+                return keyOrden(b).compareTo(keyOrden(a));
+            }
+        });
+        for (Mantenimiento m : all) {
+            if (!(estadoFinal(m.estado) || m.fechaReal.length() > 0)) continue;
+            out.add(m);
+            if (out.size() >= n) break;
+        }
         return out;
+    }
+
+    private static String keyOrden(Mantenimiento m) {
+        if (m.finalizadoEn.length() > 0) return m.finalizadoEn;
+        return keyFecha(m);
+    }
+
+    private static String keyFecha(Mantenimiento m) {
+        if (m.fechaReal.length() > 0) return m.fechaReal;
+        if (m.fechaReprogramada.length() > 0) return m.fechaReprogramada;
+        return m.fechaProgramada;
     }
 
     // ---------- estadisticas ----------
@@ -883,9 +982,14 @@ public final class Db {
         int colArea = findCol(headers, "AREA");
         int colCargo = findCol(headers, "CARGO");
         int colEmail = findCol(headers, "EMAIL");
+        int colClave = findCol(headers, "CLAVE");
 
         if (colNombre < 0) {
             errores.add("Falta la columna RESPONSABLE (o NOMBRE Y APELLIDOS).");
+            return new int[]{0, filas.size()};
+        }
+        if (colDni < 0) {
+            errores.add("Falta la columna DNI.");
             return new int[]{0, filas.size()};
         }
 
@@ -929,7 +1033,8 @@ public final class Db {
             u.area = val(f, colArea);
             u.cargo = val(f, colCargo);
             u.email = val(f, colEmail);
-            u.clave = dni;
+            String claveExcel = val(f, colClave);
+            u.clave = claveExcel.length() > 0 ? claveExcel : dni;
             u.rol = ROL_EDICION;
             saveUsuario(u);
             existentes.put(keyOf(nombre), true);
@@ -953,8 +1058,8 @@ public final class Db {
 
     private static int[] loadEquipos0(String[] headers, List<String[]> filas, List<String> errores) {
         int ok = 0, err = 0;
-        int colResp = findCol(headers, "USUARIO ASIGNADO", "USUARIO");
-        int colRespAlt = findCol(headers, "RESPONSABLE");
+        int colAsignado = findCol(headers, "USUARIO ASIGNADO", "USUARIO");
+        int colResp = findCol(headers, "RESPONSABLE");
         int colDni = findCol(headers, "DNI");
         int colHost = findCol(headers, "HOSTNAME", "NEW HOSTNAME");
         int colIp = findCol(headers, "DIR. IP", "IP");
@@ -966,9 +1071,16 @@ public final class Db {
         int colModelo = findCol(headers, "MODELO");
         int colContrato = findCol(headers, "CONTRATO DE ARRENDAMIENTO", "CONTRATO");
         int colStatus = findCol(headers, "STATUS");
+        int colArea = findCol(headers, "AREA");
+        int colCargo = findCol(headers, "CARGO");
 
         if (colSerie < 0 && colHost < 0) {
             errores.add("Faltan las columnas SERIE DE EQUIPO / HOSTNAME.");
+            return new int[]{0, filas.size()};
+        }
+        // Se necesita al menos una columna para identificar al responsable
+        if (colResp < 0 && colDni < 0 && colAsignado < 0) {
+            errores.add("Falta la columna RESPONSABLE, DNI o USUARIO ASIGNADO para vincular el equipo.");
             return new int[]{0, filas.size()};
         }
 
@@ -992,26 +1104,28 @@ public final class Db {
                 addError(errores, i, "serie duplicada: " + serie);
                 continue;
             }
-            String asignado = val(f, colResp);
-            String respAlt = colRespAlt >= 0 ? val(f, colRespAlt) : "";
+            // Matching EXACTO de responsable (sin fuzzy): DNI > nombre RESPONSABLE > USUARIO ASIGNADO
+            String asignado = val(f, colAsignado);
             String dniText = val(f, colDni);
-            boolean dniEsNombre = dniText.length() > 0 && !esNumero(dniText);
-            // Responsable a asignar: RESPONSABLE > DNI (si trae nombre) > USUARIO ASIGNADO
-            String nombreResp = respAlt;
-            if (nombreResp.length() == 0 && dniEsNombre) nombreResp = dniText;
-            if (nombreResp.length() == 0) nombreResp = asignado;
+            String nombreResp = val(f, colResp);
             Usuario u = null;
-            if (dniText.length() > 0 && !dniEsNombre) u = findUsuarioByDni(dniText);
-            if (u == null && nombreResp.length() > 0) u = matchResponsable(nombreResp);
+            // 1) Buscar por DNI (si es numerico)
+            if (dniText.length() > 0 && esNumero(dniText)) {
+                u = findUsuarioByDni(dniText);
+            }
+            // 2) Buscar por nombre de RESPONSABLE (exacto)
+            if (u == null && nombreResp.length() > 0) {
+                u = findUsuarioByNombre(nombreResp);
+            }
+            // 3) Buscar por USUARIO ASIGNADO (exacto)
+            if (u == null && asignado.length() > 0) {
+                u = findUsuarioByNombre(asignado);
+            }
             if (u == null) {
                 err++;
-                addError(errores, i, "no se encontró el responsable: " +
-                        (nombreResp.length() > 0 ? nombreResp : "—"));
+                String criterio = dniText.length() > 0 ? dniText : (nombreResp.length() > 0 ? nombreResp : asignado);
+                addError(errores, i, "no se encontró el responsable: " + (criterio.length() > 0 ? criterio : "—"));
                 continue;
-            }
-            if (dniText.length() > 0 && !dniEsNombre && !dniText.equalsIgnoreCase(u.dni)) {
-                u.dni = dniText;
-                saveUsuario(u);
             }
             Equipo e = new Equipo();
             e.usuarioId = u.id;
@@ -1026,6 +1140,9 @@ public final class Db {
             e.modelo = val(f, colModelo);
             e.contrato = val(f, colContrato);
             e.status = val(f, colStatus);
+            e.area = val(f, colArea);
+            e.cargo = val(f, colCargo);
+            e.dni = dniText.length() > 0 && esNumero(dniText) ? dniText : "";
             saveEquipo(e);
             seriesUsadas.put(keyOf(serie), true);
             ok++;
@@ -1101,17 +1218,28 @@ public final class Db {
     }
 
     // Coincidencia: primero igualdad exacta (sin acentos ni espacios), luego "contiene".
+    // Matching estricto de columnas: exacto (pass 0) o header que arranca
+    // con el target (pass 1, target >= 4 chars). Evita el contains codicioso
+    // que hacia match con la columna equivocada ("SERIE" vs "NUMERO DE SERIE").
     private static int findCol(String[] headers, String... names) {
         String[] targets = new String[names.length];
         for (int i = 0; i < names.length; i++) targets[i] = keyOf(names[i]);
-        for (int pass = 0; pass < 2; pass++) {
-            for (int i = 0; i < headers.length; i++) {
-                String h = keyOf(headers[i]);
-                if (h.length() == 0) continue;
-                for (String t : targets) {
-                    if (t.length() == 0) continue;
-                    if (pass == 0 ? h.equals(t) : h.contains(t)) return i;
-                }
+        // Pass 0: exacta
+        for (int i = 0; i < headers.length; i++) {
+            String h = keyOf(headers[i]);
+            if (h.length() == 0) continue;
+            for (String t : targets) {
+                if (t.length() == 0) continue;
+                if (h.equals(t)) return i;
+            }
+        }
+        // Pass 1: el header arranca con el target (solo targets largos, >= 4)
+        for (int i = 0; i < headers.length; i++) {
+            String h = keyOf(headers[i]);
+            if (h.length() == 0) continue;
+            for (String t : targets) {
+                if (t.length() < 4) continue;
+                if (h.startsWith(t)) return i;
             }
         }
         return -1;
@@ -1195,6 +1323,10 @@ public final class Db {
             o.put("modelo", e.modelo);
             o.put("contrato", e.contrato);
             o.put("status", e.status);
+            o.put("usuario_asignado", e.usuarioAsignado);
+            o.put("area", e.area);
+            o.put("cargo", e.cargo);
+            o.put("dni", e.dni);
             eqs.put(o);
         }
         root.put("equipos", eqs);
@@ -1212,11 +1344,23 @@ public final class Db {
             o.put("actividades", m.actividades);
             o.put("proxima", m.proxima);
             o.put("observaciones", m.observaciones);
+            o.put("finalizado_en", m.finalizadoEn);
             mts.put(o);
         }
         root.put("mantenimientos", mts);
+
+        JSONArray fds = new JSONArray();
+        for (String[] f : allFeriados()) {
+            JSONObject o = new JSONObject();
+            o.put("id", Long.parseLong(f[0]));
+            o.put("fecha", f[1]);
+            o.put("motivo", f[2]);
+            fds.put(o);
+        }
+        root.put("feriados", fds);
         logAuditoria("EXPORTACION DE DATOS", "Registros: " + uss.length() + " usuarios, "
-                + eqs.length() + " equipos, " + mts.length() + " mantenimientos");
+                + eqs.length() + " equipos, " + mts.length() + " mantenimientos, "
+                + fds.length() + " feriados");
         return root.toString(2);
     }
 
@@ -1228,6 +1372,7 @@ public final class Db {
             db.delete("mantenimientos", null, null);
             db.delete("equipos", null, null);
             db.delete("usuarios", null, null);
+            db.delete("feriados", null, null);
 
             HashMap<Long, Long> mapUsuarios = new HashMap<>();
             JSONArray uss = root.optJSONArray("usuarios");
@@ -1277,6 +1422,10 @@ public final class Db {
                     e.modelo = o.optString("modelo");
                     e.contrato = o.optString("contrato");
                     e.status = o.optString("status");
+                    e.usuarioAsignado = o.optString("usuario_asignado");
+                    e.area = o.optString("area");
+                    e.cargo = o.optString("cargo");
+                    e.dni = o.optString("dni");
                     Long mapped = mapUsuarios.get(e.usuarioId);
                     if (mapped != null) e.usuarioId = mapped;
                     ContentValues v = new ContentValues();
@@ -1291,6 +1440,10 @@ public final class Db {
                     v.put("modelo", e.modelo);
                     v.put("contrato", e.contrato);
                     v.put("status", e.status);
+                    v.put("usuario_asignado", e.usuarioAsignado);
+                    v.put("area", e.area);
+                    v.put("cargo", e.cargo);
+                    v.put("dni", e.dni);
                     mapEquipos.put(o.optLong("id", 0), db.insert("equipos", null, v));
                 }
             }
@@ -1310,6 +1463,10 @@ public final class Db {
                     m.actividades = o.optString("actividades");
                     m.proxima = o.optString("proxima");
                     m.observaciones = o.optString("observaciones");
+                    m.finalizadoEn = o.optString("finalizado_en");
+                    if (m.finalizadoEn.length() == 0 && (m.fechaReal.length() > 0 || estadoFinal(m.estado))) {
+                        m.finalizadoEn = m.fechaReal.length() > 0 ? m.fechaReal : nowStamp();
+                    }
                     ContentValues v = new ContentValues();
                     v.put("equipo_id", m.equipoId);
                     v.put("prioridad", m.prioridad);
@@ -1320,7 +1477,18 @@ public final class Db {
                     v.put("actividades", m.actividades);
                     v.put("proxima", m.proxima);
                     v.put("observaciones", m.observaciones);
+                    v.put("finalizado_en", m.finalizadoEn);
                     db.insert("mantenimientos", null, v);
+                }
+            }
+            JSONArray fds = root.optJSONArray("feriados");
+            if (fds != null) {
+                for (int i = 0; i < fds.length(); i++) {
+                    JSONObject o = fds.getJSONObject(i);
+                    ContentValues v = new ContentValues();
+                    v.put("fecha", o.optString("fecha"));
+                    v.put("motivo", o.optString("motivo"));
+                    db.insert("feriados", null, v);
                 }
             }
             db.setTransactionSuccessful();
@@ -1349,10 +1517,137 @@ public final class Db {
         v.put("estado", "Programado");
         v.put("fecha_real", "");
         v.put("fecha_reprogramada", "");
+        v.put("finalizado_en", "");
         int n = db.update("mantenimientos", v,
                 "fecha_programada LIKE '2026-%' OR fecha_reprogramada LIKE '2026-%'", null);
         logAuditoria("ACTIVAR MANTENIMIENTOS 2026", n + " mantenimiento(s) activado(s)");
         return n;
+    }
+
+    // ---------- feriados ----------
+
+    public static void saveFeriado(String fecha, String motivo) {
+        if (fecha == null || fecha.length() == 0) return;
+        w().delete("feriados", "fecha=?", new String[]{fecha});
+        ContentValues v = new ContentValues();
+        v.put("fecha", fecha);
+        v.put("motivo", motivo == null ? "" : motivo);
+        w().insert("feriados", null, v);
+        logAuditoria("ALTA FERIADO", Fmt.disp(fecha)
+                + (motivo != null && motivo.length() > 0 ? " · " + motivo : ""));
+    }
+
+    public static void deleteFeriado(long id) {
+        w().delete("feriados", "id=?", new String[]{String.valueOf(id)});
+        logAuditoria("BAJA FERIADO", "id=" + id);
+    }
+
+    public static ArrayList<String[]> allFeriados() {
+        ArrayList<String[]> out = new ArrayList<>();
+        Cursor c = r().query("feriados", null, null, null, null, null, "fecha ASC");
+        if (c != null) {
+            while (c.moveToNext()) {
+                out.add(new String[]{
+                        String.valueOf(c.getLong(c.getColumnIndexOrThrow("id"))),
+                        s(c, "fecha"),
+                        s(c, "motivo")
+                });
+            }
+            c.close();
+        }
+        return out;
+    }
+
+    public static boolean esFeriado(String fecha) {
+        if (fecha == null || fecha.length() == 0) return false;
+        Cursor c = r().query("feriados", null, "fecha=?", new String[]{fecha}, null, null, null);
+        boolean feriado = c != null && c.moveToFirst();
+        if (c != null) c.close();
+        return feriado;
+    }
+
+    // ---------- programación de mantenimientos ----------
+
+    // Avanza al siguiente día laboral (lun-vie, sin feriados); si date ya es laboral lo conserva.
+    public static String fechaLaboral(String date) {
+        if (date == null || date.length() == 0) return date;
+        String d = date;
+        for (int i = 0; i < 400; i++) {
+            int dow = dayOfWeek(d);
+            if (dow >= Calendar.MONDAY && dow <= Calendar.FRIDAY && !esFeriado(d)) return d;
+            d = Fmt.addDays(d, 1);
+        }
+        return date;
+    }
+
+    private static int dayOfWeek(String date) {
+        try {
+            Calendar c = Calendar.getInstance();
+            c.setTime(Fmt.FMT.parse(date));
+            return c.get(Calendar.DAY_OF_WEEK);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    // Reprograma los mantenimientos de todos los equipos desde fechaInicial: solo días laborales
+    // (lun-vie sin feriados), con máximo 3 equipos por día y por responsable. Actualiza el
+    // mantenimiento pendiente de cada equipo o crea uno nuevo si no existe.
+    public static int programarMantenimientos(String fechaInicial) {
+        if (fechaInicial == null || fechaInicial.length() == 0) return 0;
+        silencioAuditoria = true;
+        int total = 0;
+        try {
+            for (Usuario u : allUsuarios()) {
+                ArrayList<Equipo> eqs = equiposByUsuario(u.id);
+                if (eqs.isEmpty()) continue;
+                String dia = fechaLaboral(fechaInicial);
+                int count = 0;
+                for (Equipo e : eqs) {
+                    if (count == 3) {
+                        dia = fechaLaboral(Fmt.addDays(dia, 1));
+                        count = 0;
+                    }
+                    programarEquipo(e.id, dia);
+                    count++;
+                    total++;
+                }
+            }
+        } finally {
+            silencioAuditoria = false;
+        }
+        logAuditoria("PROGRAMACION MANTENIMIENTOS",
+                "Desde " + Fmt.disp(fechaInicial) + " · Equipos programados: " + total);
+        return total;
+    }
+
+    // Asigna la fecha programada al mantenimiento pendiente del equipo (o crea uno nuevo).
+    private static void programarEquipo(long equipoId, String fecha) {
+        Mantenimiento pendiente = null;
+        long maxId = -1;
+        for (Mantenimiento m : allMants(equipoId)) {
+            if (m.fechaReal.length() > 0 || estadoFinal(m.estado)) continue;
+            if (m.id > maxId) {
+                maxId = m.id;
+                pendiente = m;
+            }
+        }
+        if (pendiente != null) {
+            ContentValues v = new ContentValues();
+            v.put("fecha_programada", fecha);
+            v.put("fecha_reprogramada", "");
+            v.put("fecha_real", "");
+            v.put("estado", "Programado");
+            v.put("finalizado_en", "");
+            w().update("mantenimientos", v, "id=?", new String[]{String.valueOf(pendiente.id)});
+        } else {
+            Mantenimiento m = new Mantenimiento();
+            m.equipoId = equipoId;
+            m.fechaProgramada = fecha;
+            m.estado = "Programado";
+            m.finalizadoEn = "";
+            saveMant(m);
+        }
     }
 
     private static String s(Cursor c, String col) {

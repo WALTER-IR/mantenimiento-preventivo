@@ -47,11 +47,19 @@
                     android:textSize="13sp" />
 
                 <Button
+                    android:id="@+id/btnMiPerfil"
+                    style="@style/BtnOutline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Mi perfil" />
+
+                <Button
                     android:id="@+id/btnCerrarSesion"
                     style="@style/BtnDanger"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="8dp"
                     android:text="Cerrar sesión" />
             </LinearLayout>
 
@@ -132,6 +140,118 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/cardProgramacion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="vertical"
+                style="@style/Card">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Section"
+                    android:text="Programación de mantenimientos" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Registra los días feriados y programa las fechas de mantenimiento desde una fecha inicial (solo días laborales, 3 equipos por día y por responsable)."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnProgramacion"
+                    style="@style/BtnOutline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Programación de mantenimientos" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cardCorreo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="vertical"
+                style="@style/Card">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Section"
+                    android:text="Correo de programación" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Redacta el correo que notificará la programación de mantenimientos. El detalle de los equipos se carga automáticamente según la ubicación."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/correoAsunto"
+                    style="@style/Input"
+                    android:layout_marginTop="4dp"
+                    android:hint="Asunto del correo"
+                    android:text="@string/correo_asunto"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/correoCuerpo"
+                    style="@style/Input"
+                    android:layout_marginTop="8dp"
+                    android:hint="Texto del correo"
+                    android:text="@string/correo_cuerpo"
+                    android:minLines="8"
+                    android:gravity="top" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Ubicación"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <Spinner
+                    android:id="@+id/correoUbicacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Detalle de equipos"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="6dp">
+
+                    <TableLayout
+                        android:id="@+id/correoTable"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:stretchColumns="0" />
+                </ScrollView>
+
+                <Button
+                    android:id="@+id/btnEnviarCorreo"
+                    style="@style/BtnPrimary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Enviar correo" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/cardEmpresa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -181,6 +301,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="Exportar datos" />
+
+                <Button
+                    android:id="@+id/btnExportarExcel"
+                    style="@style/BtnPrimary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Exportar a Excel" />
 
                 <Button
                     android:id="@+id/btnImportar"

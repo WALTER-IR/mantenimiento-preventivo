@@ -9,10 +9,12 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -21,14 +23,16 @@ import java.util.Locale;
 
 public class AlertasActivity extends Activity implements View.OnClickListener {
 
-    private int modo = 0; // 0 vencidos, 1 proximos
+    private int modo = 0; // 0 vencidos (botón), 1 7dias, 2 15dias, 3 30dias (combobox)
     private ListView lv;
     private TextView empty;
-    private Button chipVencidos, chipProximos;
+    private Spinner spinnerAlertas;
+    private Button btnVencidos;
     private EditText search;
     private ArrayList<Mantenimiento> items = new ArrayList<>();
     private HashMap<Long, String> labels = new HashMap<>();
     private int loadSeq = 0;
+    private boolean spinnerReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,20 +47,33 @@ public class AlertasActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.navConfig).setOnClickListener(this);
         Ui.ajustarNav(this);
 
-        chipVencidos = (Button) findViewById(R.id.btnVencidos);
-        chipProximos = (Button) findViewById(R.id.btnProximos);
-        chipVencidos.setOnClickListener(new View.OnClickListener() {
+        // Botón "Vencidos" + combobox con los próximos mantenimientos
+        btnVencidos = (Button) findViewById(R.id.btnVencidos);
+        btnVencidos.setOnClickListener(this);
+
+        spinnerAlertas = (Spinner) findViewById(R.id.spinnerAlertas);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.alertas_proximos, android.R.layout.simple_spinner_dropdown_item);
+        spinnerAlertas.setAdapter(adapter);
+        spinnerAlertas.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                setModo(0);
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // El primer disparo se produce al colocar el adaptador; se ignora para
+                // que la vista inicial sea "Vencidos".
+                if (!spinnerReady) {
+                    spinnerReady = true;
+                    return;
+                }
+                modo = position + 1; // 1=7dias, 2=15dias, 3=30dias
+                marcarVencidos(false);
+                load();
             }
-        });
-        chipProximos.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                setModo(1);
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
+
+        marcarVencidos(true);
+        load();
 
         lv = (ListView) findViewById(R.id.listaAlertas);
         empty = (TextView) findViewById(R.id.emptyAlertas);
@@ -89,35 +106,37 @@ public class AlertasActivity extends Activity implements View.OnClickListener {
         });
     }
 
-    private void setModo(int m) {
-        modo = m;
-        chipVencidos.setBackgroundResource(m == 0 ? R.drawable.bg_chip_active : R.drawable.bg_chip_inactive);
-        chipProximos.setBackgroundResource(m == 1 ? R.drawable.bg_chip_active : R.drawable.bg_chip_inactive);
-        chipVencidos.setTextColor(m == 0 ? 0xFFFFFFFF : Ui.TEXT);
-        chipProximos.setTextColor(m == 1 ? 0xFFFFFFFF : Ui.TEXT);
-        load();
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
         load();
     }
 
+    private void marcarVencidos(boolean activo) {
+        if (btnVencidos == null) return;
+        btnVencidos.setBackgroundResource(activo ? R.drawable.bg_chip_active : R.drawable.bg_chip_inactive);
+        btnVencidos.setTextColor(activo ? 0xFFFFFFFF : 0xFF000000);
+    }
+
     private void load() {
         final int seq = ++loadSeq;
         final String q = search == null ? "" : search.getText().toString().trim().toLowerCase(Locale.ROOT);
+        final int m = modo;
         new Thread(new Runnable() {
             @Override
             public void run() {
                 final ArrayList<Mantenimiento> result;
                 final HashMap<Long, String> map = new HashMap<>();
                 try {
-                    result = Db.alertas(modo);
+                    // m: 0=vencidos, 1=7dias, 2=15dias, 3=30dias
+                    result = Db.alertas(m);
                     if (q.length() > 0) {
                         ArrayList<Mantenimiento> filt = new ArrayList<>();
                         for (Mantenimiento m : result) {
-                            if (m.usuario.toLowerCase(Locale.ROOT).contains(q)
+                            // Buscar por usuario asignado, serie y hostname
+                            Equipo eq = Db.getEquipo(m.equipoId);
+                            String usuarioEq = (eq != null && eq.usuarioAsignado != null) ? eq.usuarioAsignado.toLowerCase(Locale.ROOT) : "";
+                            if (usuarioEq.contains(q)
                                     || m.serie.toLowerCase(Locale.ROOT).contains(q)
                                     || m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
                                 filt.add(m);
@@ -144,6 +163,13 @@ public class AlertasActivity extends Activity implements View.OnClickListener {
                         labels = map;
                         lv.setAdapter(new Adapter());
                         empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                        // Contador de alertas
+                        TextView counter = findViewById(R.id.alertCounter);
+                        if (counter != null) {
+                            String[] tipos = {"Vencidos", "Próximos 7 días", "Próximos 15 días", "Próximos 30 días"};
+                            String tipo = m >= 0 && m < tipos.length ? tipos[m] : "Alertas";
+                            counter.setText(result.size() + " registro" + (result.size() == 1 ? "" : "s") + " " + tipo.toLowerCase());
+                        }
                     }
                 });
             }
@@ -158,6 +184,12 @@ public class AlertasActivity extends Activity implements View.OnClickListener {
         else if (id == R.id.navEquipos) target = EquiposActivity.class;
         else if (id == R.id.navMantenimientos) target = MantenimientosActivity.class;
         else if (id == R.id.navConfig) target = ConfigActivity.class;
+        else if (id == R.id.btnVencidos) {
+            modo = 0;
+            marcarVencidos(true);
+            load();
+            return;
+        }
         if (target != null) {
             startActivity(new Intent(this, target));
             overridePendingTransition(0, 0);
@@ -192,13 +224,25 @@ public class AlertasActivity extends Activity implements View.OnClickListener {
                 TextView info = (TextView) v.findViewById(R.id.alInfo);
                 TextView dias = (TextView) v.findViewById(R.id.alDias);
                 String lbl = labels.get(m.equipoId);
-                nom.setText(lbl != null ? lbl : "Equipo eliminado");
-                usuario.setText(m.usuario.length() > 0 ? "👤 " + m.usuario : "");
+                // Usuario asignado en la primera línea (negrita); responsable en línea independiente en rojo.
+                Equipo eq = Db.getEquipo(m.equipoId);
+                String asignado = eq != null && eq.usuarioAsignado != null ? eq.usuarioAsignado.trim() : "";
+                nom.setText(asignado.length() > 0 ? asignado : "Equipo eliminado");
+                String responsable = eq != null && eq.responsable != null ? eq.responsable.trim() : "";
+                if (responsable.length() > 0 && !responsable.equalsIgnoreCase(asignado)) {
+                    usuario.setText("Responsable: " + responsable);
+                    usuario.setVisibility(View.VISIBLE);
+                } else {
+                    usuario.setVisibility(View.GONE);
+                }
+                info.setText(lbl != null ? lbl : "");
+                TextView mant = (TextView) v.findViewById(R.id.alMant);
                 String eff = m.fechaReprogramada.length() > 0 ? m.fechaReprogramada : m.fechaProgramada;
                 long d = Fmt.daysUntil(Fmt.today(), eff);
-                info.setText("Programado: " + Fmt.disp(eff) +
-                        (m.prioridad.length() > 0 ? " · " + m.prioridad : "") +
-                        (m.estado.length() > 0 ? " · " + m.estado : ""));
+                String infoText = "Programado: " + Fmt.disp(eff);
+                if (m.prioridad.length() > 0) infoText += " | " + m.prioridad;
+                if (m.estado.length() > 0) infoText += " | " + m.estado;
+                mant.setText(infoText);
                 int color;
                 String txt;
                 if (d < 0) {

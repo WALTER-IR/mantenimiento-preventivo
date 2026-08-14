@@ -17,6 +17,8 @@
   let currentView = "dashboard";
   let alertTab = "vencidos";
   let currentDetailId = null;
+  let usuarioPerfilMode = false;
+  let feriados = [];
 
   // ---------------- Roles y sesión ----------------
   const ROL = { LECTURA: 0, EDICION: 1, ADMIN: 2 };
@@ -38,6 +40,8 @@
 
   // ---------------- Estado del mantenimiento ----------------
   const estadoMant = (m) => (m.estado === "programado" || m.estado === "reprogramado") ? m.estado : "finalizado";
+  // Un mantenimiento es finalizado si tiene fecha real registrada aunque el estado diga lo contrario.
+  const esFinalizado = (m) => Boolean(m.fechaReal) || estadoMant(m) === "finalizado";
   const estadoLabel = (e) => (e === "programado" ? "Programado" : e === "reprogramado" ? "Reprogramado" : "Finalizado");
   const estadoBadge = (m) => {
     const e = estadoMant(m);
@@ -224,7 +228,7 @@
     const stats = { vencidos: 0, proximos: 0, ok: 0 };
     vis.forEach((e) => { stats[statusOf(e).key]++; });
     const firstOfMonth = todayISO().slice(0, 7) + "-01";
-    const visIds = new Set(vis.map((e) => e.id));
+    const visIds = new Set(vis.map((e) => String(e.id)));
     const mes = mantenimientos.filter((m) => visIds.has(m.equipoId) && m.fecha >= firstOfMonth).length;
 
     $("#statTotal").textContent = total;
@@ -251,52 +255,47 @@
     $("#alertList").innerHTML = alerts.slice(0, 6).map(alertHTML).join("");
     $("#alertEmpty").classList.toggle("hidden", alerts.length > 0);
 
-    const atrasados = vis
-      .map((e) => ({ eq: e, st: statusOf(e) }))
-      .filter((x) => x.st.key === "vencido")
-      .sort((a, b) => (a.st.days - b.st.days));
-    $("#atrasadosList").innerHTML = atrasados.slice(0, 10).map(atrasadoHTML).join("");
-    $("#atrasadosEmpty").classList.toggle("hidden", atrasados.length > 0);
-
     const recent = [...mantenimientos]
-      .filter((m) => visIds.has(m.equipoId))
-      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
-      .slice(0, 5);
+      .filter((m) => visIds.has(String(m.equipoId)) && esFinalizado(m))
+      .sort((a, b) => (b.fechaReal || b.fecha || "").localeCompare(a.fechaReal || a.fecha || ""))
+      .slice(0, 3);
     $("#recentList").innerHTML = recent.map(recentHTML).join("");
     $("#recentEmpty").classList.toggle("hidden", recent.length > 0);
   }
 
   function eqName(id) {
-    const e = equipos.find((x) => x.id === id);
+    const e = equipos.find((x) => String(x.id) === String(id));
     return e ? e.nombre : "Equipo eliminado";
+  }
+
+  // Siempre muestra el usuario asignado; si existe un responsable distinto, lo agrega.
+  function usuarioLabel(eq) {
+    const a = (eq.usuarioAsignado || "").trim();
+    const r = (eq.responsable || "").trim();
+    if (!a && !r) return "";
+    if (!a) return r;
+    if (!r || a.toLowerCase() === r.toLowerCase()) return a;
+    return a + " (resp: " + r + ")";
   }
 
   function alertHTML({ eq, st }) {
     const cls = st.key === "vencido" ? "danger" : "";
     const label = st.key === "vencido" ? "VENCIDO" : "PRÓXIMO";
     const days = st.key === "vencido" ? Math.abs(st.days) : st.days;
+    const asignado = (eq.usuarioAsignado || "").trim() || "—";
+    const responsable = (eq.responsable || "").trim();
+    const respLine = responsable && responsable.toLowerCase() !== asignado.toLowerCase()
+      ? `<div class="alert-sub item-resp">Responsable: ${esc(responsable)}</div>` : "";
     return `
       <div class="alert-item ${cls}" data-open-detail="${eq.id}">
         <div class="alert-head">
-          <span class="alert-title">${esc(eq.nombre)}</span>
+          <span class="alert-title">${esc(asignado)}</span>
           <span class="badge ${st.key === "vencido" ? "danger" : "warn"}">${label}</span>
         </div>
+        ${respLine}
+        <div class="alert-sub">${esc(eq.nombre)}</div>
         <div class="alert-sub">${esc(eq.marca || "Sin marca")} · ${esc(eq.tipo === "desktop" ? "Escritorio" : eq.tipo)}</div>
         <div class="alert-sub">Vence: <b>${fmtDate(st.due)}</b> (${days} día${days === 1 ? "" : "s"})</div>
-      </div>`;
-  }
-
-  function atrasadoHTML({ eq, st }) {
-    const days = Math.abs(st.days);
-    return `
-      <div class="item-card" data-open-detail="${eq.id}">
-        <div class="item-avatar">⏰</div>
-        <div class="item-body">
-          <div class="item-user">👤 ${esc(eq.responsable || "Sin usuario asignado")}</div>
-          <div class="item-title">${esc(eq.nombre)}</div>
-          <div class="item-sub">${esc(eq.serie || "—")} · ${esc(eq.marca || "")} ${esc(eq.modelo || "")}</div>
-        </div>
-        <div class="item-meta"><span class="badge danger">${days} día${days === 1 ? "" : "s"} atrasado</span></div>
       </div>`;
   }
 
@@ -306,7 +305,7 @@
         <div class="item-avatar">🔧</div>
         <div class="item-body">
           <div class="item-title">${esc(eqName(m.equipoId))}</div>
-          <div class="item-sub">${estadoLabel(estadoMant(m))} · ${fmtDate(m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"} · ${esc(m.tecnico || "—")}</div>
+          <div class="item-sub">${estadoLabel(esFinalizado(m) ? "finalizado" : estadoMant(m))} · ${fmtDate(m.fechaReal || m.fecha)} · ${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"} · ${esc(m.tecnico || "—")}</div>
         </div>
         <div class="item-meta">
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
@@ -328,7 +327,7 @@
       if (!esVisibleEquipo(e)) return false;
       if (tipo && e.tipo !== tipo) return false;
       if (!q) return true;
-      return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.responsable, e.modelo]
+      return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.cargo, e.responsable, e.modelo]
         .join(" ").toLowerCase().includes(q);
     });
     list.sort((a, b) => (a.nombre < b.nombre ? -1 : 1));
@@ -341,12 +340,15 @@
           ? `<span class="badge warn">Pronto</span>`
           : `<span class="badge ok">Al día</span>`;
       const ico = e.tipo === "laptop" ? "💻" : e.tipo === "servidor" ? "🖥️" : "🖥️";
+      const asignado = (e.usuarioAsignado || "").trim();
+      const respLine = (e.responsable || "").trim();
       return `
         <div class="item-card" data-open-detail="${e.id}">
           <div class="item-avatar">${ico}</div>
           <div class="item-body">
-            <div class="item-user">👤 ${esc(e.responsable || "Sin usuario asignado")}</div>
+            <div class="item-user">👤 ${esc(asignado || "Sin usuario asignado")}</div>
             <div class="item-title">${esc(e.serie || "—")} - ${esc(e.hostname || "—")}</div>
+            ${respLine ? `<div class="item-resp">${esc(respLine)}</div>` : ""}
             <div class="item-sub">${esc(e.nombre || "—")} - ${esc(e.ubicacion || "—")} - ${esc(e.ip || "—")}</div>
             <div class="due-line ${st.key === "vencido" ? "badge danger" : st.key === "proximo" ? "badge warn" : "badge ok"}">Próx. mant.: ${fmtDate(st.due)}</div>
           </div>
@@ -396,10 +398,20 @@
     $("#eqSerie").value = eq ? (eq.serie || "") : "";
     $("#eqHostname").value = eq ? (eq.hostname || "") : "";
     $("#eqDepartamento").value = eq ? (eq.departamento || "") : "";
+    $("#eqCargo").value = eq ? (eq.cargo || "") : "";
     cargarSelectResponsables(eq);
     $("#eqUbicacion").value = eq ? (eq.ubicacion || "") : "";
     $("#eqSO").value = eq ? (eq.so || "") : "";
     $("#eqIP").value = eq ? (eq.ip || "") : "";
+    $("#eqUsuarioAsignado").value = eq ? (eq.usuarioAsignado || "") : "";
+    $("#eqArea").value = eq ? (eq.area || "") : "";
+    $("#eqCodInventario").value = eq ? (eq.codInventario || "") : "";
+    $("#eqDni").value = eq ? (eq.dni || "") : "";
+    $("#eqResponsable").onchange = () => {
+      const nom = $("#eqResponsable").value;
+      const u = usuarios.find((x) => (x.nombre || "").trim() === nom);
+      if (u && u.dni) $("#eqDni").value = u.dni;
+    };
     $("#eqFechaCompra").value = eq ? (eq.fechaCompra || "") : "";
     $("#eqIntervalo").value = eq ? (eq.intervalo || "") : "";
     $("#eqNotas").value = eq ? (eq.notas || "") : "";
@@ -429,10 +441,15 @@
       serie: $("#eqSerie").value.trim(),
       hostname: $("#eqHostname").value.trim(),
       departamento: $("#eqDepartamento").value.trim(),
+      cargo: $("#eqCargo").value.trim(),
       responsable: $("#eqResponsable").value.trim(),
       ubicacion: $("#eqUbicacion").value.trim(),
       so: $("#eqSO").value.trim(),
       ip: $("#eqIP").value.trim(),
+      usuarioAsignado: $("#eqUsuarioAsignado").value.trim(),
+      area: $("#eqArea").value.trim(),
+      codInventario: $("#eqCodInventario").value.trim(),
+      dni: $("#eqDni").value.trim(),
       fechaCompra: $("#eqFechaCompra").value,
       intervalo: parseInt($("#eqIntervalo").value, 10) || appConfig.intervalo,
       notas: $("#eqNotas").value.trim(),
@@ -467,10 +484,16 @@
   //  MANTENIMIENTOS
   // ============================================================
   function buildChecklist() {
-    $("#checklist").innerHTML = CFG.CHECKLIST_DEFAULT.map((c, i) => `
+    const soft = [], hard = [];
+    CFG.CHECKLIST_DEFAULT.forEach((c) => {
+      if (HW_RE.test(c)) hard.push(c); else soft.push(c);
+    });
+    const render = (arr) => arr.map((c, i) => `
       <label class="check-item">
         <input type="checkbox" value="${esc(c)}" data-check="${i}" /> ${esc(c)}
       </label>`).join("");
+    $("#checklistSoft").innerHTML = render(soft);
+    $("#checklistHard").innerHTML = render(hard);
   }
 
   function openMantModal(mant) {
@@ -493,7 +516,10 @@
       $("#mtProxima").value = mant.proxima || "";
       $("#mtObs").value = mant.obs || "";
       const tasks = mant.tareas || [];
-      $$("#checklist input").forEach((inp) => { if (tasks.includes(inp.value)) inp.checked = true; });
+      $$("#checklistSoft input, #checklistHard input").forEach((inp) => { if (tasks.includes(inp.value)) inp.checked = true; });
+      // En edición solo se permiten: fecha reprogramada, fecha real, actividades y observaciones.
+      ["mtEquipo", "mtFecha", "mtTipo", "mtPrioridad", "mtEstado", "mtTecnico", "mtCosto", "mtProxima"]
+        .forEach((id) => { $(id).disabled = true; });
     } else {
       sel.value = vis[0] ? vis[0].id : "";
       $("#mtFecha").value = todayISO();
@@ -506,6 +532,12 @@
       $("#mtCosto").value = "";
       $("#mtProxima").value = "";
       $("#mtObs").value = "";
+      // En registro todos los campos quedan habilitados.
+      ["mtEquipo", "mtFecha", "mtTipo", "mtPrioridad", "mtEstado", "mtTecnico", "mtCosto", "mtProxima"]
+        .forEach((id) => { $(id).disabled = false; });
+      // En registro nuevo, reprogramada y real se deshabilitan (se completan al editar).
+      $("#mtFechaReprog").disabled = true;
+      $("#mtFechaReal").disabled = true;
       setNextFromEquipo();
     }
     openModal("modalMant");
@@ -525,7 +557,7 @@
     const fecha = $("#mtFecha").value;
     if (!equipoId || !fecha) return toast("Equipo y fecha son obligatorios", "err");
     const id = $("#mtId").value;
-    const tareas = $$("#checklist input:checked").map((i) => i.value);
+    const tareas = $$("#checklistSoft input:checked, #checklistHard input:checked").map((i) => i.value);
     const fechaReal = $("#mtFechaReal").value;
     const fechaReprogramada = $("#mtFechaReprog").value;
     // El estado se actualiza según las fechas registradas:
@@ -593,6 +625,7 @@
     const fUbic = ubicSel.value;
     const fDesde = $("#filterFechaDesde").value;
     const fHasta = $("#filterFechaHasta").value;
+    const fUsuario = ($("#filterUsuarioMant").value || "").trim().toLowerCase();
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
       if (fUbic && (ubicMap.get(m.equipoId) || "") !== fUbic) return false;
@@ -601,22 +634,34 @@
       if (fEstado && estadoMant(m) !== fEstado) return false;
       if (fDesde && m.fecha < fDesde) return false;
       if (fHasta && m.fecha > fHasta) return false;
+      // Filtrar por usuario asignado
+      if (fUsuario) {
+        const eq = equipos.find((x) => x.id === m.equipoId) || {};
+        const usuarioEq = (eq.usuarioAsignado || eq.responsable || "").toLowerCase();
+        if (!usuarioEq.includes(fUsuario)) return false;
+      }
       return true;
     });
     list.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 
-    $("#mantList").innerHTML = list.map((m) => {
+    // Contador de registros
+    const contador = `<div class="mant-counter">${list.length} registro${list.length === 1 ? "" : "s"} encontrado${list.length === 1 ? "" : "s"}</div>`;
+
+    $("#mantList").innerHTML = contador + list.map((m) => {
       const eq = equipos.find((x) => x.id === m.equipoId) || {};
       const subSerie = [eq.serie, eq.hostname].filter(Boolean).join(" - ") || "—";
       const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
       const reprog = m.fechaReprogramada ? fmtDate(m.fechaReprogramada) : "—";
+      const asignado = (eq.usuarioAsignado || "").trim();
+      const responsable = (eq.responsable || "").trim();
       return `
       <div class="mant-row" data-open-detail="${m.equipoId}">
         <div class="mant-row-head">
-          <span class="mant-row-title">👤 ${esc(eq.responsable || "Sin usuario asignado")}</span>
+          <span class="mant-row-title">👤 ${esc(asignado || "Sin usuario asignado")}</span>
           ${estadoBadge(m)}
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
         </div>
+        ${responsable && responsable.toLowerCase() !== asignado.toLowerCase() ? `<div class="mant-row-sub item-resp">Responsable: ${esc(responsable)}</div>` : ""}
         <div class="mant-row-sub">${esc(subSerie)}</div>
         <div class="mant-row-sub">${esc(prog)}</div>
         <div class="mant-row-sub">${esc(reprog)}</div>
@@ -653,14 +698,35 @@
   //  ALERTAS
   // ============================================================
   function renderAlertas() {
-    $$(".chip[data-alerttab]").forEach((c) => c.classList.toggle("active", c.dataset.alerttab === alertTab));
-    const list = equipos
+    const vencidos = alertTab === "vencidos";
+    const dias = parseInt($("#filterAlertaTipo").value || "30", 10);
+    const busqueda = ($("#searchAlerta").value || "").trim().toLowerCase();
+    let list = equipos
       .filter(esVisibleEquipo)
       .map((e) => ({ eq: e, st: statusOf(e) }))
-      .filter((x) => (alertTab === "vencidos" ? x.st.key === "vencido" : x.st.key === "proximo"))
+      .filter((x) => {
+        if (vencidos) return x.st.key === "vencido";
+        // Proximos: filtrar por dias
+        if (x.st.key !== "proximo") return false;
+        return x.st.days <= dias;
+      })
+      .filter((x) => {
+        // Buscar por usuario asignado, serie y hostname
+        if (!busqueda) return true;
+        const usuario = (x.eq.usuarioAsignado || x.eq.responsable || "").toLowerCase();
+        const serie = (x.eq.serie || "").toLowerCase();
+        const hostname = (x.eq.hostname || "").toLowerCase();
+        return usuario.includes(busqueda) || serie.includes(busqueda) || hostname.includes(busqueda);
+      })
       .sort((a, b) => (a.st.days > b.st.days ? 1 : -1));
-    $("#alertFullList").innerHTML = list.map(alertHTML).join("");
+    const tipoLabel = vencidos ? "Vencidos" : "Próximos " + dias + " días";
+    $("#alertFullList").innerHTML = `
+      <div class="alert-counter">${list.length} registro${list.length === 1 ? "" : "s"} ${tipoLabel.toLowerCase()}</div>
+      ${list.map(alertHTML).join("")}
+    `;
     $("#alertFullEmpty").classList.toggle("hidden", list.length > 0);
+    const chip = $("#btnAlertVencidos");
+    if (chip) chip.classList.toggle("active", vencidos);
   }
 
   // ============================================================
@@ -679,14 +745,19 @@
 
     $("#detalleTitle").innerHTML = `${esc(eq.nombre)} ${badge}`;
     const cells = [
-      ["Usuario asignado", eq.responsable || "—"],
+      ["Usuario asignado", eq.usuarioAsignado || "—"],
       ["Tipo", tipoLabel(eq.tipo)],
       ["Marca", eq.marca || "—"],
       ["Modelo", eq.modelo || "—"],
       ["No. serie", eq.serie || "—"],
       ["Hostname", eq.hostname || "—"],
       ["Departamento", eq.departamento || "—"],
+      ["Cargo", eq.cargo || "—"],
+      ["Responsable", eq.responsable || "—"],
+      ["Área", eq.area || "—"],
       ["Ubicación", eq.ubicacion || "—"],
+      ["Cod. inventario", eq.codInventario || "—"],
+      ["DNI", eq.dni || "—"],
       ["Sistema operativo", eq.so || "—"],
       ["Dirección IP", eq.ip || "—"],
       ["Fecha compra", fmtDate(eq.fechaCompra)],
@@ -696,7 +767,7 @@
     $("#detalleInfo").innerHTML = cells.map(([l, v]) => `<div class="detail-cell"><label>${l}</label><div>${esc(v)}</div></div>`).join("");
 
     const canEdit = puedeEditar();
-    $("#btnEliminarEquipo").classList.toggle("hidden", !canEdit);
+    $("#btnEliminarEquipo").classList.toggle("hidden", !esAdmin());
     $("#btnEditarEquipo").classList.toggle("hidden", !canEdit);
 
     const hist = mantenimientos
@@ -716,6 +787,9 @@
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
       </div>`).join("");
     $("#detalleHistEmpty").classList.toggle("hidden", hist.length > 0);
+    // El formato solo se habilita si el último mantenimiento está finalizado.
+    const formatoOk = hist.length > 0 && estadoMant(hist[0]) === "finalizado";
+    $("#btnFormato").disabled = !formatoOk;
     $("#btnEliminarEquipo").onclick = () => eliminarEquipo(id);
     $("#btnEditarEquipo").onclick = () => { closeModal("modalDetalle"); openEquipoModal(eq); };
     $("#btnFormato").onclick = () => { closeModal("modalDetalle"); generarFormato(id); };
@@ -755,10 +829,10 @@
     const m = mants[0];
     const { soft, hard } = splitTareas(m ? m.tareas : []);
     const d = {
-      eq, resp,
-      fechaMant: m ? fmtDate(m.fecha) : todayISO(),
+      eq, resp, m,
+      fechaMant: m ? (m.fechaReal || m.fecha) : todayISO(),
       centro: eq.ubicacion || eq.departamento || "—",
-      area: eq.departamento || "—",
+      area: eq.area || eq.departamento || "—",
       tec: sesion ? sesion.nombre : "—",
       soft, hard
     };
@@ -777,33 +851,43 @@
     const items = (arr) => arr.length
       ? arr.map((t) => `<div class="f-item">• ${esc(t)}</div>`).join("")
       : `<div class="f-item">—</div>`;
+    const serieCi = [d.eq.serie, d.eq.codInventario].filter(Boolean).join(" - ");
     $("#formatoContenido").innerHTML = `
+      <div class="formato-intro">Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. <b>TI-F016</b></div>
       <div class="formato-head">
         <div class="formato-title">FORMATO DE MANTENIMIENTO</div>
         <div class="formato-meta">
           <span>Código: <b>TI-F016</b></span>
-          <span>Versión: <b>02</b></span>
-          <span>Fecha de Aprobación: <b>01/03/2023</b></span>
-          <span>Nº CC:</span>
+          <span>Versión: <b>04</b></span>
+          <span>Fecha de Aprobación: <b>22/09/2025</b></span>
         </div>
       </div>
       <table class="formato-fields">
-        ${field("Apellidos y nombres:", d.resp.nombre)}
-        ${field("DNI:", d.resp.dni)}
-        ${field("Cargo:", "")}
-        ${field("Área:", d.area)}
-        ${field("Fecha Mantenimiento:", d.fechaMant)}
-        ${field("Serie/CI:", d.eq.serie)}
-        ${field("Centro de trabajo:", d.centro)}
-        ${field("Responsable de TI:", d.tec)}
+        ${field("NOMBRES", d.eq.usuarioAsignado)}
+        ${field("ÁREA", d.area)}
+        ${field("CARGO", d.eq.cargo)}
+        ${field("DNI", d.eq.dni || d.resp.dni)}
+        ${field("UNIDAD DE PRODUCCIÓN", d.eq.ubicacion)}
+        ${field("SERIE/CI", serieCi)}
+        ${field("RESPONSABLE DE TI", d.tec)}
+        ${field("FECHA DE MANTENIMIENTO", d.fechaMant)}
       </table>
       <div class="formato-act">
-        <h4>Actividades Realizadas:</h4>
+        <h4>ACTIVIDADES REALIZADAS:</h4>
         <p>A continuación, se detallan los mantenimientos:</p>
         <h5>Mantenimiento de Software</h5>
         ${items(d.soft)}
         <h5>Mantenimiento de Hardware</h5>
         ${items(d.hard)}
+      </div>
+      <div class="formato-obs">
+        <h4>Observaciones:</h4>
+        <p>${esc(d.m ? d.m.obs : "")}&nbsp;</p>
+      </div>
+      <div class="formato-cierre">
+        Mediante el presente correo se deja constancia de su aprobación del formato.<br />
+        Agradecemos su colaboración.<br />
+        Saludos cordiales.
       </div>`;
   }
 
@@ -811,28 +895,38 @@
     const d = formatoActual;
     if (!d) return "";
     const items = (arr) => arr.length ? arr.map((t) => "• " + t).join("\n") : "—";
+    const serieCi = [d.eq.serie, d.eq.codInventario].filter(Boolean).join(" - ");
     return [
+      "Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. TI-F016",
+      "",
       "FORMATO DE MANTENIMIENTO",
-      "Código: TI-F016 | Versión: 02 | Fecha de Aprobación: 01/03/2023",
-      "Nº CC:",
+      "Código: TI-F016 /Versión: 04 /Fecha de Aprobación: 22/09/2025",
       "",
-      "Apellidos y nombres: " + (d.resp.nombre || ""),
-      "DNI: " + (d.resp.dni || ""),
-      "Cargo: ",
-      "Área: " + (d.area || ""),
-      "Fecha Mantenimiento: " + d.fechaMant,
-      "Serie/CI: " + (d.eq.serie || ""),
-      "Centro de trabajo: " + (d.centro || ""),
-      "Responsable de TI: " + (d.tec || ""),
+      "NOMBRES: " + (d.eq.usuarioAsignado || ""),
+      "ÁREA: " + (d.area || ""),
+      "CARGO: " + (d.eq.cargo || ""),
+      "DNI: " + (d.eq.dni || d.resp.dni || ""),
+      "UNIDAD DE PRODUCCIÓN: " + (d.eq.ubicacion || ""),
+      "SERIE/CI: " + (serieCi || ""),
       "",
-      "Actividades Realizadas:",
+      "RESPONSABLE DE TI: " + (d.tec || ""),
+      "FECHA DE MANTENIMIENTO: " + d.fechaMant,
+      "",
+      "ACTIVIDADES REALIZADAS:",
       "A continuación, se detallan los mantenimientos:",
       "",
       "Mantenimiento de Software",
       items(d.soft),
       "",
       "Mantenimiento de Hardware",
-      items(d.hard)
+      items(d.hard),
+      "",
+      "Observaciones:",
+      d.m ? d.m.obs : "",
+      "",
+      "Mediante el presente correo se deja constancia de su aprobación del formato.",
+      "Agradecemos su colaboración.",
+      "Saludos cordiales."
     ].join("\n");
   }
 
@@ -855,6 +949,184 @@
     document.body.classList.remove("imprimiendo");
   }
 
+  // Genera un PDF del formato TI-F016 con diseño corporativo (jsPDF bajo demanda).
+  async function generarPDF() {
+    const d = formatoActual;
+    if (!d) return;
+    let jsPDF;
+    try {
+      if (window.jspdf) {
+        jsPDF = window.jspdf.jsPDF;
+      } else {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload = resolve;
+          s.onerror = () => reject(new Error("No se pudo cargar jsPDF"));
+          document.head.appendChild(s);
+        });
+        jsPDF = window.jspdf.jsPDF;
+      }
+    } catch (e) {
+      toast("Sin conexión a internet para generar PDF", "err");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const contentW = pageW - margin * 2;
+    let y = margin;
+    const lineH = 4.5;
+    const ensureSpace = (need) => { if (y + need > pageH - margin) { doc.addPage(); y = margin; } };
+
+    // ======== ENCABEZADO CORPORATIVO ========
+    const hdrH = 60;
+    ensureSpace(hdrH + 5);
+    const x0 = margin;
+    // Columnas: 1=logo(18%), 2=titulo(40%), 3=codigo(17%), 4=fecha+CC(25%)
+    const c1 = contentW * 0.18, c2 = contentW * 0.40, c3 = contentW * 0.17, c4 = contentW * 0.25;
+    doc.setDrawColor(60); doc.setLineWidth(0.3);
+    doc.rect(x0, y, contentW, hdrH);
+    doc.line(x0 + c1, y, x0 + c1, y + hdrH);
+    doc.line(x0 + c1 + c2, y, x0 + c1 + c2, y + hdrH);
+    doc.line(x0 + c1 + c2 + c3, y, x0 + c1 + c2 + c3, y + hdrH);
+
+    // Col 1: Logo al 90% de la celda (ancho y alto), centrado
+    const logoB64 = getLogoData();
+    const logoW = (c1 - 4) * 0.9; // 90% del ancho de la celda
+    const logoH = (hdrH - 4) * 0.9; // 90% de la altura de la celda
+    const logoX = x0 + (c1 - logoW) / 2;
+    const logoY = y + (hdrH - logoH) / 2;
+    if (logoB64) {
+      try {
+        doc.addImage(logoB64, "PNG", logoX, logoY, logoW, logoH);
+      } catch (e) {
+        drawLogoPlaceholder(doc, x0 + c1 / 2, y + hdrH / 2, Math.min(logoW, logoH) / 2);
+      }
+    } else {
+      drawLogoPlaceholder(doc, x0 + c1 / 2, y + hdrH / 2, Math.min(logoW, logoH) / 2);
+    }
+
+    // Col 2: Titulo en 1 linea, centrado vertical y horizontal
+    doc.setTextColor(0); doc.setFontSize(13); doc.setFont(undefined, "bold");
+    const titleX = x0 + c1 + c2 / 2;
+    doc.text("FORMATO DE MANTENIMIENTO", titleX, y + hdrH / 2 + 4, { align: "center" });
+
+    // Col 3: 2 lineas (Codigo en negrita, sin caracteres raros)
+    doc.setFontSize(8); doc.setFont(undefined, "bold");
+    const l3 = hdrH / 3;
+    doc.text("C\u00f3digo: TI-F016", x0 + c1 + c2 + 3, y + l3);
+    doc.setFont(undefined, "normal");
+    doc.text("Versi\u00f3n: 02", x0 + c1 + c2 + 3, y + l3 * 2);
+
+    // Col 4: Fecha + N°CC (con interlineado)
+    const c4x = x0 + c1 + c2 + c3;
+    doc.line(c4x, y + hdrH / 2, c4x + c4, y + hdrH / 2);
+    // Parte superior - Fecha
+    doc.setFontSize(7); doc.setFont(undefined, "bold");
+    doc.text("Fecha de Aprobacion:", c4x + 2, y + hdrH / 4 - 2);
+    doc.setDrawColor(150); doc.setLineWidth(0.2);
+    doc.rect(c4x + 2, y + hdrH / 4 + 1, c4 - 4, 5);
+    doc.setFontSize(7.5); doc.setFont(undefined, "normal");
+    doc.text("01/03/2023", c4x + c4 / 2, y + hdrH / 4 + 4.5, { align: "center" });
+    // Parte inferior - N°CC
+    const nccY = y + hdrH / 2 + 3, nccW = c4 - 4, nccH = 8;
+    doc.setDrawColor(60); doc.setLineWidth(0.3);
+    doc.rect(c4x + 2, nccY, nccW, nccH);
+    doc.setFontSize(7); doc.setFont(undefined, "bold");
+    doc.text("N\u00b0 CC:", c4x + 3, nccY + 5.5);
+    y += hdrH + 5;
+
+    // 2 saltos de linea despues de la cabecera
+    y += lineH * 2;
+
+    // ======== TABLA DE DATOS ========
+    const fields = [
+      ["APELLIDOS Y NOMBRES:", d.eq.usuarioAsignado || "-"],
+      ["DNI:", d.eq.dni || d.resp.dni || "-"],
+      ["CARGO:", d.eq.cargo || "-"],
+      ["ÁREA:", d.area || "-"],
+      ["FECHA DE MANTENIMIENTO:", d.fechaMant || "-"],
+      ["SERIE/CI:", [d.eq.serie, d.eq.codInventario].filter(Boolean).join(" - ") || "-"],
+      ["UNIDAD DE PRODUCCIÓN:", d.eq.ubicacion || "-"],
+      ["RESPONSABLE DE TI:", d.tec || "-"],
+    ];
+    const col1W = contentW * 0.42, rowH = 7.5;
+    const tblH = fields.length * rowH;
+    ensureSpace(tblH + 5);
+    doc.setDrawColor(60); doc.setLineWidth(0.3);
+    doc.rect(margin, y, contentW, tblH);
+    doc.line(margin + col1W, y, margin + col1W, y + tblH);
+    for (let i = 0; i < fields.length; i++) {
+      const ry = y + i * rowH;
+      if (i > 0) doc.line(margin, ry, margin + contentW, ry);
+      doc.setFontSize(8.5); doc.setFont(undefined, "bold");
+      doc.text(fields[i][0], margin + 2, ry + 5.5);
+      doc.setFont(undefined, "normal");
+      doc.text(String(fields[i][1]), margin + col1W + 2, ry + 5.5);
+    }
+    y += tblH + 5;
+
+    // ======== ACTIVIDADES REALIZADAS ========
+    ensureSpace(lineH + 2);
+    doc.setFontSize(11); doc.setFont(undefined, "bold");
+    doc.text("Actividades Realizadas:", margin, y); y += lineH + 1;
+    doc.setFontSize(9); doc.setFont(undefined, "normal");
+    doc.text("A continuación, se detallan los mantenimientos:", margin, y); y += lineH + 2;
+
+    const printSection = (title, arr) => {
+      y += lineH; // 1 salto de linea antes de cada seccion
+      ensureSpace(lineH + 3);
+      // Fondo gris claro para el titulo
+      doc.setFillColor(235, 235, 235);
+      doc.rect(margin, y - 3.5, contentW, lineH + 1, "F");
+      doc.setFontSize(9); doc.setFont(undefined, "bold");
+      doc.setTextColor(0);
+      doc.text(title, margin + 2, y);
+      y += lineH + 1;
+      // Lista con viñetas
+      doc.setFont(undefined, "normal");
+      if (!arr || !arr.length) {
+        doc.text("-", margin + 4, y); y += lineH;
+      } else {
+        for (const t of arr) {
+          ensureSpace(lineH);
+          const l = doc.splitTextToSize("• " + t, contentW - 10);
+          doc.text(l, margin + 4, y); y += l.length * lineH;
+        }
+      }
+      y += 2;
+    };
+    printSection("Mantenimiento de Software", d.soft);
+    printSection("Mantenimiento de Hardware", d.hard);
+
+    // ======== FOOTER ========
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const pageH = doc.internal.pageSize.getHeight();
+      const footerY = pageH - 12;
+      // Linea separadora
+      doc.setDrawColor(150); doc.setLineWidth(0.2);
+      doc.line(margin, footerY - 4, margin + contentW, footerY - 4);
+      // Texto 1 linea antes del fin del documento
+      doc.setFontSize(7); doc.setFont(undefined, "normal"); doc.setTextColor(120);
+      const finalY = pageH - margin - 4;
+      doc.text("La aceptacion de esta acta se formaliza mediante la firma ya sea digital o fisica., o a traves de la confirmacion del usuario por medio del correo de texto", margin + contentW / 2, finalY, { align: "center" });
+    }
+
+    doc.save("Formato_TI-F016_" + (d.eq.serie || d.eq.nombre || "mantenimiento") + ".pdf");
+    toast("PDF generado", "ok");
+  }
+
+  // Placeholder del logo (circulos de colores)
+  function drawLogoPlaceholder(doc, cx, cy, r) {
+    doc.setFillColor(220, 60, 60); doc.circle(cx, cy, r, "F");
+    doc.setFillColor(240, 140, 40); doc.circle(cx + 3, cy, r, "F");
+    doc.setFillColor(60, 100, 200); doc.circle(cx - 3, cy, r, "F");
+  }
+
   // ============================================================
   //  CONFIGURACIÓN (solo administrador)
   // ============================================================
@@ -864,15 +1136,26 @@
     $("#appVersion").textContent = CFG.APP_VERSION;
     $("#brandName").textContent = appConfig.empresa === "Empresa" ? CFG.APP_NAME : appConfig.empresa;
     $("#brandSub").textContent = "Laptops y Computadoras";
+    const cu = $("#miCuentaInfo");
+    if (cu) cu.textContent = sesion ? `Sesión: ${sesion.nombre} · ${rolNombre(sesion.rol)}` : "Sin sesión";
     const info = $("#acercaInfo");
     if (info) {
       const ua = (navigator.userAgent || "").replace(/Chrom\w*\/(\d+)\.[\d.]+.*/i, "…Chromium/$1");
       info.textContent = "Almacenamiento: " + (window.__STORAGE_OK__ ? "funcionando ✓" : "NO disponible ⚠") + " · " + ua.slice(0, 90);
     }
     const admin = esAdmin();
+    const edicion = puedeEditar();
     $("#cardEmpresa").classList.toggle("hidden", !admin);
     $("#cardAuditoria").classList.toggle("hidden", !admin);
     $("#btnNuevoUsuario").classList.toggle("hidden", !admin);
+    $("#cardProgramacion").classList.toggle("hidden", !admin);
+    $("#cardCorreo").classList.toggle("hidden", !edicion);
+    if (admin) {
+      renderFeriados();
+    }
+    if (edicion) {
+      renderCorreo();
+    }
     renderUsuarios();
     if (admin) renderAuditoria();
   }
@@ -880,6 +1163,10 @@
   // ---------------- Usuarios y permisos ----------------
   function renderUsuarios() {
     const admin = esAdmin();
+    if (!admin) {
+      $("#usuariosList").innerHTML = `<p class="card-text">Solo el administrador ve la lista de usuarios.</p>`;
+      return;
+    }
     $("#usuariosList").innerHTML = usuarios.map((u) => {
       const controls = admin
         ? `<select class="input select user-rol" data-usuario="${esc(u.id)}">
@@ -901,6 +1188,7 @@
   }
 
   function openUsuarioModal(u) {
+    usuarioPerfilMode = false;
     $("#modalUsuarioTitle").textContent = u ? "Editar usuario" : "Nuevo usuario";
     $("#usId").value = u ? u.id : "";
     $("#usNombre").value = u ? u.nombre : "";
@@ -908,18 +1196,40 @@
     $("#usClave").value = u ? (u.clave || "") : "";
     $("#usRol").value = u ? String(u.rol) : "1";
     $("#btnEliminarUsuario").classList.toggle("hidden", !u);
+    $("#usRolLabel").classList.remove("hidden");
+    $("#usRol").classList.remove("hidden");
+    openModal("modalUsuario");
+  }
+
+  function openMiPerfil() {
+    if (!sesion) return;
+    usuarioPerfilMode = true;
+    const u = usuarios.find((x) => x.id === sesion.id) || sesion;
+    $("#modalUsuarioTitle").textContent = "Mi perfil";
+    $("#usId").value = u.id;
+    $("#usNombre").value = u.nombre || "";
+    $("#usDni").value = u.dni || "";
+    $("#usClave").value = "";
+    $("#usRol").value = String(u.rol != null ? u.rol : sesion.rol);
+    $("#btnEliminarUsuario").classList.add("hidden");
+    $("#usRolLabel").classList.add("hidden");
+    $("#usRol").classList.add("hidden");
     openModal("modalUsuario");
   }
 
   async function saveUsuario() {
-    if (!esAdmin()) return toast("Solo el administrador", "err");
+    const perfil = usuarioPerfilMode;
+    if (!perfil && !esAdmin()) return toast("Solo el administrador", "err");
     const nombre = $("#usNombre").value.trim();
     const dni = $("#usDni").value.trim();
     if (!nombre || !dni) return toast("Nombre y DNI son obligatorios", "err");
     const id = $("#usId").value;
     const clave = $("#usClave").value.trim();
-    const rol = parseInt($("#usRol").value, 10);
-    if (id === sesion.id && rol !== ROL.ADMIN) {
+    const prev = usuarios.find((x) => x.id === id) || {};
+    const rol = perfil
+      ? (prev.rol != null ? prev.rol : sesion.rol)
+      : parseInt($("#usRol").value, 10);
+    if (!perfil && id === sesion.id && rol !== ROL.ADMIN) {
       return toast("No puedes quitarte el permiso de administrador a ti mismo", "err");
     }
     if (usuarios.some((x) => x.id !== id && x.dni === dni)) {
@@ -929,9 +1239,9 @@
       id: id || "us-" + Date.now(),
       nombre,
       dni,
-      clave: clave || dni,
+      clave: clave || prev.clave || (perfil ? sesion.clave : dni) || dni,
       rol,
-      fechaAlta: (usuarios.find((x) => x.id === id) || {}).fechaAlta || todayISO()
+      fechaAlta: prev.fechaAlta || todayISO()
     };
     await DB.putUsuario(u);
     if (id) {
@@ -940,10 +1250,19 @@
     } else {
       usuarios.push(u);
     }
+    if (perfil && id === sesion.id) {
+      sesion.nombre = u.nombre;
+      sesion.dni = u.dni;
+      sesion.clave = u.clave;
+      await DB.setSesion(sesion);
+    }
     closeModal("modalUsuario");
-    toast("Usuario guardado", "ok");
-    auditar(id ? "EDICION USUARIO" : "ALTA USUARIO", "Nombre: " + nombre + " · Permiso: " + rolNombre(rol));
+    usuarioPerfilMode = false;
+    toast(perfil ? "Perfil actualizado" : "Usuario guardado", "ok");
+    auditar(perfil ? "MI PERFIL" : (id ? "EDICION USUARIO" : "ALTA USUARIO"),
+      "Nombre: " + nombre + " · Permiso: " + rolNombre(rol));
     renderUsuarios();
+    renderConfig();
   }
 
   async function eliminarUsuario(id) {
@@ -984,6 +1303,229 @@
     renderConfig();
   }
 
+  // ---------------- Feriados y programación ----------------
+  function renderFeriados() {
+    const list = $("#feriadosList");
+    if (!list) return;
+    if (!feriados.length) {
+      list.innerHTML = `<p class="card-text">Sin feriados registrados.</p>`;
+      return;
+    }
+    list.innerHTML = feriados
+      .slice()
+      .sort((a, b) => (a.fecha < b.fecha ? -1 : 1))
+      .map((f) => `
+      <div class="user-row">
+        <div class="user-info">
+          <div class="user-name">📅 ${esc(fmtDate(f.fecha))}</div>
+          <div class="user-sub">${esc(f.motivo || "")}</div>
+        </div>
+        <button class="btn btn-ghost" data-del-feriado="${esc(f.id)}">Eliminar</button>
+      </div>`).join("");
+  }
+
+  async function agregarFeriado() {
+    if (!esAdmin()) return toast("Solo el administrador", "err");
+    const fecha = $("#fdFecha").value;
+    if (!fecha) return toast("Selecciona la fecha del feriado", "err");
+    const motivo = $("#fdMotivo").value.trim();
+    const prev = feriados.find((x) => x.fecha === fecha);
+    const f = { id: prev ? prev.id : "fd-" + Date.now(), fecha, motivo };
+    if (prev) {
+      const i = feriados.findIndex((x) => x.id === prev.id);
+      feriados[i] = f;
+    } else {
+      feriados.push(f);
+    }
+    await DB.put("feriados", f);
+    $("#fdFecha").value = "";
+    $("#fdMotivo").value = "";
+    toast("Feriado registrado", "ok");
+    auditar("ALTA FERIADO", fmtDate(fecha) + (motivo ? " · " + motivo : ""));
+    renderFeriados();
+  }
+
+  async function eliminarFeriado(id) {
+    const f = feriados.find((x) => x.id === id);
+    await DB.delete("feriados", id);
+    feriados = feriados.filter((x) => x.id !== id);
+    toast("Feriado eliminado");
+    auditar("BAJA FERIADO", f ? fmtDate(f.fecha) : id);
+    renderFeriados();
+  }
+
+  // Día laboral: lunes-viernes y que no esté registrado como feriado.
+  function fechaLaboral(iso) {
+    let d = iso;
+    for (let i = 0; i < 400; i++) {
+      const dow = parseISO(d).getDay(); // 0=Domingo ... 6=Sábado
+      if (dow >= 1 && dow <= 5 && !feriados.some((f) => f.fecha === d)) return d;
+      d = addDays(d, 1);
+    }
+    return iso;
+  }
+
+  // Asigna la fecha programada al mantenimiento pendiente del equipo (o crea uno nuevo).
+  async function programarEquipo(equipoId, fecha) {
+    const mants = mantenimientos
+      .filter((m) => m.equipoId === equipoId)
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+    const pend = mants.find((m) => !m.fechaReal && (m.estado === "programado" || m.estado === "reprogramado"));
+    if (pend) {
+      pend.fecha = fecha;
+      pend.fechaReprogramada = "";
+      pend.estado = "programado";
+      const i = mantenimientos.findIndex((x) => x.id === pend.id);
+      if (i >= 0) mantenimientos[i] = pend;
+      await DB.put("mantenimientos", pend);
+    } else {
+      const nm = {
+        id: "mt-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        equipoId,
+        fecha,
+        tipo: "preventivo",
+        estado: "programado",
+        prioridad: "",
+        fechaReprogramada: "",
+        fechaReal: "",
+        tecnico: "",
+        costo: 0,
+        proxima: "",
+        obs: "",
+        tareas: []
+      };
+      mantenimientos.push(nm);
+      await DB.put("mantenimientos", nm);
+    }
+  }
+
+  async function programarMantenimientos() {
+    if (!esAdmin()) return toast("Solo el administrador", "err");
+    const inicial = $("#progFechaInicial").value;
+    if (!inicial) return toast("Selecciona la fecha inicial", "err");
+    if (!confirm("Se reprogramarán los mantenimientos pendientes de todos los equipos desde " + fmtDate(inicial) +
+      " (solo días laborales lun-vie sin feriados, con 3 equipos por día y por responsable). ¿Continuar?")) return;
+
+    const porUsuario = new Map();
+    usuarios.forEach((u) => porUsuario.set(u.id, []));
+    equipos.forEach((e) => {
+      const usr = (e.usuarioAsignado || e.responsable || "").trim();
+      const u = usuarios.find((x) =>
+        (x.nombre || "").trim().toLowerCase() === usr.toLowerCase() ||
+        (x.dni || "").trim().toLowerCase() === usr.toLowerCase());
+      if (u) porUsuario.get(u.id).push(e);
+    });
+
+    let total = 0;
+    for (const grupo of porUsuario.values()) {
+      if (!grupo.length) continue;
+      grupo.sort((a, b) => ((a.hostname || "") + " " + (a.serie || ""))
+        .localeCompare((b.hostname || "") + " " + (b.serie || "")));
+      let dia = fechaLaboral(inicial);
+      let count = 0;
+      for (const e of grupo) {
+        if (count === 3) {
+          dia = fechaLaboral(addDays(dia, 1));
+          count = 0;
+        }
+        await programarEquipo(e.id, dia);
+        count++;
+        total++;
+      }
+    }
+
+    mantenimientos = await DB.getAll("mantenimientos");
+    toast("Mantenimientos programados: " + total, "ok");
+    auditar("PROGRAMACION MANTENIMIENTOS", "Desde " + inicial + " · Equipos programados: " + total);
+    renderConfig();
+    if (currentView === "mantenimientos") renderMantenimientos();
+    if (currentView === "alertas") renderAlertas();
+    if (currentView === "equipos") renderEquipos();
+  }
+
+  // ---------------- Correo de programación por ubicación ----------------
+  // Ordena los equipos por fecha programada y luego por usuario asignado.
+  function correoEquipos(ubic) {
+    return equiposVisibles()
+      .filter((e) => !ubic || (e.ubicacion || "").trim() === ubic)
+      .sort((a, b) => {
+        const fa = proximoMantDe(a) || "9999";
+        const fb = proximoMantDe(b) || "9999";
+        if (fa !== fb) return fa < fb ? -1 : 1;
+        const ua = (a.usuarioAsignado || "").trim();
+        const ub = (b.usuarioAsignado || "").trim();
+        return ua.localeCompare(ub) || ((a.hostname || "") + (a.serie || "")).localeCompare((b.hostname || "") + (b.serie || ""));
+      });
+  }
+
+  // Fecha efectiva del próximo mantenimiento pendiente del equipo.
+  function proximoMantDe(eq) {
+    const ms = mantenimientos
+      .filter((m) => m.equipoId === eq.id && !esFinalizado(m))
+      .map((m) => m.fechaReprogramada || m.fecha)
+      .filter(Boolean)
+      .sort();
+    return ms[0] || nextDueDate(eq);
+  }
+
+  function renderCorreo() {
+    const sel = $("#correoUbicacion");
+    if (!sel) return;
+    const cur = sel.value;
+    const ubics = [...new Set(equiposVisibles()
+      .map((e) => (e.ubicacion || "").trim())
+      .filter(Boolean))].sort();
+    sel.innerHTML = `<option value="">Todas las ubicaciones</option>` +
+      ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+    if (ubics.includes(cur)) sel.value = cur;
+    const eqs = correoEquipos(sel.value);
+    $("#correoTbody").innerHTML = eqs.length
+      ? eqs.map((e) => `
+        <tr>
+          <td>${esc((e.usuarioAsignado || "").trim() || "—")}</td>
+          <td>${esc((e.ubicacion || "").trim() || "—")}</td>
+          <td>${esc((e.responsable || "").trim() || "—")}</td>
+          <td>${esc(fmtDate(proximoMantDe(e)))}</td>
+        </tr>`).join("")
+      : `<tr><td colspan="4" class="empty-cell">Sin equipos en esta ubicación.</td></tr>`;
+  }
+
+  function detalleTextoCorreo() {
+    const eqs = correoEquipos($("#correoUbicacion").value);
+    const filas = [["USUARIO ASIGNADO", "UBICACIÓN", "RESPONSABLE", "FECHA PROGRAMADA"]];
+    eqs.forEach((e) => filas.push([
+      (e.usuarioAsignado || "").trim() || "—",
+      (e.ubicacion || "").trim() || "—",
+      (e.responsable || "").trim() || "—",
+      fmtDate(proximoMantDe(e))
+    ]));
+    const anchos = [0, 0, 0, 0];
+    filas.forEach((f) => f.forEach((c, i) => { if (c.length > anchos[i]) anchos[i] = c.length; }));
+    return filas.map((f) => f.map((c, i) => c.padEnd(anchos[i])).join(" | ")).join("\n");
+  }
+
+  function enviarCorreo() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    const eqs = correoEquipos($("#correoUbicacion").value);
+    const emails = [...new Set(eqs.map((e) => (e.email || "").trim()).filter(Boolean))].join(",");
+    if (!emails) return toast("No hay correos registrados en la ubicación seleccionada", "err");
+    const asunto = $("#correoAsunto").value.trim() || "Programación de Mantenimiento de Equipos de Computo";
+    const cuerpo = $("#correoCuerpo").value.trim();
+    const detalle = detalleTextoCorreo();
+    const marker = "Detalle de equipos programados:";
+    let body;
+    const idx = cuerpo.indexOf(marker);
+    if (idx >= 0) {
+      body = cuerpo.slice(0, idx + marker.length) + "\n\n" + detalle + cuerpo.slice(idx + marker.length);
+    } else {
+      body = (cuerpo ? cuerpo + "\n\n" : "") + marker + "\n\n" + detalle;
+    }
+    window.location.href = "mailto:" + emails + "?subject=" + encodeURIComponent(asunto) +
+      "&body=" + encodeURIComponent(body);
+    auditar("ENVIAR CORREO PROGRAMACION", "Ubicación: " + ($("#correoUbicacion").value || "Todas") + " · Equipos: " + eqs.length);
+    toast("Abriendo el correo...", "ok");
+  }
+
   // ---------------- Export / Import ----------------
   function exportData() {
     if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
@@ -993,7 +1535,8 @@
       exportado: now(),
       config: appConfig,
       equipos,
-      mantenimientos
+      mantenimientos,
+      feriados
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
@@ -1005,6 +1548,103 @@
     auditar("EXPORTAR DATOS", "Respaldo descargado");
   }
 
+  // ---------------- Exportar a Excel (XLSX) ----------------
+  const EXCEL_HEADER = [
+    "NOMBRE Y APELLIDOS", "DNI", "ZONA", "SUBDIVISION", "AREA", "CARGO",
+    "NEW HOSTNAME", "UBICACIÓN FISICA", "SERIE DE EQUIPO", "EQUIPO", "MARCA", "MODELO",
+    "RESPONSABLE", "CORREOS", "CONTRATO", "STATUS", "PRIORIDAD", "OBSERVACIONES",
+    "FECHA PROGRAMADO", "FECHA REPROGRAMADA", "FECHA REAL", "ESTADO"
+  ];
+
+  function fmtFechaLarga(iso) {
+    if (!iso) return "";
+    try {
+      return parseISO(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
+    } catch (e) {
+      return String(iso);
+    }
+  }
+
+  function estadoExcel(m) {
+    const s = String(m.estado || estadoMant(m) || "").toLowerCase();
+    if (s === "programado") return "Programado";
+    if (s === "reprogramado") return "Reprogramado";
+    if (s === "no realizado" || s === "cancelado") return "No realizado";
+    return "Finalizado";
+  }
+
+  function filaExcel(e, m) {
+    const row = new Array(22).fill("");
+    if (e) {
+      row[0] = e.usuarioAsignado || "";
+      row[1] = e.dni || "";
+      row[2] = e.zona || e.departamento || "";
+      row[3] = e.subdivision || "";
+      row[4] = e.area || "";
+      row[5] = e.cargo || "";
+      row[6] = e.hostname || "";
+      row[7] = e.ubicacion || "";
+      row[8] = e.serie || "";
+      row[9] = e.nombre || "";
+      row[10] = e.marca || "";
+      row[11] = e.modelo || "";
+      row[12] = e.responsable || "";
+      row[13] = e.email || "";
+      row[14] = e.contrato || "";
+      row[15] = e.status || "";
+    }
+    if (m) {
+      row[16] = m.prioridad || "";
+      row[17] = m.obs || "";
+      row[18] = fmtFechaLarga(m.fecha);
+      row[19] = fmtFechaLarga(m.fechaReprogramada);
+      row[20] = fmtFechaLarga(m.fechaReal);
+      row[21] = estadoExcel(m);
+    }
+    return row;
+  }
+
+  async function exportExcel() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    if (typeof XLSX === "undefined") {
+      toast("Cargando librería de Excel (requiere internet)…");
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+          s.onload = resolve;
+          s.onerror = () => reject(new Error("No se pudo cargar la librería de Excel"));
+          document.head.appendChild(s);
+        });
+      } catch (e) {
+        toast("Sin conexión a internet para exportar a Excel", "err");
+        return;
+      }
+    }
+    const aoa = [EXCEL_HEADER.slice()];
+    const mants = mantenimientos.slice();
+    if (!mants.length) {
+      for (const e of equipos) aoa.push(filaExcel(e, null));
+    } else {
+      for (const m of mants) aoa.push(filaExcel(equipos.find((x) => x.id === m.equipoId) || null, m));
+    }
+    if (aoa.length === 1) return toast("No hay datos para exportar", "err");
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"] = EXCEL_HEADER.map((h, i) => {
+      let w = h.length;
+      for (let r = 1; r < aoa.length && r < 200; r++) {
+        const v = String(aoa[r][i] == null ? "" : aoa[r][i]);
+        if (v.length > w) w = v.length;
+      }
+      return { wch: Math.min(w + 2, 40) };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Mantenimientos");
+    XLSX.writeFile(wb, "reporte_mantenimientos.xlsx");
+    toast("Excel descargado", "ok");
+    auditar("EXPORTAR EXCEL", "Reporte de mantenimientos generado");
+  }
+
   function importData(file) {
     if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const reader = new FileReader();
@@ -1014,6 +1654,7 @@
         if (!data.equipos || !data.mantenimientos) throw new Error("bad");
         await DB.bulkPut("equipos", data.equipos);
         await DB.bulkPut("mantenimientos", data.mantenimientos);
+        if (Array.isArray(data.feriados)) await DB.bulkPut("feriados", data.feriados);
         if (data.config) {
           await DB.setConfig("empresa", data.config.empresa || "Empresa");
           await DB.setConfig("intervalo", data.config.intervalo || 90);
@@ -1029,8 +1670,11 @@
   }
 
   // ============================================================
-  //  ACTUALIZACIÓN POR INTERNET
+  //  ACTUALIZACIÓN POR INTERNET (solo bajo petición explícita)
   // ============================================================
+  //  La app NO se actualiza automáticamente. El botón "Buscar
+  //  actualizaciones" consulta GitHub; si hay versión nueva limpia
+  //  la caché local y recarga los archivos frescos.
   async function checkForUpdates(silent) {
     const statusEl = $("#updateStatus");
     if (navigator.onLine === false) {
@@ -1041,7 +1685,7 @@
     try {
       const base = (CFG.UPDATE_URL || "").replace(/\/+$/, "");
       if (!base || !/^https?:\/\//i.test(base)) {
-        if (statusEl) statusEl.textContent = `Versión ${CFG.APP_VERSION} · Sin servidor remoto (modo local)`;
+        if (statusEl) statusEl.textContent = `Versión ${CFG.APP_VERSION} · Modo local`;
         if (!silent) toast("No se configuró un servidor de actualizaciones", "err");
         return;
       }
@@ -1050,17 +1694,29 @@
       const remote = await resp.json();
       const local = CFG.APP_VERSION;
       if (remote.version !== local) {
-        if (statusEl) statusEl.textContent = `Actualización disponible (${local} → ${remote.version}). Recarga la aplicación.`;
-        toast("Hay una actualización disponible. Recarga la app.", "ok");
-        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: "SKIP_WAITING" });
+        if (statusEl) statusEl.textContent = `Actualización disponible (${local} → ${remote.version}). Aplicando...`;
+        toast("Hay una nueva versión. Aplicando actualización...", "ok");
+        // Solo bajo petición explícita: desregistrar SW, limpiar caché
+        // y recargar para obtener los archivos frescos desde GitHub.
+        if (!silent) {
+          try {
+            if (navigator.serviceWorker) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map((r) => r.unregister()));
+            }
+          } catch (e) { /* sin soporte */ }
+          try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          } catch (e) { /* sin soporte */ }
+          setTimeout(() => window.location.reload(), 400);
         }
       } else {
         if (statusEl) statusEl.textContent = `Versión ${local} · Actualizada ✓`;
         if (!silent) toast("La aplicación está actualizada", "ok");
       }
     } catch (e) {
-      if (statusEl) statusEl.textContent = `Versión ${CFG.APP_VERSION} · Sin servidor remoto (modo local)`;
+      if (statusEl) statusEl.textContent = `Versión ${CFG.APP_VERSION} · Modo local`;
       if (!silent) toast("No se encontró un servidor de actualizaciones", "err");
     }
   }
@@ -1070,6 +1726,7 @@
     mantenimientos = await DB.getAll("mantenimientos");
     usuarios = await DB.getUsuarios();
     auditoria = await DB.getAuditoria(300);
+    feriados = await DB.getAll("feriados");
     appConfig = await DB.getConfig();
     renderConfig();
     setView(currentView);
@@ -1107,6 +1764,12 @@
       e.target.value = "";
     });
     $("#btnCheckUpdate").addEventListener("click", () => checkForUpdates(false));
+    $("#btnMiPerfil").addEventListener("click", openMiPerfil);
+    $("#btnExportarExcel").addEventListener("click", exportExcel);
+    $("#btnAgregarFeriado").addEventListener("click", agregarFeriado);
+    $("#btnProgramar").addEventListener("click", programarMantenimientos);
+    $("#correoUbicacion").addEventListener("change", renderCorreo);
+    $("#btnEnviarCorreo").addEventListener("click", enviarCorreo);
 
     // usuarios y permisos
     $("#btnNuevoUsuario").addEventListener("click", () => openUsuarioModal(null));
@@ -1133,6 +1796,11 @@
       renderMantenimientos();
     });
 
+    // Alertas: combo y buscador
+    $("#filterAlertaTipo").addEventListener("change", () => { alertTab = "proximos"; renderAlertas(); });
+    $("#btnAlertVencidos").addEventListener("click", () => { alertTab = "vencidos"; renderAlertas(); });
+    $("#searchAlerta").addEventListener("input", renderAlertas);
+
     // cierre de modales
     $$("[data-close]").forEach((b) => b.addEventListener("click", () => closeModal(b.dataset.close)));
     $$(".modal-overlay").forEach((o) => o.addEventListener("click", (e) => {
@@ -1140,10 +1808,12 @@
     }));
 
     // checklist
-    $("#checklist").addEventListener("change", (e) => {
-      if (e.target.type === "checkbox") {
-        e.target.closest(".check-item").classList.toggle("checked", e.target.checked);
-      }
+    $$("#checklistSoft, #checklistHard").forEach((el) => {
+      el.addEventListener("change", (e) => {
+        if (e.target.type === "checkbox") {
+          e.target.closest(".check-item").classList.toggle("checked", e.target.checked);
+        }
+      });
     });
 
     // próximo mantenimiento automático
@@ -1173,6 +1843,11 @@
         if (u) openUsuarioModal(u);
         return;
       }
+      const delF = e.target.closest("[data-del-feriado]");
+      if (delF) {
+        eliminarFeriado(delF.dataset.delFeriado);
+        return;
+      }
       const delM = e.target.closest("[data-del-mant]");
       if (delM) {
         const m = mantenimientos.find((x) => x.id === delM.dataset.delMant);
@@ -1187,8 +1862,6 @@
       }
       const open = e.target.closest("[data-open-detail]");
       if (open) { renderDetalle(open.dataset.openDetail); return; }
-      const tab = e.target.closest("[data-alerttab]");
-      if (tab) { alertTab = tab.dataset.alerttab; renderAlertas(); }
     });
 
     // cambio de permiso desde la lista
@@ -1215,14 +1888,60 @@
       });
     });
 
-    // estado de conexión
-    window.addEventListener("online", () => checkForUpdates(true));
-
     // formato de mantenimiento (TI-F016)
     $("#btnVolverFormato").addEventListener("click", () => setView(viewAntesFormato || "dashboard"));
     $("#btnEnviarFormato").addEventListener("click", enviarFormato);
     $("#btnImprimirFormato").addEventListener("click", imprimirFormato);
+    $("#btnPdfFormato").addEventListener("click", generarPDF);
   }
+
+  // ======== LOGO PARA EL PDF ========
+  function getLogoData() {
+    try { return localStorage.getItem("formato_logo_base64") || ""; }
+    catch (e) { return ""; }
+  }
+  function setLogoData(b64) {
+    try {
+      if (b64) localStorage.setItem("formato_logo_base64", b64);
+      else localStorage.removeItem("formato_logo_base64");
+    } catch (e) {}
+  }
+  function processLogo(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to 100x100, keep aspect ratio, center in square
+        const canvas = document.createElement("canvas");
+        const size = 100;
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+        const ratio = Math.min(size / img.width, size / img.height);
+        const dw = img.width * ratio, dh = img.height * ratio;
+        ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+        const fullB64 = canvas.toDataURL("image/png");
+        const pureB64 = fullB64.replace(/^data:image\/png;base64,/, "");
+        setLogoData(pureB64);
+        $("#logoPreview").src = fullB64;
+        $("#logoPreview").classList.remove("hidden");
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  $("#logoInput").addEventListener("change", (e) => {
+    if (e.target.files[0]) processLogo(e.target.files[0]);
+  });
+  $("#btnClearLogo").addEventListener("click", () => {
+    setLogoData("");
+    $("#logoPreview").classList.add("hidden");
+    $("#logoInput").value = "";
+  });
+  // Restore logo preview on load
+  const savedLogo = getLogoData();
+  if (savedLogo) { $("#logoPreview").src = savedLogo; $("#logoPreview").classList.remove("hidden"); }
 
   function init() {
     bindEvents();
@@ -1248,21 +1967,14 @@
         } else {
           showLogin();
         }
+        /* Service Worker en modo SOLO CACHÉ (sin red): mantiene el
+           funcionamiento sin conexión pero NO sincroniza nada en
+           segundo plano. La actualización automática está deshabilitada;
+           solo se contacta GitHub cuando el usuario pulsa "Buscar
+           actualizaciones". */
         if ("serviceWorker" in navigator) {
-          try {
-            navigator.serviceWorker.register("sw.js").then((reg) => {
-              reg.addEventListener("updatefound", () => {
-                const nw = reg.installing;
-                if (nw) nw.addEventListener("statechange", () => {
-                  if (nw.state === "installed" && navigator.serviceWorker.controller) {
-                    toast("Nueva versión descargada. Recarga para aplicar.", "ok");
-                  }
-                });
-              });
-            }).catch(() => {});
-          } catch (e) { /* sin soporte */ }
+          try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) { /* sin soporte */ }
         }
-        setTimeout(() => checkForUpdates(true), 2500);
       })
       .catch((e) => {
         // modo degradado: la app abre con datos en memoria (sin guardar)

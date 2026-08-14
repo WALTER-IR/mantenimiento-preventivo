@@ -11,6 +11,8 @@ public class Mantenimiento {
     public String actividades = "";
     public String proxima = "";
     public String observaciones = "";
+    // Fecha/hora (yyyy-MM-dd HH:mm:ss) en que el mantenimiento pasó a Finalizado.
+    public String finalizadoEn = "";
 
     // datos del equipo (JOIN)
     public String serie = "";

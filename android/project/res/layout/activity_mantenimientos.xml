@@ -149,6 +149,19 @@
             android:layout_marginLeft="10dp" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/counterMantenimientos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:text="" />
+
     <ListView
         android:id="@+id/listaMantenimientos"
         android:layout_width="match_parent"

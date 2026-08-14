@@ -18,6 +18,7 @@ import java.util.Arrays;
 public class UsuarioFormActivity extends Activity implements View.OnClickListener {
 
     private long usuarioId = 0;
+    private boolean perfil = false;
     private EditText usNombre, usDni, usSubdivision, usCeco, usArea, usCargo, usEmail, usClave;
     private Spinner usZona, usRol;
     private Button btnEliminar;
@@ -27,7 +28,18 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Db.init(this);
-        if (!Db.esAdmin()) {
+        Bundle b = getIntent().getExtras();
+        if (b != null) {
+            usuarioId = b.getLong("usuarioId", 0);
+            perfil = b.getBoolean("perfil", false);
+        }
+        if (perfil) {
+            usuarioId = Db.getSesionId();
+            if (usuarioId <= 0) {
+                finish();
+                return;
+            }
+        } else if (!Db.esAdmin()) {
             Fmt.toast(this, "Solo el administrador puede gestionar usuarios y permisos");
             finish();
             return;
@@ -58,8 +70,14 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
         findViewById(R.id.btnGuardarUsuario).setOnClickListener(this);
         btnEliminar.setOnClickListener(this);
 
-        Bundle b = getIntent().getExtras();
-        if (b != null) usuarioId = b.getLong("usuarioId", 0);
+        if (perfil) {
+            ((TextView) findViewById(R.id.formUsuTitle)).setText("Mi perfil");
+            findViewById(R.id.usRolLabel).setVisibility(View.GONE);
+            usRol.setVisibility(View.GONE);
+            btnEliminar.setVisibility(View.GONE);
+            usClave.setHint("Déjala vacía para no cambiar tu contraseña");
+        }
+
         if (usuarioId > 0) cargar();
         cargarEquipos();
     }
@@ -92,7 +110,7 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
             finish();
             return;
         }
-        ((TextView) findViewById(R.id.formUsuTitle)).setText("Editar responsable");
+        ((TextView) findViewById(R.id.formUsuTitle)).setText(perfil ? "Mi perfil" : "Editar responsable");
         usNombre.setText(u.nombre);
         usDni.setText(u.dni);
         int zi = Arrays.asList(getResources().getStringArray(R.array.zonas)).indexOf(u.zona);
@@ -127,18 +145,26 @@ public class UsuarioFormActivity extends Activity implements View.OnClickListene
             Fmt.toast(this, "El DNI es obligatorio");
             return;
         }
-        if (usRol.getSelectedItemPosition() == Db.ROL_ADMIN && usuarioId == Db.getSesionId()) {
-            Fmt.toast(this, "No puedes quitarte el permiso de administrador a ti mismo");
-            return;
+        Usuario actual = Db.getUsuario(usuarioId);
+        int rol = usRol.getSelectedItemPosition();
+        String clave = usClave.getText().toString();
+        if (perfil) {
+            rol = actual == null ? 0 : actual.rol;
+            if (clave.length() == 0) clave = actual == null ? dni : actual.clave;
+        } else {
+            if (rol == Db.ROL_ADMIN && usuarioId == Db.getSesionId()) {
+                Fmt.toast(this, "No puedes quitarte el permiso de administrador a ti mismo");
+                return;
+            }
+            if (clave.length() == 0) clave = dni;
         }
         Usuario u = new Usuario();
         u.id = usuarioId;
         u.nombre = nombre;
         u.dni = dni;
         u.zona = usZona.getSelectedItem() == null ? "Norte" : usZona.getSelectedItem().toString();
-        u.rol = usRol.getSelectedItemPosition();
-        String clave = usClave.getText().toString();
-        u.clave = clave.length() == 0 ? dni : clave;
+        u.rol = rol;
+        u.clave = clave;
         u.subdivision = usSubdivision.getText().toString().trim();
         u.ceco = usCeco.getText().toString().trim();
         u.area = usArea.getText().toString().trim();

@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -108,6 +109,17 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
                             return;
                         }
                         lv.setAdapter(new MantAdapter(mants));
+                        // El formato solo se habilita si el último mantenimiento está finalizado.
+                        boolean formatoOk = !mants.isEmpty() && Db.estadoFinal(mants.get(0).estado);
+                        Button btnFormato = (Button) findViewById(R.id.btnFormato);
+                        btnFormato.setEnabled(formatoOk);
+                        if (formatoOk) {
+                            btnFormato.setTextColor(0xFFB91C1C);
+                            Ui.setBg(btnFormato, 0xFFFFFFFF, 10);
+                        } else {
+                            btnFormato.setTextColor(0xFF9CA3AF);
+                            Ui.setBg(btnFormato, 0xFFE2E8F0, 10);
+                        }
                         App.logMessage("Detalle equipo id=" + equipoId + " render ok");
                     }
                 });
@@ -119,8 +131,9 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
         ((TextView) findViewById(R.id.detTitle)).setText(Db.equipoLabel(equipo));
 
         equipoCard.removeViews(1, equipoCard.getChildCount() - 1);
-        String asignado = equipo.usuarioAsignado.length() > 0 ? equipo.usuarioAsignado : equipo.responsable;
+        String asignado = equipo.usuarioAsignado != null ? equipo.usuarioAsignado.trim() : "";
         addRow(equipoCard, "USUARIO ASIGNADO", asignado.length() > 0 ? asignado : "—");
+        addRow(equipoCard, "CARGO", equipo.cargo.length() > 0 ? equipo.cargo : "—");
         addRow(equipoCard, "HOSTNAME", equipo.hostname);
         addRow(equipoCard, "DIR. IP", equipo.ip);
         addRow(equipoCard, "UBICACIÓN FISICA", equipo.ubicacion);
@@ -139,7 +152,7 @@ public class EquipoDetailActivity extends Activity implements View.OnClickListen
         addRow(respCard, "DNI", equipo.dni);
         addRow(respCard, "CeCo SAP", equipo.ceco);
         addRow(respCard, "AREA", equipo.area);
-        addRow(respCard, "CARGO", equipo.cargo);
+        addRow(respCard, "CARGO", equipo.cargoResponsable.length() > 0 ? equipo.cargoResponsable : "—");
         addRow(respCard, "EMAIL", equipo.email);
     }
 

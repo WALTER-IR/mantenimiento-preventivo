@@ -27,5 +27,6 @@ public class Equipo {
     public String ceco = "";
     public String area = "";
     public String cargo = "";
+    public String cargoResponsable = "";
     public String email = "";
 }

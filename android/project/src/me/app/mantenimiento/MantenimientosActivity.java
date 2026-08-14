@@ -224,10 +224,16 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                 try {
                     result = new ArrayList<>();
                     for (Mantenimiento m : Db.allMants()) {
-                        if (q.length() > 0 && !m.usuario.toLowerCase(Locale.ROOT).contains(q)
-                                && !m.serie.toLowerCase(Locale.ROOT).contains(q)
-                                && !m.hostname.toLowerCase(Locale.ROOT).contains(q)) {
-                            continue;
+                        // Buscar por texto: usuario mantenimiento, serie, hostname, usuario asignado del equipo
+                        if (q.length() > 0) {
+                            Equipo eq = Db.getEquipo(m.equipoId);
+                            String usuarioEq = (eq != null) ? (eq.usuarioAsignado + " " + eq.responsable).toLowerCase(Locale.ROOT) : "";
+                            if (!m.usuario.toLowerCase(Locale.ROOT).contains(q)
+                                    && !m.serie.toLowerCase(Locale.ROOT).contains(q)
+                                    && !m.hostname.toLowerCase(Locale.ROOT).contains(q)
+                                    && !usuarioEq.contains(q)) {
+                                continue;
+                            }
                         }
                         if (uq.length() > 0 && !uq.equals("Todas las ubicaciones")
                                 && !m.ubicacion.trim().equalsIgnoreCase(uq)) continue;
@@ -255,6 +261,11 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
                         labels = map;
                         lv.setAdapter(new Adapter());
                         empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                        // Contador de registros
+                        TextView counter = findViewById(R.id.counterMantenimientos);
+                        if (counter != null) {
+                            counter.setText(result.size() + " registro" + (result.size() == 1 ? "" : "s") + " encontrado" + (result.size() == 1 ? "" : "s"));
+                        }
                     }
                 });
             }
@@ -300,14 +311,23 @@ public class MantenimientosActivity extends Activity implements View.OnClickList
             try {
                 Mantenimiento m = items.get(i);
                 TextView usr = (TextView) v.findViewById(R.id.mtUsuario);
-                TextView nom = (TextView) v.findViewById(R.id.mtNombre);
+                TextView resp = (TextView) v.findViewById(R.id.mtResponsable);
+                TextView eq = (TextView) v.findViewById(R.id.mtEquipo);
                 TextView badge = (TextView) v.findViewById(R.id.mtBadge);
                 TextView info = (TextView) v.findViewById(R.id.mtInfo);
                 TextView reprog = (TextView) v.findViewById(R.id.mtReprog);
                 TextView act = (TextView) v.findViewById(R.id.mtAct);
-                String asignado = m.usuarioAsignado.length() > 0 ? m.usuarioAsignado : m.usuario;
+                // Usuario asignado en la primera línea; responsable en línea independiente en rojo.
+                String asignado = m.usuarioAsignado == null ? "" : m.usuarioAsignado.trim();
                 usr.setText(asignado.length() > 0 ? "👤 " + asignado : "👤 Sin usuario asignado");
-                nom.setText(linea(m.serie, m.hostname));
+                String responsable = m.usuario == null ? "" : m.usuario.trim();
+                if (responsable.length() > 0 && !responsable.equalsIgnoreCase(asignado)) {
+                    resp.setText("Responsable: " + responsable);
+                    resp.setVisibility(View.VISIBLE);
+                } else {
+                    resp.setVisibility(View.GONE);
+                }
+                eq.setText(linea(m.serie, m.hostname));
                 String estado = m.estado.length() > 0 ? m.estado : "Programado";
                 int color = Db.estadoFinal(m.estado) ? Ui.OK : Ui.WARN;
                 setBadge(badge, estado.toUpperCase(), color);

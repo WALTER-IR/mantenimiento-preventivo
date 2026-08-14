@@ -21,14 +21,6 @@
             android:text="Equipos" />
 
         <Button
-            android:id="@+id/btnCargaMasiva"
-            style="@style/BtnOutline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="6dp"
-            android:text="Masiva" />
-
-        <Button
             android:id="@+id/btnNuevoEquipo"
             style="@style/BtnPrimary"
             android:layout_width="wrap_content"

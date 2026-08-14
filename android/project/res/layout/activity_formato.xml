@@ -36,6 +36,41 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
+
+        <Button
+            android:id="@+id/btnSelectLogo"
+            style="@style/BtnOutline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Logo" />
+
+        <ImageView
+            android:id="@+id/imgLogoPreview"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="8dp"
+            android:visibility="gone"
+            android:scaleType="centerCrop" />
+
+        <Button
+            android:id="@+id/btnClearLogoAPK"
+            style="@style/BtnOutline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:text="X"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:paddingLeft="14dp"
         android:paddingRight="14dp"
         android:paddingTop="10dp"
@@ -49,6 +84,15 @@
             android:layout_weight="1"
             android:layout_marginRight="6dp"
             android:text="Enviar" />
+
+        <Button
+            android:id="@+id/btnPdfFormato"
+            style="@style/BtnOutline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginRight="6dp"
+            android:text="PDF" />
 
         <Button
             android:id="@+id/btnImprimirFormato"

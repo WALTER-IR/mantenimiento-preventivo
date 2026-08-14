@@ -46,13 +46,6 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
                 startActivity(new Intent(EquiposActivity.this, EquipoFormActivity.class));
             }
         });
-        findViewById(R.id.btnCargaMasiva).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(EquiposActivity.this, CargaMasivaActivity.class)
-                        .putExtra("tipo", CargaMasivaActivity.TIPO_EQUIPOS));
-            }
-        });
 
         lv = (ListView) findViewById(R.id.listaEquipos);
         search = (EditText) findViewById(R.id.searchEquipo);
@@ -90,7 +83,6 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             return;
         }
         findViewById(R.id.btnNuevoEquipo).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
-        findViewById(R.id.btnCargaMasiva).setVisibility(Db.puedeEditar() ? View.VISIBLE : View.GONE);
         load();
     }
 
@@ -163,12 +155,15 @@ public class EquiposActivity extends Activity implements View.OnClickListener {
             Equipo e = items.get(i);
             TextView usr = (TextView) v.findViewById(R.id.itemUser);
             TextView nom = (TextView) v.findViewById(R.id.itemNombre);
+            TextView resp = (TextView) v.findViewById(R.id.itemResp);
             TextView sub = (TextView) v.findViewById(R.id.itemSub);
             TextView badge = (TextView) v.findViewById(R.id.itemBadge);
 
-            String asignado = e.usuarioAsignado.length() > 0 ? e.usuarioAsignado : e.responsable;
+            String asignado = e.usuarioAsignado != null ? e.usuarioAsignado.trim() : "";
             usr.setText(asignado.length() > 0 ? "👤 " + asignado : "👤 Sin usuario asignado");
             nom.setText(linea(e.serie, e.hostname));
+            resp.setText(e.responsable != null ? e.responsable.trim() : "");
+            resp.setVisibility(resp.getText().length() > 0 ? View.VISIBLE : View.GONE);
             sub.setText(linea(e.equipo, e.ubicacion, e.ip));
 
             String st = e.status.length() > 0 ? e.status.toUpperCase() : "ACTIVO";

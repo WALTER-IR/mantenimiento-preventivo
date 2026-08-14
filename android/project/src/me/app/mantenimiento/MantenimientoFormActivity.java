@@ -105,7 +105,33 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
         actividadChecks.clear();
         mtActividades.removeAllViews();
         String[] items = getResources().getStringArray(R.array.actividades_mantenimiento);
+        ArrayList<String> soft = new ArrayList<>();
+        ArrayList<String> hard = new ArrayList<>();
         for (String item : items) {
+            if (Db.esHardware(item)) hard.add(item); else soft.add(item);
+        }
+        // Titulo Software
+        TextView tSoft = new TextView(this);
+        tSoft.setText("Mantenimiento de Software");
+        tSoft.setTextSize(13);
+        tSoft.setTypeface(null, android.graphics.Typeface.BOLD);
+        tSoft.setPadding(0, 6, 0, 4);
+        mtActividades.addView(tSoft);
+        for (String item : soft) {
+            CheckBox cb = new CheckBox(this);
+            cb.setText(item);
+            cb.setTextSize(13);
+            mtActividades.addView(cb);
+            actividadChecks.add(cb);
+        }
+        // Titulo Hardware
+        TextView tHard = new TextView(this);
+        tHard.setText("Mantenimiento de Hardware");
+        tHard.setTextSize(13);
+        tHard.setTypeface(null, android.graphics.Typeface.BOLD);
+        tHard.setPadding(0, 10, 0, 4);
+        mtActividades.addView(tHard);
+        for (String item : hard) {
             CheckBox cb = new CheckBox(this);
             cb.setText(item);
             cb.setTextSize(13);
@@ -177,9 +203,18 @@ public class MantenimientoFormActivity extends Activity implements View.OnClickL
             marcarActividades(m.actividades);
             mtObs.setText(m.observaciones);
             btnEliminar.setVisibility(View.VISIBLE);
+            // En edición solo se permiten: fecha reprogramada, fecha real, actividades y observaciones.
+            mtEquipo.setEnabled(false);
+            mtPrioridad.setEnabled(false);
+            mtEstado.setEnabled(false);
+            mtProgramada.setEnabled(false);
+            mtProxima.setEnabled(false);
         } else {
             mtProgramada.setText(Fmt.disp(Fmt.today()));
             btnEliminar.setVisibility(View.GONE);
+            // En registro nuevo, reprogramada y real se deshabilitan (se completan al editar).
+            mtReprogramada.setEnabled(false);
+            mtReal.setEnabled(false);
         }
     }
 

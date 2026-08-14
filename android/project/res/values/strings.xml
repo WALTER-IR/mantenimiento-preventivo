@@ -2,10 +2,19 @@
 <resources>
     <string name="app_name">Inventario de Equipos</string>
 
+    <string name="correo_asunto">Programación de Mantenimiento de Equipos de Computo</string>
+    <string name="correo_cuerpo">Estimados señores:\n\nPor medio de la presente, les informamos que se ha programado una jornada de mantenimiento preventivo con el objetivo de garantizar el correcto funcionamiento de los equipos de cómputo y minimizar la probabilidad de fallas. A continuación se detallan las acciones previstas para la intervención.\n\nDetalle de equipos programados:\n\nRecomendaciones para los usuarios:\n  * Guardar su información importante.\n  * Cerrar sesión antes de la intervención.\n  * Informarnos en caso de requerir reprogramación.\n\nSi tiene dudas o necesita más información, no dude en contactarnos.\nAtentamente,</string>
+
     <string-array name="prioridades">
         <item>Alta</item>
         <item>Media</item>
         <item>Baja</item>
+    </string-array>
+
+    <string-array name="alertas_proximos">
+        <item>Próximos 7 días</item>
+        <item>Próximos 15 días</item>
+        <item>Próximos 30 días</item>
     </string-array>
 
     <string-array name="estados_mantenimiento">
