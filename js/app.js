@@ -1932,17 +1932,19 @@
         u = usuarios.find((x) => keyOf(x.nombre || "") === keyOf(asignado)) || null;
       }
       if (!u) {
-        // Si el responsable no existe, se crea automáticamente con permiso de edición.
-        const nombreNuevo = (nombreResp || asignado).trim();
+        // Si el responsable no existe, se crea automáticamente con permiso de edición
+        // (usa el nombre del archivo o, a falta de este, el DNI como nombre).
         const dniValido = dniText && esNumero(dniText);
-        if (nombreNuevo && dniValido) {
+        if (dniValido) {
           const nu = {
             id: "us-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
-            nombre: nombreNuevo,
+            nombre: (nombreResp || asignado || dniText).trim(),
             dni: dniText,
             clave: dniText,
             rol: ROL.EDICION,
-            fechaAlta: todayISO()
+            fechaAlta: todayISO(),
+            area: valCelda(f, colArea),
+            cargo: valCelda(f, colCargo)
           };
           await DB.putUsuario(nu);
           usuarios.push(nu);
@@ -1951,7 +1953,7 @@
         } else {
           err++;
           const criterio = dniText || nombreResp || asignado;
-          addError(errores, i, "no se encontró el responsable y no hay datos para crearlo: " + (criterio || "—"));
+          addError(errores, i, "no se encontró el responsable y no hay DNI válido para crearlo: " + (criterio || "—"));
           continue;
         }
       }

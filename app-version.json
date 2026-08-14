@@ -1,6 +1,6 @@
 {
-  "version": "1.19.2",
+  "version": "1.19.3",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Carga masiva de equipos: si el responsable del DNI no existe, se crea automaticamente con permiso de edicion y se informa en el resultado. Correccion del error 'no se encontro el responsable'."
+  "changelog": "Carga masiva de equipos: crea automaticamente al responsable faltante aunque la fila solo traiga el DNI (usa el DNI como nombre de respaldo)."
 }
