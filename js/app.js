@@ -1529,25 +1529,101 @@
   }
 
   // ---------------- Export / Import ----------------
-  function exportData() {
-    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
-    const payload = {
+  function buildRespaldo() {
+    return {
       app: CFG.APP_NAME,
       version: CFG.APP_VERSION,
       exportado: now(),
       config: appConfig,
+      usuarios,
       equipos,
       mantenimientos,
       feriados
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  }
+
+  function descargarJSON(obj, nombre) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "respaldo-mantenimiento-" + todayISO() + ".json";
+    a.download = nombre;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function exportData() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    descargarJSON(buildRespaldo(), "respaldo-mantenimiento-" + todayISO() + ".json");
     toast("Copia de seguridad descargada", "ok");
     auditar("EXPORTAR DATOS", "Respaldo descargado");
+  }
+
+  // Exporta con el mismo formato JSON que usa la app móvil (APK), para poder
+  // importar dentro del APK los datos registrados en la web.
+  function exportApk() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    const indiceUsuario = (e) => {
+      let i = e.dni ? usuarios.findIndex((u) => u.dni && keyOf(u.dni) === keyOf(e.dni)) : -1;
+      if (i < 0) i = usuarios.findIndex((u) => u.nombre && e.responsable && keyOf(u.nombre) === keyOf(e.responsable));
+      return i + 1;
+    };
+    const uss = usuarios.map((u, i) => ({
+      id: i + 1,
+      nombre: u.nombre || "",
+      subdivision: u.subdivision || "",
+      dni: u.dni || "",
+      ceco: u.ceco || "",
+      area: u.area || "",
+      cargo: u.cargo || "",
+      email: u.email || "",
+      zona: u.zona || "",
+      clave: u.clave || u.dni || "",
+      rol: typeof u.rol === "number" ? u.rol : ROL.EDICION
+    }));
+    const eqs = equipos.map((e, i) => ({
+      id: i + 1,
+      usuario_id: indiceUsuario(e),
+      hostname: e.hostname || "",
+      ip: e.ip || "",
+      ubicacion: e.ubicacion || "",
+      equipo: e.nombre || e.serie || "",
+      cod_inventario: e.codInventario || "",
+      serie: e.serie || "",
+      marca: e.marca || "",
+      modelo: e.modelo || "",
+      contrato: e.contrato || "",
+      status: e.status || "",
+      usuario_asignado: e.usuarioAsignado || "",
+      area: e.area || "",
+      cargo: e.cargo || "",
+      dni: e.dni || ""
+    }));
+    const eqIndex = new Map(equipos.map((e, i) => [String(e.id), i + 1]));
+    const mts = mantenimientos.map((m, i) => ({
+      id: i + 1,
+      equipo_id: eqIndex.get(String(m.equipoId)) || 0,
+      prioridad: m.prioridad || "",
+      fecha_programada: m.fecha || "",
+      fecha_reprogramada: m.fechaReprogramada || "",
+      fecha_real: m.fechaReal || "",
+      estado: m.estado || "",
+      actividades: Array.isArray(m.tareas) ? m.tareas.join("; ") : (m.actividades || ""),
+      proxima: m.proxima || "",
+      observaciones: m.obs || "",
+      finalizado_en: m.finalizadoEn || (m.estado === "finalizado" ? (m.fechaReal || "") : "")
+    }));
+    const fds = feriados.map((f, i) => ({ id: i + 1, fecha: f.fecha || "", motivo: f.motivo || "" }));
+    descargarJSON({
+      app: "Inventario de equipos",
+      version: 4,
+      exported: todayISO(),
+      usuarios: uss,
+      equipos: eqs,
+      mantenimientos: mts,
+      feriados: fds
+    }, "respaldo-para-apk-" + todayISO() + ".json");
+    toast("Respaldo para APK descargado", "ok");
+    auditar("EXPORTAR DATOS PARA APK", "Respaldo compatible con la app móvil");
   }
 
   // ---------------- Exportar a Excel (XLSX) ----------------
@@ -1647,23 +1723,129 @@
     auditar("EXPORTAR EXCEL", "Reporte de mantenimientos generado");
   }
 
+  // Convierte un respaldo de la app móvil (APK) al formato de datos de la web.
+  function convertirRespaldoApk(d) {
+    const uss = Array.isArray(d.usuarios) ? d.usuarios : [];
+    const eqs = Array.isArray(d.equipos) ? d.equipos : [];
+    const mts = Array.isArray(d.mantenimientos) ? d.mantenimientos : [];
+    const fds = Array.isArray(d.feriados) ? d.feriados : [];
+
+    const usuariosWeb = uss.map((u) => ({
+      id: "us-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+      nombre: String(u.nombre || "").trim(),
+      dni: String(u.dni == null ? "" : u.dni).trim(),
+      clave: String(u.clave == null ? "" : u.clave).trim() || String(u.dni == null ? "" : u.dni).trim(),
+      rol: (typeof u.rol === "number" && u.rol >= 0 && u.rol <= 2) ? u.rol : ROL.EDICION,
+      fechaAlta: todayISO(),
+      zona: String(u.zona || "").trim(),
+      subdivision: String(u.subdivision || "").trim(),
+      ceco: String(u.ceco || "").trim(),
+      area: String(u.area || "").trim(),
+      cargo: String(u.cargo || "").trim(),
+      email: String(u.email || "").trim()
+    }));
+
+    const porUsuarioApk = new Map();
+    uss.forEach((u, i) => porUsuarioApk.set(String(u.id), usuariosWeb[i]));
+
+    const equiposWeb = eqs.map((e) => {
+      const u = porUsuarioApk.get(String(e.usuario_id)) || null;
+      const serie = String(e.serie == null ? "" : e.serie).trim();
+      return {
+        id: "eq-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        nombre: String(e.equipo || "").trim() || serie,
+        tipo: "laptop",
+        marca: String(e.marca || "").trim(),
+        modelo: String(e.modelo || "").trim(),
+        serie,
+        hostname: String(e.hostname || "").trim(),
+        ip: String(e.ip || "").trim(),
+        ubicacion: String(e.ubicacion || "").trim(),
+        usuarioAsignado: String(e.usuario_asignado || "").trim(),
+        responsable: u ? u.nombre : "",
+        dni: String(e.dni == null ? "" : e.dni).trim(),
+        area: String(e.area || "").trim(),
+        cargo: String(e.cargo || "").trim(),
+        codInventario: String(e.cod_inventario || "").trim(),
+        contrato: String(e.contrato || "").trim(),
+        status: String(e.status || "").trim(),
+        intervalo: appConfig.intervalo,
+        fechaUltimoMant: null,
+        fechaAlta: todayISO()
+      };
+    });
+
+    const porEquipoApk = new Map();
+    eqs.forEach((e, i) => porEquipoApk.set(String(e.id), equiposWeb[i]));
+
+    const mantenimientosWeb = mts.map((m) => {
+      const eq = porEquipoApk.get(String(m.equipo_id)) || null;
+      const act = String(m.actividades || "");
+      const tareas = act ? act.split(/[\r\n,;]+/).map((t) => t.trim()).filter(Boolean) : [];
+      return {
+        id: "mt-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+        equipoId: eq ? eq.id : "",
+        fecha: xlsxToDate(m.fecha_programada),
+        tipo: "preventivo",
+        estado: estadoNorm(m.estado),
+        prioridad: String(m.prioridad || "").trim(),
+        fechaReprogramada: xlsxToDate(m.fecha_reprogramada),
+        fechaReal: xlsxToDate(m.fecha_real),
+        tecnico: "",
+        costo: 0,
+        proxima: xlsxToDate(m.proxima),
+        obs: String(m.observaciones || "").trim(),
+        tareas
+      };
+    });
+
+    const feriadosWeb = fds.map((f) => ({
+      id: "fe-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
+      fecha: xlsxToDate(f.fecha),
+      motivo: String(f.motivo || "").trim()
+    }));
+
+    return { usuarios: usuariosWeb, equipos: equiposWeb, mantenimientos: mantenimientosWeb, feriados: feriadosWeb };
+  }
+
+  // Reemplaza TODOS los datos por los del respaldo (igual que la app móvil).
+  async function reemplazarDatos(data, esApk) {
+    await DB.clear("equipos");
+    await DB.clear("mantenimientos");
+    await DB.clear("usuarios");
+    await DB.clear("feriados");
+    if (Array.isArray(data.usuarios) && data.usuarios.length) await DB.bulkPut("usuarios", data.usuarios);
+    if (Array.isArray(data.equipos) && data.equipos.length) await DB.bulkPut("equipos", data.equipos);
+    if (Array.isArray(data.mantenimientos) && data.mantenimientos.length) await DB.bulkPut("mantenimientos", data.mantenimientos);
+    if (Array.isArray(data.feriados) && data.feriados.length) await DB.bulkPut("feriados", data.feriados);
+    if (!esApk && data.config) {
+      await DB.setConfig("empresa", data.config.empresa || "Empresa");
+      await DB.setConfig("intervalo", data.config.intervalo || 90);
+    }
+  }
+
   function importData(file) {
     if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const reader = new FileReader();
     reader.onload = async () => {
       try {
         const data = JSON.parse(reader.result);
-        if (!data.equipos || !data.mantenimientos) throw new Error("bad");
-        await DB.bulkPut("equipos", data.equipos);
-        await DB.bulkPut("mantenimientos", data.mantenimientos);
-        if (Array.isArray(data.feriados)) await DB.bulkPut("feriados", data.feriados);
-        if (data.config) {
-          await DB.setConfig("empresa", data.config.empresa || "Empresa");
-          await DB.setConfig("intervalo", data.config.intervalo || 90);
+        const esApk = data.app === "Inventario de equipos" ||
+          (Array.isArray(data.usuarios) && data.usuarios.length > 0 && typeof data.usuarios[0].id === "number");
+        const datos = esApk ? convertirRespaldoApk(data) : data;
+        if (!Array.isArray(datos.equipos) || !Array.isArray(datos.mantenimientos)) throw new Error("bad");
+        if (usuarios.length || equipos.length || mantenimientos.length) {
+          descargarJSON(buildRespaldo(), "respaldo-antes-de-importar-" + todayISO() + ".json");
         }
+        await reemplazarDatos(datos, esApk);
+        await auditar("IMPORTAR DATOS", esApk ? "Integración de respaldo APK (base principal)" : "Restauración de respaldo");
         await reload();
+        if (sesion && !usuarios.some((u) => u.id === sesion.id)) {
+          sesion = null;
+          await DB.clearSesion();
+          showLogin();
+        }
         toast("Datos importados correctamente", "ok");
-        auditar("IMPORTAR DATOS", "Restauración de respaldo");
       } catch (e) {
         toast("Archivo de respaldo no válido", "err");
       }
@@ -2163,6 +2345,7 @@
     $("#btnVerTodasAlertas").addEventListener("click", () => setView("alertas"));
     $("#btnGuardarConfig").addEventListener("click", saveConfig);
     $("#btnExportar").addEventListener("click", exportData);
+    $("#btnExportarApk").addEventListener("click", exportApk);
     $("#btnImportar").addEventListener("click", () => $("#fileImport").click());
     $("#fileImport").addEventListener("change", (e) => {
       if (e.target.files[0]) importData(e.target.files[0]);

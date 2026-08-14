@@ -300,11 +300,12 @@ Atentamente,</textarea>
 
       <div class="card" id="cardBackup">
         <h3 class="card-title">Copia de seguridad</h3>
-        <p class="card-text">Descarga una copia de toda tu información o restaura desde un archivo.</p>
+        <p class="card-text">Descarga una copia de toda tu información o restaura desde un archivo. Al importar se reemplazan los datos actuales (antes se descarga un respaldo automático). Se puede importar el respaldo de la app móvil (APK): se integran responsables, equipos, mantenimientos y feriados.</p>
         <div class="btn-row">
           <button class="btn btn-outline" id="btnExportar">⬇ Exportar datos</button>
           <button class="btn btn-outline" id="btnImportar">⬆ Importar datos</button>
         </div>
+        <button class="btn btn-outline btn-block" id="btnExportarApk">⬇ Exportar para APK (móvil)</button>
         <button class="btn btn-primary btn-block" id="btnExportarExcel">⬇ Exportar a Excel</button>
         <input type="file" id="fileImport" class="hidden" accept="application/json" />
       </div>

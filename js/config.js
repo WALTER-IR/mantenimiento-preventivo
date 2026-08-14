@@ -8,7 +8,7 @@
 //  Déjala vacía "" para desactivar por completo la consulta de versiones.
 // ============================================================
 window.APP_CONFIG = {
-  APP_VERSION: "1.19.9",
+  APP_VERSION: "1.20.0",
   APP_NAME: "Mantenimiento Preventivo",
   UPDATE_URL: "https://WALTER-IR.github.io/mantenimiento-preventivo/", // ej. "https://midominio.com/mantenimiento/"
   CHECKLIST_DEFAULT: [

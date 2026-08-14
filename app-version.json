@@ -1,6 +1,6 @@
 {
-  "version": "1.19.9",
+  "version": "1.20.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Carga de equipos: el error ahora muestra el nombre del responsable (y su DNI), y al final del resultado se listan los responsables existentes en la web para saber si falta importar el archivo de responsables."
+  "changelog": "Integración de bases web y móvil: el respaldo de la web ahora incluye responsables; al importar se reemplazan los datos (con respaldo automático previo) y se puede importar el respaldo de la app móvil (APK) para unificar responsables, equipos, mantenimientos y feriados. Además hay un botón para exportar los datos en formato APK y cargarlos en el celular."
 }
