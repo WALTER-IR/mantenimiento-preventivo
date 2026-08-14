@@ -1,6 +1,6 @@
 {
-  "version": "1.19.5",
+  "version": "1.19.6",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Carga masiva: igual que la app movil, se usa la primera hoja del Excel que tenga datos y coincida con las columnas esperadas (antes podia elegir una hoja-resumen pequena y solo importar 4 registros)."
+  "changelog": "Carga masiva de equipos: ya NO crea usuarios automaticamente, igual que la app movil. El responsable debe existir como usuario (importa primero el archivo de responsables); si no existe, la fila queda como invalida con el motivo."
 }
