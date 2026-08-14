@@ -1770,6 +1770,10 @@
         if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
         res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") +
           "\nHoja: " + elegida.hoja + " · Filas con datos: " + filas.length + "\n\n" + txt;
+        if (filas.length < 10) {
+          res.textContent += "\n\n¡Ojo! El archivo seleccionado tiene muy pocas filas con datos (" +
+            filas.length + "). ¿Elegiste el archivo correcto? El archivo de equipos tiene 808 filas.";
+        }
         if (r[0] > 0) {
           toast("Se importaron " + r[0] + " registros", "ok");
           auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1]);
