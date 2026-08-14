@@ -1,6 +1,6 @@
 {
-  "version": "1.19.0",
+  "version": "1.19.1",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Configuracion: nueva opcion 'Cargas masivas (Excel)' para importar responsables, equipos y mantenimientos con validacion, 'Activar mantenimientos 2026', 'Vaciar base de datos' y 'Ver errores guardados'."
+  "changelog": "Configuracion: la tarjeta 'Cargas masivas (Excel)' queda siempre visible para cualquier sesion; los botones validan permiso al usarlos."
 }

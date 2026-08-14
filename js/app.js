@@ -1150,7 +1150,6 @@
     $("#btnNuevoUsuario").classList.toggle("hidden", !admin);
     $("#cardProgramacion").classList.toggle("hidden", !admin);
     $("#cardCorreo").classList.toggle("hidden", !edicion);
-    $("#cardCargaMasiva").classList.toggle("hidden", !edicion);
     $("#cardMant2026").classList.toggle("hidden", !admin);
     $("#cardDatos").classList.toggle("hidden", !admin);
     if (admin) {
