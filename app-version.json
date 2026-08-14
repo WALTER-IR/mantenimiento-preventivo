@@ -1,6 +1,6 @@
 {
-  "version": "1.19.4",
+  "version": "1.19.5",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-13",
-  "changelog": "Carga masiva: se lee toda la hoja correcta del Excel (busca la que coincide con las columnas y tiene mas filas) y se usa el rango real de celdas aunque el archivo tenga el rango desactualizado. Corrige que solo se importaran 4 de 807 registros. El resultado ahora muestra la hoja y la cantidad de filas leidas."
+  "changelog": "Carga masiva: igual que la app movil, se usa la primera hoja del Excel que tenga datos y coincida con las columnas esperadas (antes podia elegir una hoja-resumen pequena y solo importar 4 registros)."
 }

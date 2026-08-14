@@ -1711,25 +1711,25 @@
     return XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", range: rango });
   }
 
-  // Elige la hoja que mejor coincide con las columnas esperadas; entre empates, la de más filas.
+  // Elige la hoja con los datos: igual que la app móvil, prefiere la PRIMERA hoja del
+  // libro que tenga filas y coincida con las columnas esperadas. Si ninguna coincide,
+  // devuelve la primera hoja con datos (para que se vean sus columnas).
   function elegirHoja(wb, tipo) {
     const objetivo = COLUMNAS_MASIVA[tipo].split(";")
       .map((s) => s.split("(")[0].trim()).filter(Boolean);
-    let mejor = null;
+    let primera = null;
     for (const nombre of wb.SheetNames) {
       const aoa = leerHoja(wb.Sheets[nombre]);
       const filas = aoa.filter((r) => Array.isArray(r) &&
         r.some((c) => String(c == null ? "" : c).trim() !== ""));
       if (filas.length < 2) continue;
+      if (!primera) primera = { hoja: nombre, filas, score: 0 };
       const headers = (filas[0] || []).map((h) => String(h == null ? "" : h).trim());
       let score = 0;
       for (const t of objetivo) if (findCol(headers, t) >= 0) score++;
-      if (!mejor || score > mejor.score ||
-          (score === mejor.score && filas.length > mejor.filas.length)) {
-        mejor = { hoja: nombre, filas, score };
-      }
+      if (score > 0) return { hoja: nombre, filas, score };
     }
-    return mejor;
+    return primera;
   }
 
   function abrirMasiva(tipo) {
