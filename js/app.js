@@ -52,23 +52,49 @@
   // ---------------- Utilidades de fecha ----------------
   const todayISO = () => toISODate(new Date());
   function toISODate(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return "";
     const off = d.getTimezoneOffset();
     return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
   }
+  // Normaliza cualquier formato de fecha (yyyy-MM-dd, dd/MM/yyyy, ISO, Date de
+  // JavaScript, texto de Excel) a yyyy-MM-dd. Si no es reconocible, lo devuelve tal cual.
+  function normFecha(v) {
+    if (v == null) return "";
+    if (v instanceof Date) return isNaN(v.getTime()) ? "" : toISODate(v);
+    const s = String(v).trim();
+    if (!s) return "";
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+      const p = s.split("-");
+      return p[0] + "-" + ("0" + p[1]).slice(-2) + "-" + ("0" + p[2]).slice(-2);
+    }
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+      const p = s.split("/");
+      return p[2] + "-" + ("0" + p[1]).slice(-2) + "-" + ("0" + p[0]).slice(-2);
+    }
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return toISODate(d);
+    return s;
+  }
   function addDays(iso, days) {
-    const d = new Date(iso + "T00:00:00");
+    const base = normFecha(iso);
+    if (!base) return todayISO();
+    const d = new Date(base + "T00:00:00");
     d.setDate(d.getDate() + days);
     return toISODate(d);
   }
   function parseISO(iso) {
-    return new Date(iso + "T00:00:00");
+    return new Date(normFecha(iso) + "T00:00:00");
   }
   function diffDays(fromISO, toISO) {
-    return Math.round((parseISO(toISO) - parseISO(fromISO)) / 86400000);
+    const a = parseISO(fromISO), b = parseISO(toISO);
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) return NaN;
+    return Math.round((b - a) / 86400000);
   }
   function fmtDate(iso) {
-    if (!iso) return "—";
-    const d = parseISO(iso);
+    if (iso == null || iso === "") return "—";
+    const s = normFecha(iso);
+    if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const d = parseISO(s);
     return d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
   }
   const now = () => new Date().toISOString();
@@ -412,7 +438,7 @@
       const u = usuarios.find((x) => (x.nombre || "").trim() === nom);
       if (u && u.dni) $("#eqDni").value = u.dni;
     };
-    $("#eqFechaCompra").value = eq ? (eq.fechaCompra || "") : "";
+    $("#eqFechaCompra").value = eq ? (normFecha(eq.fechaCompra) || "") : "";
     $("#eqIntervalo").value = eq ? (eq.intervalo || "") : "";
     $("#eqNotas").value = eq ? (eq.notas || "") : "";
 
@@ -450,7 +476,7 @@
       area: $("#eqArea").value.trim(),
       codInventario: $("#eqCodInventario").value.trim(),
       dni: $("#eqDni").value.trim(),
-      fechaCompra: $("#eqFechaCompra").value,
+      fechaCompra: normFecha($("#eqFechaCompra").value),
       intervalo: parseInt($("#eqIntervalo").value, 10) || appConfig.intervalo,
       notas: $("#eqNotas").value.trim(),
       fechaUltimoMant: (equipos.find((x) => x.id === id) || {}).fechaUltimoMant || null,
@@ -507,15 +533,15 @@
     sel.innerHTML = vis.map((e) => `<option value="${e.id}">${esc(e.nombre)}</option>`).join("");
     if (mant) {
       sel.value = mant.equipoId;
-      $("#mtFecha").value = mant.fecha || todayISO();
+      $("#mtFecha").value = normFecha(mant.fecha) || todayISO();
       $("#mtTipo").value = mant.tipo || "preventivo";
       $("#mtPrioridad").value = mant.prioridad || "";
-      $("#mtFechaReprog").value = mant.fechaReprogramada || "";
-      $("#mtFechaReal").value = mant.fechaReal || "";
+      $("#mtFechaReprog").value = normFecha(mant.fechaReprogramada) || "";
+      $("#mtFechaReal").value = normFecha(mant.fechaReal) || "";
       $("#mtEstado").value = estadoMant(mant);
       $("#mtTecnico").value = mant.tecnico || "";
       $("#mtCosto").value = mant.costo || "";
-      $("#mtProxima").value = mant.proxima || "";
+      $("#mtProxima").value = normFecha(mant.proxima) || "";
       $("#mtObs").value = mant.obs || "";
       const tasks = mant.tareas || [];
       $$("#checklistSoft input, #checklistHard input").forEach((inp) => { if (tasks.includes(inp.value)) inp.checked = true; });
@@ -556,12 +582,12 @@
   async function saveMant() {
     if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
     const equipoId = $("#mtEquipo").value;
-    const fecha = $("#mtFecha").value;
+    const fecha = normFecha($("#mtFecha").value);
     if (!equipoId || !fecha) return toast("Equipo y fecha son obligatorios", "err");
     const id = $("#mtId").value;
     const tareas = $$("#checklistSoft input:checked, #checklistHard input:checked").map((i) => i.value);
-    const fechaReal = $("#mtFechaReal").value;
-    const fechaReprogramada = $("#mtFechaReprog").value;
+    const fechaReal = normFecha($("#mtFechaReal").value);
+    const fechaReprogramada = normFecha($("#mtFechaReprog").value);
     // El estado se actualiza según las fechas registradas:
     // fecha real -> Finalizado ; fecha reprogramada -> Reprogramado.
     const estado = fechaReal
@@ -570,7 +596,7 @@
         ? "reprogramado"
         : estadoMant({ estado: $("#mtEstado").value });
     // Al registrar la fecha real se genera automáticamente el próximo mantenimiento anual.
-    let proxima = $("#mtProxima").value;
+    let proxima = normFecha($("#mtProxima").value);
     if (fechaReal && !proxima) proxima = addDays(fechaReal, 365);
     const data = {
       id: id || "mt-" + Date.now(),
@@ -2098,7 +2124,7 @@
       const p = s.split("/");
       return p[2] + "-" + ("0" + p[1]).slice(-2) + "-" + ("0" + p[0]).slice(-2);
     }
-    return s;
+    return normFecha(s);
   }
 
   // Normaliza el estado al formato interno de la app (minúsculas).
@@ -2385,6 +2411,21 @@
     auditoria = await DB.getAuditoria(300);
     feriados = await DB.getAll("feriados");
     appConfig = await DB.getConfig();
+    // Corrige fechas dañadas (formato JavaScript/Excel) guardadas por versiones anteriores.
+    let mCamb = false;
+    mantenimientos.forEach((m) => {
+      ["fecha", "fechaReal", "fechaReprogramada", "proxima"].forEach((k) => {
+        if (m[k]) { const n = normFecha(m[k]); if (n !== m[k]) { m[k] = n; mCamb = true; } }
+      });
+    });
+    let eCamb = false;
+    equipos.forEach((e) => {
+      ["fechaCompra", "fechaAlta", "fechaUltimoMant"].forEach((k) => {
+        if (e[k]) { const n = normFecha(e[k]); if (n !== e[k]) { e[k] = n; eCamb = true; } }
+      });
+    });
+    if (mCamb) await DB.bulkPut("mantenimientos", mantenimientos);
+    if (eCamb) await DB.bulkPut("equipos", equipos);
     renderConfig();
     setView(currentView);
   }

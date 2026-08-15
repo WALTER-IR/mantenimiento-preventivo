@@ -1,6 +1,6 @@
 {
-  "version": "1.22.0",
+  "version": "1.22.1",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Base de datos protegida (solo la app puede acceder). Fechas de mantenimiento en formato corto dd/mm/aaaa en la web y en el Formato de Mantenimiento."
+  "changelog": "Corrección: fechas dañadas guardadas en formato JavaScript (ej. 'Wed Sep 30 2026') ahora se corrigen automáticamente a dd/mm/aaaa al abrir la web y el móvil, y ya no impiden editar mantenimientos."
 }
