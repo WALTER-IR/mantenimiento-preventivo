@@ -248,7 +248,16 @@
   }
 
   // ---------------- Modal helpers ----------------
-  function openModal(id) { $("#" + id).classList.remove("hidden"); }
+  function openModal(id) {
+    // Solo un modal visible a la vez (evita que un modal quede oculto detrás de otro).
+    $$(".modal-overlay").forEach((m) => {
+      if (m.id !== id) {
+        m.classList.add("hidden");
+        if (m.id === "modalDetalle") currentDetailId = null;
+      }
+    });
+    $("#" + id).classList.remove("hidden");
+  }
   function closeModal(id) { $("#" + id).classList.add("hidden"); if (id === "modalDetalle") currentDetailId = null; }
 
   // ============================================================

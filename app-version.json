@@ -1,6 +1,6 @@
 {
-  "version": "1.22.3",
+  "version": "1.22.4",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Historial de mantenimientos editable: botones Editar y Eliminar en cada registro de la lista de Mantenimientos, y al editar ya se puede modificar también la fecha programada, estado, prioridad, técnico, costo y próxima."
+  "changelog": "Corregido: al pulsar Editar en el historial no ocurría nada porque el modal quedaba oculto detrás del detalle del equipo. Ahora solo se muestra un modal a la vez."
 }
