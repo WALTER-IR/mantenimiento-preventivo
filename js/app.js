@@ -592,6 +592,7 @@
       $("#mtFechaReprog").disabled = true;
       $("#mtFechaReal").disabled = true;
       setNextFromEquipo();
+      autocompletarResponsable();
     }
     openModal("modalMant");
   }
@@ -602,6 +603,15 @@
     const interval = e.intervalo || appConfig.intervalo;
     const base = e.fechaUltimoMant || $("#mtFecha").value || todayISO();
     $("#mtProxima").value = addDays(base, interval);
+  }
+
+  // Precarga el responsable del equipo en el campo "Responsable de mantenimiento".
+  function autocompletarResponsable() {
+    const e = equipos.find((x) => x.id === $("#mtEquipo").value);
+    if (e) {
+      const resp = e.responsable || e.usuarioAsignado || "";
+      if (resp && !$("#mtTecnico").value) $("#mtTecnico").value = resp;
+    }
   }
 
   async function saveMant() {
@@ -712,8 +722,8 @@
       </div>
       <div class="field-row">
         <div>
-          <label class="field-label" for="dtTecnico">Técnico</label>
-          <input type="text" id="dtTecnico" class="input" placeholder="Nombre del técnico" />
+          <label class="field-label" for="dtTecnico">Responsable de mantenimiento</label>
+          <input type="text" id="dtTecnico" class="input" placeholder="Nombre del responsable" />
         </div>
         <div>
           <label class="field-label" for="dtCosto">Costo (opcional)</label>
@@ -887,6 +897,7 @@
         <div class="mant-row-sub">${esc(subSerie)}</div>
         <div class="mant-row-sub">${esc(prog)}</div>
         <div class="mant-row-sub">${esc(reprog)}</div>
+        ${m.tecnico ? `<div class="mant-row-sub item-resp">Responsable de mantenimiento: ${esc(m.tecnico)}</div>` : ""}
         ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
@@ -1003,6 +1014,7 @@
             <button class="btn btn-ghost" data-del-mant="${m.id}" style="color:var(--danger)">Eliminar</button>
           </div>` : ""}
         </div>
+        ${m.tecnico ? `<div class="mant-row-sub item-resp">Responsable de mantenimiento: ${esc(m.tecnico)}</div>` : ""}
         ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
@@ -2729,7 +2741,7 @@
     });
 
     // próximo mantenimiento automático
-    $("#mtEquipo").addEventListener("change", setNextFromEquipo);
+    $("#mtEquipo").addEventListener("change", () => { setNextFromEquipo(); autocompletarResponsable(); });
     $("#mtFecha").addEventListener("change", () => {
       const e = equipos.find((x) => x.id === $("#mtEquipo").value);
       if (e) $("#mtProxima").value = addDays($("#mtFecha").value || todayISO(), e.intervalo || appConfig.intervalo);

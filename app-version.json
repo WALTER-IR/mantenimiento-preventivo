@@ -1,6 +1,6 @@
 {
-  "version": "1.22.6",
+  "version": "1.22.7",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Correcciones: el estado cambia automáticamente a Reprogramado al registrar fecha de reprogramación y a Finalizado al registrar la fecha real (también en el formulario del detalle); la prioridad se carga al editar aunque esté en otro formato; el nombre de la empresa configurada aparece en el Formato TI-F016."
+  "changelog": "El campo Técnico ahora se llama Responsable de mantenimiento, se precarga con el responsable del equipo al registrar, y se muestra el nombre del responsable en la lista de mantenimientos y en el historial del equipo."
 }
