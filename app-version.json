@@ -1,6 +1,6 @@
 {
-  "version": "1.22.7",
+  "version": "1.22.8",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "El campo Técnico ahora se llama Responsable de mantenimiento, se precarga con el responsable del equipo al registrar, y se muestra el nombre del responsable en la lista de mantenimientos y en el historial del equipo."
+  "changelog": "En la lista de Mantenimientos se muestra el usuario asignado del equipo; el responsable de mantenimiento se muestra en los datos del mantenimiento (historial del equipo) y se completa automáticamente con el responsable del equipo al cargar."
 }

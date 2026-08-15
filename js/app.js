@@ -897,7 +897,6 @@
         <div class="mant-row-sub">${esc(subSerie)}</div>
         <div class="mant-row-sub">${esc(prog)}</div>
         <div class="mant-row-sub">${esc(reprog)}</div>
-        ${m.tecnico ? `<div class="mant-row-sub item-resp">Responsable de mantenimiento: ${esc(m.tecnico)}</div>` : ""}
         ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
@@ -2624,6 +2623,12 @@
       ["fecha", "fechaReal", "fechaReprogramada", "proxima"].forEach((k) => {
         if (m[k]) { const n = normFecha(m[k]); if (n !== m[k]) { m[k] = n; mCamb = true; } }
       });
+      // Si el mantenimiento no tiene responsable, hereda el del equipo.
+      if (!m.tecnico) {
+        const eqR = equipos.find((x) => x.id === m.equipoId);
+        const resp = (eqR && (eqR.responsable || eqR.usuarioAsignado || "")).trim();
+        if (resp) { m.tecnico = resp; mCamb = true; }
+      }
     });
     let eCamb = false;
     equipos.forEach((e) => {
