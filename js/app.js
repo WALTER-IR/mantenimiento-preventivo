@@ -332,9 +332,6 @@
     const label = st.key === "vencido" ? "VENCIDO" : "PRÓXIMO";
     const days = st.key === "vencido" ? Math.abs(st.days) : st.days;
     const asignado = (eq.usuarioAsignado || "").trim() || "—";
-    const responsable = (eq.responsable || "").trim();
-    const respLine = responsable && responsable.toLowerCase() !== asignado.toLowerCase()
-      ? `<div class="alert-sub item-resp">Responsable: ${esc(responsable)}</div>` : "";
     return `
       <div class="alert-item ${cls}" data-open-detail="${eq.id}">
         <div class="alert-head">
@@ -390,14 +387,12 @@
           : `<span class="badge ok">Al día</span>`;
       const ico = e.tipo === "laptop" ? "💻" : e.tipo === "servidor" ? "🖥️" : "🖥️";
       const asignado = (e.usuarioAsignado || "").trim();
-      const respLine = (e.responsable || "").trim();
       return `
         <div class="item-card" data-open-detail="${e.id}">
           <div class="item-avatar">${ico}</div>
           <div class="item-body">
             <div class="item-user">👤 ${esc(asignado || "Sin usuario asignado")}</div>
             <div class="item-title">${esc(e.serie || "—")} - ${esc(e.hostname || "—")}</div>
-            ${respLine ? `<div class="item-resp">${esc(respLine)}</div>` : ""}
             <div class="item-sub">${esc(e.nombre || "—")} - ${esc(e.ubicacion || "—")} - ${esc(e.ip || "—")}</div>
             <div class="due-line ${st.key === "vencido" ? "badge danger" : st.key === "proximo" ? "badge warn" : "badge ok"}">Próx. mant.: ${fmtDate(st.due)}</div>
           </div>
@@ -885,7 +880,6 @@
       const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
       const reprog = m.fechaReprogramada ? fmtDate(m.fechaReprogramada) : "—";
       const asignado = (eq.usuarioAsignado || "").trim();
-      const responsable = (eq.responsable || "").trim();
       return `
       <div class="mant-row" data-open-detail="${m.equipoId}">
         <div class="mant-row-head">
@@ -893,7 +887,6 @@
           ${estadoBadge(m)}
           <span class="badge ${m.tipo === "preventivo" ? "ok" : "warn"}">${m.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</span>
         </div>
-        ${responsable && responsable.toLowerCase() !== asignado.toLowerCase() ? `<div class="mant-row-sub item-resp">Responsable: ${esc(responsable)}</div>` : ""}
         <div class="mant-row-sub">${esc(subSerie)}</div>
         <div class="mant-row-sub">${esc(prog)}</div>
         <div class="mant-row-sub">${esc(reprog)}</div>
@@ -991,7 +984,6 @@
       ["Departamento", eq.departamento || "—"],
       ["Área", eq.area || "—"],
       ["Ubicación", eq.ubicacion || "—"],
-      ["Responsable", eq.responsable || "—"],
       ["Intervalo", (eq.intervalo || appConfig.intervalo) + " días"],
       ["Último mant.", fmtDate(eq.fechaUltimoMant)]
     ];
@@ -1054,7 +1046,7 @@
   function generarFormato(id) {
     const eq = equipos.find((x) => x.id === id);
     if (!eq || !esVisibleEquipo(eq)) { toast("Equipo no encontrado", "err"); return; }
-    const resp = datosResponsable(eq.responsable);
+    const resp = datosResponsable(eq.usuarioAsignado || eq.responsable);
     const mants = mantenimientos
       .filter((m) => m.equipoId === id)
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
@@ -1728,19 +1720,17 @@
         <tr>
           <td>${esc((e.usuarioAsignado || "").trim() || "—")}</td>
           <td>${esc((e.ubicacion || "").trim() || "—")}</td>
-          <td>${esc((e.responsable || "").trim() || "—")}</td>
           <td>${esc(fmtDate(proximoMantDe(e)))}</td>
         </tr>`).join("")
-      : `<tr><td colspan="4" class="empty-cell">Sin equipos en esta ubicación.</td></tr>`;
+      : `<tr><td colspan="3" class="empty-cell">Sin equipos en esta ubicación.</td></tr>`;
   }
 
   function detalleTextoCorreo() {
     const eqs = correoEquipos($("#correoUbicacion").value);
-    const filas = [["USUARIO ASIGNADO", "UBICACIÓN", "RESPONSABLE", "FECHA PROGRAMADA"]];
+    const filas = [["USUARIO ASIGNADO", "UBICACIÓN", "FECHA PROGRAMADA"]];
     eqs.forEach((e) => filas.push([
       (e.usuarioAsignado || "").trim() || "—",
       (e.ubicacion || "").trim() || "—",
-      (e.responsable || "").trim() || "—",
       fmtDate(proximoMantDe(e))
     ]));
     const anchos = [0, 0, 0, 0];
@@ -1876,7 +1866,7 @@
   const EXCEL_HEADER = [
     "NOMBRE Y APELLIDOS", "DNI", "ZONA", "SUBDIVISION", "AREA", "CARGO",
     "NEW HOSTNAME", "UBICACIÓN FISICA", "SERIE DE EQUIPO", "EQUIPO", "MARCA", "MODELO",
-    "RESPONSABLE", "CORREOS", "CONTRATO", "STATUS", "PRIORIDAD", "OBSERVACIONES",
+    "USUARIO ASIGNADO", "CORREOS", "CONTRATO", "STATUS", "PRIORIDAD", "OBSERVACIONES",
     "FECHA PROGRAMADO", "FECHA REPROGRAMADA", "FECHA REAL", "ESTADO"
   ];
 
@@ -1912,7 +1902,7 @@
       row[9] = e.nombre || "";
       row[10] = e.marca || "";
       row[11] = e.modelo || "";
-      row[12] = e.responsable || "";
+      row[12] = e.usuarioAsignado || "";
       row[13] = e.email || "";
       row[14] = e.contrato || "";
       row[15] = e.status || "";
