@@ -1,6 +1,6 @@
 {
-  "version": "1.22.5",
+  "version": "1.22.6",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Detalle del equipo rediseñado: modal más ancho, muestra solo los datos clave, y al pulsar Editar en el historial el formulario del mantenimiento se abre en la parte de abajo dentro del mismo modal."
+  "changelog": "Correcciones: el estado cambia automáticamente a Reprogramado al registrar fecha de reprogramación y a Finalizado al registrar la fecha real (también en el formulario del detalle); la prioridad se carga al editar aunque esté en otro formato; el nombre de la empresa configurada aparece en el Formato TI-F016."
 }

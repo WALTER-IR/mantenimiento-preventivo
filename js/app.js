@@ -49,6 +49,14 @@
     return `<span class="badge ${cls}">${estadoLabel(e)}</span>`;
   };
 
+  // Selecciona la opción de un <select> sin importar mayúsculas ni espacios.
+  function fijarSelect($el, valor) {
+    const v = String(valor == null ? "" : valor).trim();
+    if (!v) { $el.value = ""; return; }
+    const hit = Array.from($el.options).find((o) => o.value.toLowerCase() === v.toLowerCase());
+    $el.value = hit ? hit.value : v;
+  }
+
   // ---------------- Utilidades de fecha ----------------
   const todayISO = () => toISODate(new Date());
   function toISODate(d) {
@@ -552,7 +560,7 @@
       sel.value = mant.equipoId;
       $("#mtFecha").value = normFecha(mant.fecha) || todayISO();
       $("#mtTipo").value = mant.tipo || "preventivo";
-      $("#mtPrioridad").value = mant.prioridad || "";
+      fijarSelect($("#mtPrioridad"), mant.prioridad);
       $("#mtFechaReprog").value = normFecha(mant.fechaReprogramada) || "";
       $("#mtFechaReal").value = normFecha(mant.fechaReal) || "";
       $("#mtEstado").value = estadoMant(mant);
@@ -738,7 +746,7 @@
     $("#dtTipo").value = m.tipo || "preventivo";
     if (m.id) $("#dtTipo").disabled = true;
     $("#dtFecha").value = normFecha(m.fecha) || todayISO();
-    $("#dtPrioridad").value = m.prioridad || "";
+    fijarSelect($("#dtPrioridad"), m.prioridad);
     $("#dtFechaReprog").value = normFecha(m.fechaReprogramada) || "";
     $("#dtFechaReal").value = normFecha(m.fechaReal) || "";
     $("#dtEstado").value = estadoMant(m);
@@ -748,6 +756,17 @@
     $("#dtObs").value = m.obs || "";
     const tareas = m.tareas || [];
     $$("#dtChecklistSoft input, #dtChecklistHard input").forEach((inp) => { if (tareas.includes(inp.value)) inp.checked = true; });
+    // auto-estado según fechas: reprogramada -> reprogramado, real -> finalizado
+    const syncEstadoDetalle = () => {
+      const real = $("#dtFechaReal").value;
+      const reprog = $("#dtFechaReprog").value;
+      $("#dtEstado").value = real ? "finalizado" : reprog ? "reprogramado" : $("#dtEstado").value;
+    };
+    $("#dtFechaReprog").addEventListener("change", syncEstadoDetalle);
+    $("#dtFechaReal").addEventListener("change", (e) => {
+      if (e.target.value) $("#dtProxima").value = addDays(e.target.value, 365);
+      syncEstadoDetalle();
+    });
     $("#btnGuardarMantDetalle").onclick = saveMantInline;
     $("#btnCancelarMantDetalle").onclick = cerrarFormMantDetalle;
     $("#detalleMantForm").classList.remove("hidden");
@@ -1054,8 +1073,9 @@
       ? arr.map((t) => `<div class="f-item">• ${esc(t)}</div>`).join("")
       : `<div class="f-item">—</div>`;
     const serieCi = [d.eq.serie, d.eq.codInventario].filter(Boolean).join(" - ");
+    const empresa = appConfig.empresa && appConfig.empresa !== "Empresa" ? appConfig.empresa : CFG.APP_NAME;
     $("#formatoContenido").innerHTML = `
-      <div class="formato-intro">Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. <b>TI-F016</b></div>
+      <div class="formato-intro"><b>${esc(empresa)}</b> — Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. <b>TI-F016</b></div>
       <div class="formato-head">
         <div class="formato-title">FORMATO DE MANTENIMIENTO</div>
         <div class="formato-meta">
@@ -1096,9 +1116,12 @@
   function formatoTexto() {
     const d = formatoActual;
     if (!d) return "";
+    const empresa = appConfig.empresa && appConfig.empresa !== "Empresa" ? appConfig.empresa : CFG.APP_NAME;
     const items = (arr) => arr.length ? arr.map((t) => "• " + t).join("\n") : "—";
     const serieCi = [d.eq.serie, d.eq.codInventario].filter(Boolean).join(" - ");
     return [
+      empresa,
+      "",
       "Estimado colaborador, En cumplimiento con el Sistema de Gestión de Calidad (SGC), adjuntamos el Formato de Mantenimiento a equipos de computo para su revisión y conformidad. TI-F016",
       "",
       "FORMATO DE MANTENIMIENTO",
@@ -2713,15 +2736,18 @@
     });
 
     // auto-estado según fechas: reprogramada -> reprogramado, real -> finalizado
-    $("#mtFechaReprog").addEventListener("change", (e) => {
-      if (e.target.value) $("#mtEstado").value = "reprogramado";
-    });
+    const syncEstadoMant = () => {
+      const real = $("#mtFechaReal").value;
+      const reprog = $("#mtFechaReprog").value;
+      $("#mtEstado").value = real ? "finalizado" : reprog ? "reprogramado" : $("#mtEstado").value;
+    };
+    $("#mtFechaReprog").addEventListener("change", syncEstadoMant);
     $("#mtFechaReal").addEventListener("change", (e) => {
       if (e.target.value) {
-        $("#mtEstado").value = "finalizado";
         // Al registrar la fecha real se genera automáticamente el próximo mantenimiento (anual).
         $("#mtProxima").value = addDays(e.target.value, 365);
       }
+      syncEstadoMant();
     });
 
     // delegación de clics
