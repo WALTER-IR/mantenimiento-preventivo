@@ -256,6 +256,7 @@ body {
 .mant-row-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 .mant-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .mant-chip { font-size: 10.5px; background: var(--rojo-50); color: var(--rojo-700); padding: 3px 8px; border-radius: 20px; }
+.mant-row-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 
 /* ---------------- Detail grid ---------------- */
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }

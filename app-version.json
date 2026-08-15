@@ -1,6 +1,6 @@
 {
-  "version": "1.22.2",
+  "version": "1.22.3",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Alertas de vencidos corregidas: ahora los equipos con mantenimiento programado en fecha pasada (o pendiente) aparecen como Vencidos en la web y el móvil, incluso si la fecha estaba en otro formato."
+  "changelog": "Historial de mantenimientos editable: botones Editar y Eliminar en cada registro de la lista de Mantenimientos, y al editar ya se puede modificar también la fecha programada, estado, prioridad, técnico, costo y próxima."
 }

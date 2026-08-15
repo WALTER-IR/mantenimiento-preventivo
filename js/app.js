@@ -551,8 +551,8 @@
       $("#mtObs").value = mant.obs || "";
       const tasks = mant.tareas || [];
       $$("#checklistSoft input, #checklistHard input").forEach((inp) => { if (tasks.includes(inp.value)) inp.checked = true; });
-      // En edición solo se permiten: fecha reprogramada, fecha real, actividades y observaciones.
-      ["mtEquipo", "mtFecha", "mtTipo", "mtPrioridad", "mtEstado", "mtTecnico", "mtCosto", "mtProxima"]
+      // En edición se permite modificar todo el historial excepto el equipo y el tipo.
+      ["mtEquipo", "mtTipo"]
         .forEach((id) => { $(id).disabled = true; });
     } else {
       sel.value = vis[0] ? vis[0].id : "";
@@ -703,6 +703,10 @@
         ${m.fechaReal ? `<div class="mant-row-sub">Real: ${esc(fmtDate(m.fechaReal))}</div>` : ""}
         ${m.obs ? `<div class="mant-row-sub">${esc(m.obs)}</div>` : ""}
         ${m.tareas && m.tareas.length ? `<div class="mant-chips">${m.tareas.map((t) => `<span class="mant-chip">✓ ${esc(t)}</span>`).join("")}</div>` : ""}
+        ${puedeEditar() ? `<div class="mant-row-actions">
+          <button class="btn btn-ghost" data-edit-mant="${m.id}">Editar</button>
+          <button class="btn btn-ghost" data-del-mant="${m.id}" style="color:var(--danger)">Eliminar</button>
+        </div>` : ""}
       </div>`;
     }).join("");
     $("#mantEmpty").classList.toggle("hidden", list.length > 0);
