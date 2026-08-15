@@ -463,6 +463,7 @@
     toast("Equipo guardado", "ok");
     auditar(id ? "EDICION EQUIPO" : "ALTA EQUIPO", "Equipo: " + nombre);
     renderEquipos();
+    syncSubir();
   }
 
   async function eliminarEquipo(id) {
@@ -478,6 +479,7 @@
     toast("Equipo eliminado");
     auditar("BAJA EQUIPO", "Equipo: " + nombre);
     renderEquipos();
+    syncSubir();
   }
 
   // ============================================================
@@ -602,6 +604,7 @@
     auditar(id ? "EDICION MANTENIMIENTO" : "ALTA MANTENIMIENTO",
       "Equipo: " + eqName(equipoId) + " · Fecha: " + fecha + " · " + (data.tipo === "preventivo" ? "Preventivo" : "Correctivo"));
     renderMantenimientos();
+    syncSubir();
   }
 
   function renderMantenimientos() {
@@ -692,6 +695,7 @@
     auditar("BAJA MANTENIMIENTO", "Equipo: " + eqName(m.equipoId) + " · Fecha: " + m.fecha);
     renderMantenimientos();
     if (currentDetailId) renderDetalle(currentDetailId);
+    syncSubir();
   }
 
   // ============================================================
@@ -1265,6 +1269,7 @@
       "Nombre: " + nombre + " · Permiso: " + rolNombre(rol));
     renderUsuarios();
     renderConfig();
+    syncSubir();
   }
 
   async function eliminarUsuario(id) {
@@ -1278,6 +1283,7 @@
     toast("Usuario eliminado");
     auditar("BAJA USUARIO", u ? "Nombre: " + u.nombre : id);
     renderUsuarios();
+    syncSubir();
   }
 
   // ---------------- Auditoría ----------------
@@ -1303,6 +1309,7 @@
     toast("Configuración guardada", "ok");
     auditar("CONFIGURACION", "Empresa: " + appConfig.empresa + " · Intervalo: " + appConfig.intervalo + " días");
     renderConfig();
+    syncSubir();
   }
 
   // ---------------- Feriados y programación ----------------
@@ -1345,6 +1352,7 @@
     toast("Feriado registrado", "ok");
     auditar("ALTA FERIADO", fmtDate(fecha) + (motivo ? " · " + motivo : ""));
     renderFeriados();
+    syncSubir();
   }
 
   async function eliminarFeriado(id) {
@@ -1354,6 +1362,7 @@
     toast("Feriado eliminado");
     auditar("BAJA FERIADO", f ? fmtDate(f.fecha) : id);
     renderFeriados();
+    syncSubir();
   }
 
   // Día laboral: lunes-viernes y que no esté registrado como feriado.
@@ -1443,6 +1452,7 @@
     if (currentView === "mantenimientos") renderMantenimientos();
     if (currentView === "alertas") renderAlertas();
     if (currentView === "equipos") renderEquipos();
+    syncSubir();
   }
 
   // ---------------- Correo de programación por ubicación ----------------
@@ -1560,8 +1570,7 @@
 
   // Exporta con el mismo formato JSON que usa la app móvil (APK), para poder
   // importar dentro del APK los datos registrados en la web.
-  function exportApk() {
-    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+  function buildApkPayload() {
     const indiceUsuario = (e) => {
       let i = e.dni ? usuarios.findIndex((u) => u.dni && keyOf(u.dni) === keyOf(e.dni)) : -1;
       if (i < 0) i = usuarios.findIndex((u) => u.nombre && e.responsable && keyOf(u.nombre) === keyOf(e.responsable));
@@ -1613,7 +1622,7 @@
       finalizado_en: m.finalizadoEn || (m.estado === "finalizado" ? (m.fechaReal || "") : "")
     }));
     const fds = feriados.map((f, i) => ({ id: i + 1, fecha: f.fecha || "", motivo: f.motivo || "" }));
-    descargarJSON({
+    return {
       app: "Inventario de equipos",
       version: 4,
       exported: todayISO(),
@@ -1621,7 +1630,12 @@
       equipos: eqs,
       mantenimientos: mts,
       feriados: fds
-    }, "respaldo-para-apk-" + todayISO() + ".json");
+    };
+  }
+
+  function exportApk() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    descargarJSON(buildApkPayload(), "respaldo-para-apk-" + todayISO() + ".json");
     toast("Respaldo para APK descargado", "ok");
     auditar("EXPORTAR DATOS PARA APK", "Respaldo compatible con la app móvil");
   }
@@ -1845,12 +1859,67 @@
           await DB.clearSesion();
           showLogin();
         }
+        syncSubir();
         toast("Datos importados correctamente", "ok");
       } catch (e) {
         toast("Archivo de respaldo no válido", "err");
       }
     };
     reader.readAsText(file);
+  }
+
+  // ---------------- Sincronización con la nube (Firebase Realtime Database) ----------------
+  // La nube guarda los datos en formato APK (ids numéricos), que es el mismo
+  // formato que usa la app móvil. Política: gana la última sincronización.
+  const SYNC_ENABLED = () => !!(CFG.SYNC_URL && CFG.SYNC_TOKEN);
+  const syncNodeUrl = () => CFG.SYNC_URL.replace(/\/+$/, "") + "/" + CFG.SYNC_TOKEN + "/db.json";
+
+  // Sube la base local a la nube.
+  async function syncSubir() {
+    if (!SYNC_ENABLED() || !navigator.onLine) return;
+    try {
+      const res = await fetch(syncNodeUrl(), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildApkPayload())
+      });
+      if (!res.ok) throw new Error("http " + res.status);
+    } catch (e) { /* sin conexión: se reintenta en la próxima edición */ }
+  }
+
+  // Baja la base de la nube y reemplaza la local. Devuelve true si cambió algo.
+  async function syncBajar() {
+    if (!SYNC_ENABLED() || !navigator.onLine) return false;
+    try {
+      const res = await fetch(syncNodeUrl());
+      if (!res.ok) throw new Error("http " + res.status);
+      const data = await res.json();
+      if (!data || typeof data !== "object") return false;
+      const conDatos = [data.usuarios, data.equipos, data.mantenimientos, data.feriados]
+        .some((a) => Array.isArray(a) && a.length > 0);
+      if (!conDatos) return false;
+      await reemplazarDatos(convertirRespaldoApk(data), true);
+      await auditar("SINCRONIZAR", "Datos recibidos desde la nube");
+      await reload();
+      await ensureAdmin();
+      if (sesion && !usuarios.some((u) => u.id === sesion.id)) {
+        sesion = null;
+        await DB.clearSesion();
+        showLogin();
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Sube la copia local y luego baja la nube (unifica ambos lados).
+  async function sincronizarAhora() {
+    if (!SYNC_ENABLED()) return toast("Sincronización no configurada", "err");
+    if (!navigator.onLine) return toast("Sin conexión a internet", "err");
+    toast("Sincronizando…");
+    await syncSubir();
+    const ok = await syncBajar();
+    await auditar("SINCRONIZAR", ok ? "Datos sincronizados con la nube" : "Copia local subida a la nube");
+    toast(ok ? "Sincronización completada" : "Datos subidos a la nube", ok ? "ok" : "warn");
   }
 
   // ---------------- Cargas masivas (Excel) ----------------
@@ -1964,6 +2033,7 @@
         if (r[0] > 0) {
           toast("Se importaron " + r[0] + " registros", "ok");
           auditar("CARGA MASIVA " + tipo.toUpperCase(), "Importados: " + r[0] + " · Inválidos: " + r[1]);
+          syncSubir();
         }
       } catch (e) {
         res.textContent += "\nError: " + e.message;
@@ -2346,6 +2416,7 @@
     $("#btnGuardarConfig").addEventListener("click", saveConfig);
     $("#btnExportar").addEventListener("click", exportData);
     $("#btnExportarApk").addEventListener("click", exportApk);
+    $("#btnSincronizar").addEventListener("click", sincronizarAhora);
     $("#btnImportar").addEventListener("click", () => $("#fileImport").click());
     $("#fileImport").addEventListener("change", (e) => {
       if (e.target.files[0]) importData(e.target.files[0]);
@@ -2588,6 +2659,7 @@
     await reload();
     toast("Base de datos vaciada", "ok");
     auditar("VACIAR BASE DE DATOS", "Se eliminaron todos los registros");
+    syncSubir();
   }
 
   // Deja como programados todos los mantenimientos de 2026,
@@ -2611,6 +2683,7 @@
     toast(n + " mantenimiento(s) activado(s)", "ok");
     auditar("ACTIVAR MANTENIMIENTOS 2026", n + " mantenimiento(s) activado(s)");
     renderConfig();
+    syncSubir();
   }
 
   function init() {

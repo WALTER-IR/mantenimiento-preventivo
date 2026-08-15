@@ -1,6 +1,6 @@
 {
-  "version": "1.20.0",
+  "version": "1.21.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-13",
-  "changelog": "Integración de bases web y móvil: el respaldo de la web ahora incluye responsables; al importar se reemplazan los datos (con respaldo automático previo) y se puede importar el respaldo de la app móvil (APK) para unificar responsables, equipos, mantenimientos y feriados. Además hay un botón para exportar los datos en formato APK y cargarlos en el celular."
+  "updated": "2026-08-14",
+  "changelog": "Sincronización automática web-móvil: cada edición se sube a la nube (Firebase) y la app móvil la descarga al abrirse. Botón 'Sincronizar ahora' para unificar los datos de la web y del celular."
 }
