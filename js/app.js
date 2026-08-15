@@ -102,6 +102,12 @@
   // ---------------- Fecha de próximo mantenimiento ----------------
   function nextDueDate(eq) {
     const interval = eq.intervalo || appConfig.intervalo;
+    // Si hay un mantenimiento pendiente (no finalizado), su fecha efectiva
+    // (reprogramada o programada) es la que marca el vencimiento.
+    const pend = mantenimientos
+      .filter((m) => m.equipoId === eq.id && !esFinalizado(m))
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))[0];
+    if (pend) return normFecha(pend.fechaReprogramada) || normFecha(pend.fecha) || addDays(todayISO(), interval);
     const last = eq.fechaUltimoMant || eq.fechaCompra || eq.fechaAlta;
     if (!last) return addDays(todayISO(), interval);
     return addDays(last, interval);

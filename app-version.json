@@ -1,6 +1,6 @@
 {
-  "version": "1.22.1",
+  "version": "1.22.2",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Corrección: fechas dañadas guardadas en formato JavaScript (ej. 'Wed Sep 30 2026') ahora se corrigen automáticamente a dd/mm/aaaa al abrir la web y el móvil, y ya no impiden editar mantenimientos."
+  "changelog": "Alertas de vencidos corregidas: ahora los equipos con mantenimiento programado en fecha pasada (o pendiente) aparecen como Vencidos en la web y el móvil, incluso si la fecha estaba en otro formato."
 }
