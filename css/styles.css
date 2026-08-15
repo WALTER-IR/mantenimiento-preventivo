@@ -222,6 +222,11 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 .modal-lg { max-width: 640px; }
+.modal-xl { max-width: 900px; }
+.modal-xl .detail-grid { grid-template-columns: repeat(3, 1fr); }
+.detalle-mant-form { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+.detalle-form-title { font-size: 15px; color: var(--rojo-700); margin: 0 0 12px; }
+.mant-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
 @keyframes slideUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 .modal-head {
   display: flex; align-items: center; justify-content: space-between;

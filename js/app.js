@@ -526,7 +526,7 @@
   // ============================================================
   //  MANTENIMIENTOS
   // ============================================================
-  function buildChecklist() {
+  function rellenarChecklist(softSel, hardSel) {
     const soft = [], hard = [];
     CFG.CHECKLIST_DEFAULT.forEach((c) => {
       if (HW_RE.test(c)) hard.push(c); else soft.push(c);
@@ -535,9 +535,11 @@
       <label class="check-item">
         <input type="checkbox" value="${esc(c)}" data-check="${i}" /> ${esc(c)}
       </label>`).join("");
-    $("#checklistSoft").innerHTML = render(soft);
-    $("#checklistHard").innerHTML = render(hard);
+    $(softSel).innerHTML = render(soft);
+    $(hardSel).innerHTML = render(hard);
   }
+
+  function buildChecklist() { rellenarChecklist("#checklistSoft", "#checklistHard"); }
 
   function openMantModal(mant) {
     $("#modalMantTitle").textContent = mant ? "Editar mantenimiento" : "Registrar mantenimiento";
@@ -645,6 +647,163 @@
     auditar(id ? "EDICION MANTENIMIENTO" : "ALTA MANTENIMIENTO",
       "Equipo: " + eqName(equipoId) + " · Fecha: " + fecha + " · " + (data.tipo === "preventivo" ? "Preventivo" : "Correctivo"));
     renderMantenimientos();
+    syncSubir();
+  }
+
+  // ============================================================
+  //  FORMULARIO DE MANTENIMIENTO EMBEBIDO EN EL DETALLE
+  // ============================================================
+  function renderMantFormEnDetalle(mant) {
+    const m = mant || {};
+    const eqId = currentDetailId;
+    $("#detalleMantForm").innerHTML = `
+      <h4 class="detalle-form-title">${m.id ? "Editar mantenimiento" : "Registrar mantenimiento"}</h4>
+      <input type="hidden" id="dtId" value="${esc(m.id || "")}" />
+      <input type="hidden" id="dtEquipo" value="${esc(eqId)}" />
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="dtFecha">Fecha *</label>
+          <input type="date" id="dtFecha" class="input" />
+        </div>
+        <div>
+          <label class="field-label" for="dtTipo">Tipo</label>
+          <select id="dtTipo" class="input select">
+            <option value="preventivo">Preventivo</option>
+            <option value="correctivo">Correctivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="dtPrioridad">Prioridad</label>
+          <select id="dtPrioridad" class="input select">
+            <option value="">—</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="dtFechaReprog">Fecha reprogramación</label>
+          <input type="date" id="dtFechaReprog" class="input" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="dtFechaReal">Fecha real</label>
+          <input type="date" id="dtFechaReal" class="input" />
+        </div>
+        <div>
+          <label class="field-label" for="dtEstado">Estado</label>
+          <select id="dtEstado" class="input select">
+            <option value="finalizado">Finalizado</option>
+            <option value="programado">Programado</option>
+            <option value="reprogramado">Reprogramado</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="dtTecnico">Técnico</label>
+          <input type="text" id="dtTecnico" class="input" placeholder="Nombre del técnico" />
+        </div>
+        <div>
+          <label class="field-label" for="dtCosto">Costo (opcional)</label>
+          <input type="number" id="dtCosto" class="input" min="0" step="0.01" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="dtProxima">Próximo mantenimiento</label>
+          <input type="date" id="dtProxima" class="input" />
+        </div>
+        <div></div>
+      </div>
+      <label class="field-label"><strong>Actividades realizadas</strong></label>
+      <div class="checklist-section">
+        <h5><strong>Mantenimiento de Software</strong></h5>
+        <div id="dtChecklistSoft" class="checklist"></div>
+      </div>
+      <div class="checklist-section">
+        <h5><strong>Mantenimiento de Hardware</strong></h5>
+        <div id="dtChecklistHard" class="checklist"></div>
+      </div>
+      <label class="field-label" for="dtObs"><strong>Observaciones</strong></label>
+      <textarea id="dtObs" class="input textarea" rows="2" placeholder="Detalles del mantenimiento"></textarea>
+      <div class="mant-form-actions">
+        <button class="btn btn-outline" id="btnCancelarMantDetalle">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarMantDetalle">Guardar mantenimiento</button>
+      </div>`;
+    rellenarChecklist("#dtChecklistSoft", "#dtChecklistHard");
+    $("#dtTipo").value = m.tipo || "preventivo";
+    if (m.id) $("#dtTipo").disabled = true;
+    $("#dtFecha").value = normFecha(m.fecha) || todayISO();
+    $("#dtPrioridad").value = m.prioridad || "";
+    $("#dtFechaReprog").value = normFecha(m.fechaReprogramada) || "";
+    $("#dtFechaReal").value = normFecha(m.fechaReal) || "";
+    $("#dtEstado").value = estadoMant(m);
+    $("#dtTecnico").value = m.tecnico || "";
+    $("#dtCosto").value = m.costo || "";
+    $("#dtProxima").value = normFecha(m.proxima) || "";
+    $("#dtObs").value = m.obs || "";
+    const tareas = m.tareas || [];
+    $$("#dtChecklistSoft input, #dtChecklistHard input").forEach((inp) => { if (tareas.includes(inp.value)) inp.checked = true; });
+    $("#btnGuardarMantDetalle").onclick = saveMantInline;
+    $("#btnCancelarMantDetalle").onclick = cerrarFormMantDetalle;
+    $("#detalleMantForm").classList.remove("hidden");
+    $("#detalleMantForm").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function cerrarFormMantDetalle() {
+    $("#detalleMantForm").classList.add("hidden");
+    $("#detalleMantForm").innerHTML = "";
+  }
+
+  async function saveMantInline() {
+    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    const equipoId = $("#dtEquipo").value;
+    const fecha = normFecha($("#dtFecha").value);
+    if (!equipoId || !fecha) return toast("Equipo y fecha son obligatorios", "err");
+    const id = $("#dtId").value;
+    const tareas = $$("#dtChecklistSoft input:checked, #dtChecklistHard input:checked").map((i) => i.value);
+    const fechaReal = normFecha($("#dtFechaReal").value);
+    const fechaReprogramada = normFecha($("#dtFechaReprog").value);
+    const estado = fechaReal
+      ? "finalizado"
+      : fechaReprogramada
+        ? "reprogramado"
+        : estadoMant({ estado: $("#dtEstado").value });
+    let proxima = normFecha($("#dtProxima").value);
+    if (fechaReal && !proxima) proxima = addDays(fechaReal, 365);
+    const data = {
+      id: id || "mt-" + Date.now(),
+      equipoId,
+      fecha,
+      tipo: $("#dtTipo").value,
+      estado,
+      prioridad: $("#dtPrioridad").value.trim(),
+      fechaReprogramada,
+      fechaReal,
+      tecnico: $("#dtTecnico").value.trim(),
+      costo: parseFloat($("#dtCosto").value) || 0,
+      proxima,
+      obs: $("#dtObs").value.trim(),
+      tareas
+    };
+    await DB.put("mantenimientos", data);
+    const eq = equipos.find((x) => x.id === equipoId);
+    if (eq && estado === "finalizado") {
+      eq.fechaUltimoMant = fecha;
+      eq.intervalo = eq.intervalo || appConfig.intervalo;
+      await DB.put("equipos", eq);
+    }
+    mantenimientos = await DB.getAll("mantenimientos");
+    equipos = await DB.getAll("equipos");
+    cerrarFormMantDetalle();
+    toast("Mantenimiento guardado", "ok");
+    auditar(id ? "EDICION MANTENIMIENTO" : "ALTA MANTENIMIENTO",
+      "Equipo: " + eqName(equipoId) + " · Fecha: " + fecha + " · " + (data.tipo === "preventivo" ? "Preventivo" : "Correctivo"));
+    renderDetalle(equipoId);
     syncSubir();
   }
 
@@ -801,15 +960,9 @@
       ["No. serie", eq.serie || "—"],
       ["Hostname", eq.hostname || "—"],
       ["Departamento", eq.departamento || "—"],
-      ["Cargo", eq.cargo || "—"],
-      ["Responsable", eq.responsable || "—"],
       ["Área", eq.area || "—"],
       ["Ubicación", eq.ubicacion || "—"],
-      ["Cod. inventario", eq.codInventario || "—"],
-      ["DNI", eq.dni || "—"],
-      ["Sistema operativo", eq.so || "—"],
-      ["Dirección IP", eq.ip || "—"],
-      ["Fecha compra", fmtDate(eq.fechaCompra)],
+      ["Responsable", eq.responsable || "—"],
       ["Intervalo", (eq.intervalo || appConfig.intervalo) + " días"],
       ["Último mant.", fmtDate(eq.fechaUltimoMant)]
     ];
@@ -2593,7 +2746,9 @@
       const editM = e.target.closest("[data-edit-mant]");
       if (editM) {
         const m = mantenimientos.find((x) => x.id === editM.dataset.editMant);
-        if (m) openMantModal(m);
+        if (m) {
+          if (currentDetailId) renderMantFormEnDetalle(m); else openMantModal(m);
+        }
         return;
       }
       const open = e.target.closest("[data-open-detail]");

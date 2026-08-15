@@ -1,6 +1,6 @@
 {
-  "version": "1.22.4",
+  "version": "1.22.5",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Corregido: al pulsar Editar en el historial no ocurría nada porque el modal quedaba oculto detrás del detalle del equipo. Ahora solo se muestra un modal a la vez."
+  "changelog": "Detalle del equipo rediseñado: modal más ancho, muestra solo los datos clave, y al pulsar Editar en el historial el formulario del mantenimiento se abre en la parte de abajo dentro del mismo modal."
 }
