@@ -1,6 +1,6 @@
 {
-  "version": "1.21.0",
+  "version": "1.22.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-14",
-  "changelog": "Sincronización automática web-móvil: cada edición se sube a la nube (Firebase) y la app móvil la descarga al abrirse. Botón 'Sincronizar ahora' para unificar los datos de la web y del celular."
+  "changelog": "Base de datos protegida (solo la app puede acceder). Fechas de mantenimiento en formato corto dd/mm/aaaa en la web y en el Formato de Mantenimiento."
 }

@@ -69,7 +69,7 @@
   function fmtDate(iso) {
     if (!iso) return "—";
     const d = parseISO(iso);
-    return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+    return d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
   }
   const now = () => new Date().toISOString();
 
@@ -834,7 +834,7 @@
     const { soft, hard } = splitTareas(m ? m.tareas : []);
     const d = {
       eq, resp, m,
-      fechaMant: m ? (m.fechaReal || m.fecha) : todayISO(),
+      fechaMant: m ? fmtDate(m.fechaReal || m.fecha) : fmtDate(todayISO()),
       centro: eq.ubicacion || eq.departamento || "—",
       area: eq.area || eq.departamento || "—",
       tec: sesion ? sesion.nombre : "—",
@@ -1872,7 +1872,7 @@
   // La nube guarda los datos en formato APK (ids numéricos), que es el mismo
   // formato que usa la app móvil. Política: gana la última sincronización.
   const SYNC_ENABLED = () => !!(CFG.SYNC_URL && CFG.SYNC_TOKEN);
-  const syncNodeUrl = () => CFG.SYNC_URL.replace(/\/+$/, "") + "/" + CFG.SYNC_TOKEN + "/db.json";
+  const syncNodeUrl = () => CFG.SYNC_URL.replace(/\/+$/, "") + "/" + CFG.SYNC_TOKEN + "/db.json?auth=" + encodeURIComponent(CFG.SYNC_SECRET || "");
 
   // Sube la base local a la nube.
   async function syncSubir() {
