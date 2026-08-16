@@ -118,6 +118,19 @@
         </div>
       </div>
 
+      <div class="card">
+        <h3 class="card-title">Gráfico de avance</h3>
+        <div class="chart-legend">
+          <span class="legend-item"><i class="dot dot-prog"></i>Programado</span>
+          <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramado</span>
+          <span class="legend-item"><i class="dot dot-fin"></i>Finalizado</span>
+        </div>
+        <div class="perf-bar perf-bar-lg" id="dashBar"></div>
+        <div class="perf-nums" id="dashNums"></div>
+        <div class="section-head"><h3>Avance por responsable</h3></div>
+        <div id="dashPerfList" class="perf-list"></div>
+      </div>
+
       <div class="section-head">
         <h3>Alertas de mantenimiento</h3>
         <button class="btn btn-ghost" id="btnVerTodasAlertas">Ver todas</button>
@@ -141,6 +154,13 @@
     <!-- ============================ RENDIMIENTO ============================ -->
     <section id="view-rendimiento" class="view hidden">
       <h2 class="view-title">Rendimiento por usuario</h2>
+
+      <div class="toolbar">
+        <label class="filter-label" for="perfUsuario">Ver avance de:</label>
+        <select id="perfUsuario" class="input select">
+          <option value="">Todos los responsables</option>
+        </select>
+      </div>
 
       <div class="stats-grid">
         <div class="stat-card info">

@@ -1,6 +1,6 @@
 {
-  "version": "1.23.5",
+  "version": "1.23.6",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Nuevo diseño con menú lateral (sidebar) y nueva vista 'Rendimiento': avance por usuario con gráfico de barras apiladas (programado / reprogramado / finalizado) y tabla de detalle."
+  "changelog": "Vista de rendimiento con selector de responsable (combo) para ver el avance de cada técnico; gráfico de avance global y por responsable en el Panel de control; sincronización protegida: la nube ya no se sobrescribe cuando otro dispositivo tiene más equipos."
 }

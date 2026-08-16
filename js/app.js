@@ -333,6 +333,25 @@
     $("#statReprog").textContent = prog.reprogramado;
     $("#statFin").textContent = prog.finalizado;
 
+    // Gráfico de avance global (barras apiladas).
+    const totP = prog.programado + prog.reprogramado + prog.finalizado;
+    const segG = totP
+      ? `<div class="perf-seg prog" style="flex:${(prog.programado / totP) * 100}"></div>` +
+        `<div class="perf-seg reprog" style="flex:${(prog.reprogramado / totP) * 100}"></div>` +
+        `<div class="perf-seg fin" style="flex:${(prog.finalizado / totP) * 100}"></div>`
+      : `<div class="perf-seg empty" style="flex:1"></div>`;
+    $("#dashBar").innerHTML = segG;
+    $("#dashNums").innerHTML =
+      `<span class="prog-t">${prog.programado} program.</span>` +
+      `<span class="reprog-t">${prog.reprogramado} reprogram.</span>` +
+      `<span class="fin-t">${prog.finalizado} finaliz.</span>`;
+
+    // Avance por responsable (solo equipos visibles para este usuario).
+    const perf = avancePorUsuario(visIds);
+    $("#dashPerfList").innerHTML = perf.rows.length
+      ? perf.rows.map(barHTML).join("")
+      : `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin mantenimientos para mostrar.</p></div>`;
+
     const alerts = vis
       .map((e) => ({ eq: e, st: statusOf(e) }))
       .filter((x) => x.st.key !== "ok")
@@ -351,9 +370,10 @@
   }
 
   // ============================================================
-  //  RENDIMIENTO POR USUARIO
+  //  AVANCE POR USUARIO (compartido: panel + rendimiento)
   // ============================================================
-  function renderRendimiento() {
+  // scope: opcional, Set de equipoIds para limitar (p. ej. los visibles por el usuario).
+  function avancePorUsuario(scope) {
     const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
@@ -365,6 +385,7 @@
     buckets.set("__sin__", sin);
 
     mantenimientos.forEach((m) => {
+      if (scope && !scope.has(String(m.equipoId))) return;
       const eq = eqById.get(String(m.equipoId));
       let b = sin;
       if (eq) {
@@ -388,21 +409,19 @@
     rows.forEach((b) => { tot.prog += b.prog; tot.reprog += b.reprog; tot.fin += b.fin; });
     tot.total = tot.prog + tot.reprog + tot.fin;
 
-    $("#perfProg").textContent = tot.prog;
-    $("#perfReprog").textContent = tot.reprog;
-    $("#perfFin").textContent = tot.fin;
-    $("#perfTotal").textContent = tot.total;
-    $("#perfPct").textContent = tot.total ? Math.round((tot.fin / tot.total) * 100) + "%" : "0%";
+    return { rows, tot, tecnicos, sinUsado: Boolean(sin.prog || sin.reprog || sin.fin) };
+  }
 
-    const barHTML = (b) => {
-      const t = b.prog + b.reprog + b.fin;
-      const pct = t ? Math.round((b.fin / t) * 100) : 0;
-      const seg = t
-        ? `<div class="perf-seg prog" style="flex:${(b.prog / t) * 100}"></div>` +
-          `<div class="perf-seg reprog" style="flex:${(b.reprog / t) * 100}"></div>` +
-          `<div class="perf-seg fin" style="flex:${(b.fin / t) * 100}"></div>`
-        : `<div class="perf-seg empty" style="flex:1"></div>`;
-      return `
+  // Fila de avance de un usuario: barra apilada + etiquetas.
+  function barHTML(b) {
+    const t = b.prog + b.reprog + b.fin;
+    const pct = t ? Math.round((b.fin / t) * 100) : 0;
+    const seg = t
+      ? `<div class="perf-seg prog" style="flex:${(b.prog / t) * 100}"></div>` +
+        `<div class="perf-seg reprog" style="flex:${(b.reprog / t) * 100}"></div>` +
+        `<div class="perf-seg fin" style="flex:${(b.fin / t) * 100}"></div>`
+      : `<div class="perf-seg empty" style="flex:1"></div>`;
+    return `
       <div class="perf-row">
         <div class="perf-head">
           <span class="perf-name">${esc(b.nombre)}</span>
@@ -415,14 +434,44 @@
           <span class="fin-t">${b.fin} finaliz.</span>
         </div>
       </div>`;
-    };
+  }
 
-    $("#perfList").innerHTML = rows.length
-      ? rows.map(barHTML).join("")
+  // ============================================================
+  //  RENDIMIENTO POR USUARIO
+  // ============================================================
+  function renderRendimiento() {
+    const { rows, tot, tecnicos, sinUsado } = avancePorUsuario();
+
+    // Combo para elegir un responsable (conserva la selección mientras siga existiendo).
+    const sel = $("#perfUsuario");
+    const prev = sel.value;
+    const opts = ['<option value="">Todos los responsables</option>']
+      .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`))
+      .concat(sinUsado ? [`<option value="__sin__">Sin asignar</option>`] : []);
+    if (sel.innerHTML !== opts.join("")) sel.innerHTML = opts.join("");
+    if (![...sel.options].some((o) => o.value === prev)) sel.value = "";
+    const filtro = sel.value;
+
+    const vis = filtro === "__sin__"
+      ? rows.filter((r) => r.nombre === "Sin asignar")
+      : filtro
+        ? rows.filter((r) => r.nombre === filtro).length
+          ? rows.filter((r) => r.nombre === filtro)
+          : [{ nombre: filtro, prog: 0, reprog: 0, fin: 0, equipos: new Set() }]
+        : rows;
+
+    $("#perfProg").textContent = tot.prog;
+    $("#perfReprog").textContent = tot.reprog;
+    $("#perfFin").textContent = tot.fin;
+    $("#perfTotal").textContent = tot.total;
+    $("#perfPct").textContent = tot.total ? Math.round((tot.fin / tot.total) * 100) + "%" : "0%";
+
+    $("#perfList").innerHTML = vis.length
+      ? vis.map(barHTML).join("")
       : `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin mantenimientos para mostrar.</p></div>`;
 
-    $("#perfTbody").innerHTML = rows.length
-      ? rows.map((b) => {
+    $("#perfTbody").innerHTML = vis.length
+      ? vis.map((b) => {
         const t = b.prog + b.reprog + b.fin;
         const pct = t ? Math.round((b.fin / t) * 100) : 0;
         return `<tr>
@@ -2257,15 +2306,26 @@
   };
 
   // Sube la base local a la nube. Nunca sube una base vacía: si no hay datos reales,
-  // no pisa la nube (protege los datos de los otros dispositivos).
+  // no pisa la nube (protege los datos de los otros dispositivos). Tampoco pisa la nube
+  // cuando ella tiene MÁS equipos que lo local: en ese caso la nube es la fuente de verdad
+  // y los demás dispositivos deben descargarla (evita que un dispositivo con datos
+  // parciales borre la base completa, como ocurrió con los 807 equipos).
   async function syncSubir() {
     if (!SYNC_ENABLED() || !navigator.onLine) return;
     if (!tieneDatosReales()) return;
     try {
+      const payload = buildApkPayload();
+      const res0 = await fetch(syncNodeUrl());
+      if (res0.ok) {
+        const cloud = await res0.json();
+        if (cloud && nubeConDatosReales(cloud) && (cloud.equipos || []).length > (payload.equipos || []).length) {
+          return;
+        }
+      }
       const res = await fetch(syncNodeUrl(), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildApkPayload())
+        body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error("http " + res.status);
       setLastSyncAt(Date.now());
@@ -2873,6 +2933,7 @@
     $("#btnMenu").addEventListener("click", () => toggleSidebar(true));
     $("#sidebarBackdrop").addEventListener("click", () => toggleSidebar(false));
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleSidebar(false); });
+    $("#perfUsuario").addEventListener("change", renderRendimiento);
 
     // sesión
     $("#btnLogin").addEventListener("click", doLogin);

@@ -258,6 +258,7 @@ body {
 .perf-meta { font-size: 11.5px; color: var(--text-muted); }
 .perf-meta b { color: var(--rojo-700); }
 .perf-bar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: #EDEDF5; box-shadow: inset 0 1px 3px rgba(0,0,0,.08); }
+.perf-bar-lg { height: 26px; border-radius: 13px; margin-bottom: 8px; }
 .perf-seg { height: 100%; }
 .perf-seg.prog { background: #2563EB; }
 .perf-seg.reprog { background: var(--warn); }
