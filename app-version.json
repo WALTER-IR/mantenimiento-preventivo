@@ -1,6 +1,6 @@
 {
-  "version": "1.22.9",
+  "version": "1.23.0",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-14",
-  "changelog": "En los datos del equipo se muestra el usuario asignado; la etiqueta 'Responsable' se reemplaza por 'usuario asignado' en el detalle del equipo, la lista de equipos, los avisos, la tabla de correos y el export a Excel."
+  "updated": "2026-08-15",
+  "changelog": "Lógica alineada con el APK: estados finales según el móvil (No realizado / No completado / No finalizado quedan pendientes y salen en alertas; Cancelado, Anulado, Atendido, Hecho, Completado son finales), marcador de tiempo finalizado_en para los últimos mantenimientos, login igual al móvil (admin/administrador, DNI o nombre) y visibilidad de equipos por usuario asignado o responsable."
 }

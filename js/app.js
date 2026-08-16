@@ -26,22 +26,40 @@
   const puedeEditar = () => !!sesion && sesion.rol >= ROL.EDICION;
   const esAdmin = () => !!sesion && sesion.rol === ROL.ADMIN;
 
-  // Un usuario común solo ve los registros asignados a él (coincide su nombre o DNI con el responsable); el admin ve todo.
+  // Un usuario común solo ve los registros asignados a él (coincide su nombre o DNI con el
+  // usuario asignado o el responsable del equipo, igual que el APK por usuario_id); el admin ve todo.
   const esVisibleEquipo = (e) => {
     if (!sesion) return false;
     if (esAdmin()) return true;
-    const r = (e.responsable || "").trim().toLowerCase();
-    if (!r) return false;
     const n = (sesion.nombre || "").trim().toLowerCase();
     const d = (sesion.dni || "").trim().toLowerCase();
-    return r === n || (d !== "" && r === d);
+    const personas = [e.usuarioAsignado || "", e.responsable || ""]
+      .map((v) => v.trim().toLowerCase()).filter(Boolean);
+    return personas.some((p) => p === n || (d !== "" && p === d));
   };
   const equiposVisibles = () => equipos.filter(esVisibleEquipo);
 
   // ---------------- Estado del mantenimiento ----------------
-  const estadoMant = (m) => (m.estado === "programado" || m.estado === "reprogramado") ? m.estado : "finalizado";
-  // Un mantenimiento es finalizado si tiene fecha real registrada aunque el estado diga lo contrario.
-  const esFinalizado = (m) => Boolean(m.fechaReal) || estadoMant(m) === "finalizado";
+  // Lógica idéntica al APK: un estado es final si contiene realiz/complet/hecho/ok/cumplid/
+  // concluid/finaliz/termin/ejecutad/atendid/anulad/cancelad, pero NO si dice "no realizado",
+  // "no completado" o "no finalizado" (esos quedan pendientes y salen en las alertas).
+  const esEstadoFinal = (estado) => {
+    if (estado == null) return false;
+    const e = String(estado).toLowerCase();
+    if (e.indexOf("no realiz") >= 0 || e.indexOf("no complet") >= 0 || e.indexOf("no finaliz") >= 0) return false;
+    return ["realiz", "complet", "hecho", "ok", "cumplid", "concluid", "finaliz", "termin",
+      "ejecutad", "atendid", "anulad", "cancelad"].some((k) => e.indexOf(k) >= 0);
+  };
+  const estadoMant = (m) => {
+    if (m.fechaReal) return "finalizado";
+    const e = String(m.estado || "").toLowerCase();
+    if (e.indexOf("reprogram") >= 0) return "reprogramado";
+    if (e.indexOf("program") >= 0) return "programado";
+    if (esEstadoFinal(m.estado)) return "finalizado";
+    return "programado";
+  };
+  // Un mantenimiento es finalizado si tiene fecha real registrada o su estado es final.
+  const esFinalizado = (m) => Boolean(m.fechaReal) || esEstadoFinal(m.estado);
   const estadoLabel = (e) => (e === "programado" ? "Programado" : e === "reprogramado" ? "Reprogramado" : "Finalizado");
   const estadoBadge = (m) => {
     const e = estadoMant(m);
@@ -59,6 +77,13 @@
 
   // ---------------- Utilidades de fecha ----------------
   const todayISO = () => toISODate(new Date());
+  // Marca de tiempo (yyyy-MM-dd HH:mm:ss) del momento en que se finaliza, igual que el APK.
+  const nowStamp = () => {
+    const d = new Date();
+    const p = (n) => ("0" + n).slice(-2);
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate())
+      + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+  };
   function toISODate(d) {
     if (!(d instanceof Date) || isNaN(d.getTime())) return "";
     const off = d.getTimezoneOffset();
@@ -209,8 +234,14 @@
       err.classList.remove("hidden");
       return;
     }
-    const u = usuarios.find((x) =>
-      (x.nombre || "").toLowerCase() === usuario || (x.dni || "").toLowerCase() === usuario);
+    // Lógica idéntica al APK: "admin"/"administrador" entra con cualquier usuario administrador;
+    // los responsables entran con su DNI o nombre (clave asignada o DNI si no tienen clave).
+    const ku = usuario.replace(/[^a-z0-9]/g, "").toLowerCase();
+    const adminKey = ku === "admin" || ku === "administrador";
+    const u = adminKey
+      ? usuarios.find((x) => x.rol === ROL.ADMIN)
+      : usuarios.find((x) =>
+          (x.nombre || "").toLowerCase() === usuario || (x.dni || "").toLowerCase() === usuario);
     if (!u) {
       err.textContent = "Usuario o contraseña incorrectos";
       err.classList.remove("hidden");
@@ -306,7 +337,8 @@
 
     const recent = [...mantenimientos]
       .filter((m) => visIds.has(String(m.equipoId)) && esFinalizado(m))
-      .sort((a, b) => (b.fechaReal || b.fecha || "").localeCompare(a.fechaReal || a.fecha || ""))
+      .sort((a, b) => (b.finalizadoEn || b.fechaReal || b.fechaReprogramada || b.fecha || "")
+        .localeCompare(a.finalizadoEn || a.fechaReal || a.fechaReprogramada || a.fecha || ""))
       .slice(0, 3);
     $("#recentList").innerHTML = recent.map(recentHTML).join("");
     $("#recentEmpty").classList.toggle("hidden", recent.length > 0);
@@ -338,7 +370,6 @@
           <span class="alert-title">${esc(asignado)}</span>
           <span class="badge ${st.key === "vencido" ? "danger" : "warn"}">${label}</span>
         </div>
-        ${respLine}
         <div class="alert-sub">${esc(eq.nombre)}</div>
         <div class="alert-sub">${esc(eq.marca || "Sin marca")} · ${esc(eq.tipo === "desktop" ? "Escritorio" : eq.tipo)}</div>
         <div class="alert-sub">Vence: <b>${fmtDate(st.due)}</b> (${days} día${days === 1 ? "" : "s"})</div>
@@ -628,6 +659,12 @@
     // Al registrar la fecha real se genera automáticamente el próximo mantenimiento anual.
     let proxima = normFecha($("#mtProxima").value);
     if (fechaReal && !proxima) proxima = addDays(fechaReal, 365);
+    // Marca de finalización (yyyy-MM-dd HH:mm:ss): se conserva si ya estaba fijada.
+    let finalizadoEn = "";
+    if (estado === "finalizado") {
+      const prev = id ? mantenimientos.find((x) => x.id === id) : null;
+      finalizadoEn = (prev && prev.finalizadoEn) || nowStamp();
+    }
     const data = {
       id: id || "mt-" + Date.now(),
       equipoId,
@@ -641,7 +678,8 @@
       costo: parseFloat($("#mtCosto").value) || 0,
       proxima: proxima,
       obs: $("#mtObs").value.trim(),
-      tareas
+      tareas,
+      finalizadoEn
     };
     await DB.put("mantenimientos", data);
 
@@ -799,6 +837,11 @@
         : estadoMant({ estado: $("#dtEstado").value });
     let proxima = normFecha($("#dtProxima").value);
     if (fechaReal && !proxima) proxima = addDays(fechaReal, 365);
+    let finalizadoEn = "";
+    if (estado === "finalizado") {
+      const prev = id ? mantenimientos.find((x) => x.id === id) : null;
+      finalizadoEn = (prev && prev.finalizadoEn) || nowStamp();
+    }
     const data = {
       id: id || "mt-" + Date.now(),
       equipoId,
@@ -812,7 +855,8 @@
       costo: parseFloat($("#dtCosto").value) || 0,
       proxima,
       obs: $("#dtObs").value.trim(),
-      tareas
+      tareas,
+      finalizadoEn
     };
     await DB.put("mantenimientos", data);
     const eq = equipos.find((x) => x.id === equipoId);
@@ -1012,7 +1056,7 @@
       </div>`).join("");
     $("#detalleHistEmpty").classList.toggle("hidden", hist.length > 0);
     // El formato solo se habilita si el último mantenimiento está finalizado.
-    const formatoOk = hist.length > 0 && estadoMant(hist[0]) === "finalizado";
+    const formatoOk = hist.length > 0 && esFinalizado(hist[0]);
     $("#btnFormato").disabled = !formatoOk;
     $("#btnEliminarEquipo").onclick = () => eliminarEquipo(id);
     $("#btnEditarEquipo").onclick = () => { closeModal("modalDetalle"); openEquipoModal(eq); };
@@ -2323,13 +2367,14 @@
     return normFecha(s);
   }
 
-  // Normaliza el estado al formato interno de la app (minúsculas).
+  // Normaliza el estado al formato interno de la app (minúsculas), igual que el APK:
+  // reprogramado > programado > final > pendiente/en proceso; si no coincide, lo deja tal cual.
   function estadoNorm(s) {
     if (s == null) return "";
     const e = String(s).trim().toLowerCase();
     if (e.indexOf("reprogram") >= 0) return "reprogramado";
     if (e.indexOf("program") >= 0) return "programado";
-    if (e.indexOf("final") >= 0 || e.indexOf("realizado") >= 0) return "finalizado";
+    if (esEstadoFinal(s)) return "finalizado";
     if (e.indexOf("pendiente") >= 0 || e.indexOf("en proceso") >= 0) return "programado";
     return e;
   }
@@ -2618,6 +2663,11 @@
         const eqR = equipos.find((x) => x.id === m.equipoId);
         const resp = (eqR && (eqR.responsable || eqR.usuarioAsignado || "")).trim();
         if (resp) { m.tecnico = resp; mCamb = true; }
+      }
+      // Marca de finalización para los ya finalizados que no la tienen (igual que el APK).
+      if (esFinalizado(m) && !m.finalizadoEn) {
+        m.finalizadoEn = m.fechaReal || nowStamp();
+        mCamb = true;
       }
     });
     let eCamb = false;
