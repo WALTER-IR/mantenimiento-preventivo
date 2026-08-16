@@ -350,8 +350,8 @@
     const perf = avancePorUsuario(visIds);
     $("#dashBarChart").innerHTML = barChartHTML(perf.rows);
 
-    // Onda: mantenimientos por mes.
-    $("#dashWave").innerHTML = waveChartHTML(mantsPorMes(visIds));
+    // Barras: cantidad de equipos (Netbook y ProBook).
+    $("#dashCatBar").innerHTML = equiposCatHTML(visIds);
 
     // Barras: mantenimientos vencidos por responsable.
     $("#dashVencBar").innerHTML = vencidosBarHTML(vencidosPorResponsable(visIds));
@@ -476,6 +476,43 @@
     if (esFinalizado(m)) return false;
     const fe = normFecha(m.fechaReprogramada) || normFecha(m.fecha) || "";
     return !!fe && fe < todayISO();
+  }
+
+  // Conteo de equipos por categoría: Netbook (NOTEBOOK/CONVERTIBLE) y ProBook (HP PROBOOK).
+  function equiposPorCategoria(scope) {
+    let netbook = 0, probook = 0;
+    equipos.forEach((e) => {
+      if (scope && !scope.has(String(e.id))) return;
+      if (!esVisibleEquipo(e)) return;
+      const modelo = String(e.modelo || "").toUpperCase();
+      if (modelo.indexOf("PROBOOK") >= 0) { probook++; return; }
+      const nom = String(e.nombre || "").toUpperCase();
+      if (nom.indexOf("NOTEBOOK") >= 0 || nom.indexOf("CONVERTIBLE") >= 0) netbook++;
+    });
+    return { netbook, probook };
+  }
+
+  // Barras grandes de Netbook vs ProBook.
+  function equiposCatHTML(scope) {
+    const c = equiposPorCategoria(scope);
+    const total = c.netbook + c.probook;
+    if (!total) return `<div class="empty-state"><div class="empty-icon">💻</div><p>Sin equipos.</p></div>`;
+    const max = Math.max(c.netbook, c.probook, 1);
+    const pct = (n) => Math.round((n / total) * 100) + "%";
+    return `<div class="cat-chart">
+      <div class="cat-col">
+        <div class="cat-val">${c.netbook}</div>
+        <div class="cat-track"><div class="cat-fill netbook" style="height:${(c.netbook / max) * 100}%"></div></div>
+        <div class="cat-label">Netbooks</div>
+        <div class="cat-sub">${pct(c.netbook)} del total</div>
+      </div>
+      <div class="cat-col">
+        <div class="cat-val">${c.probook}</div>
+        <div class="cat-track"><div class="cat-fill probook" style="height:${(c.probook / max) * 100}%"></div></div>
+        <div class="cat-label">ProBooks</div>
+        <div class="cat-sub">${pct(c.probook)} del total</div>
+      </div>
+    </div>`;
   }
 
   // Vencidos agrupados por responsable (solo equipos visibles para este usuario).

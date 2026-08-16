@@ -77,6 +77,47 @@
     <!-- ============================ DASHBOARD ============================ -->
     <section id="view-dashboard" class="view">
       <h2 class="view-title">Panel de control</h2>
+
+      <div class="card">
+        <h3 class="card-title">Gráfico de avance</h3>
+        <div class="chart-legend">
+          <span class="legend-item"><i class="dot dot-prog"></i>Programado</span>
+          <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramado</span>
+          <span class="legend-item"><i class="dot dot-fin"></i>Finalizado</span>
+        </div>
+        <div class="perf-bar perf-bar-lg" id="dashBar"></div>
+        <div class="perf-nums" id="dashNums"></div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card chart-col">
+          <h3 class="card-title">Mantenimientos por responsable</h3>
+          <div id="dashBarChart"></div>
+        </div>
+        <div class="card chart-col">
+          <h3 class="card-title">Cantidad de equipos</h3>
+          <div id="dashCatBar"></div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card chart-col">
+          <h3 class="card-title">Mantenimientos vencidos</h3>
+          <div id="dashVencBar"></div>
+        </div>
+        <div class="card chart-col">
+          <h3 class="card-title">Reprogramados y finalizados</h3>
+          <div class="wave-legend">
+            <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramados</span>
+            <span class="legend-item"><i class="dot dot-fin"></i>Finalizados</span>
+          </div>
+          <div id="dashReproFinWave"></div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h3>Equipos y mantenimientos</h3>
+      </div>
       <div class="stats-grid">
         <div class="stat-card rojo" id="cardResp">
           <div class="stat-num" id="statResp">0</div>
@@ -115,43 +156,6 @@
         <div class="stat-card success">
           <div class="stat-num" id="statFin">0</div>
           <div class="stat-label">Finalizados</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 class="card-title">Gráfico de avance</h3>
-        <div class="chart-legend">
-          <span class="legend-item"><i class="dot dot-prog"></i>Programado</span>
-          <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramado</span>
-          <span class="legend-item"><i class="dot dot-fin"></i>Finalizado</span>
-        </div>
-        <div class="perf-bar perf-bar-lg" id="dashBar"></div>
-        <div class="perf-nums" id="dashNums"></div>
-      </div>
-
-      <div class="chart-row">
-        <div class="card chart-col">
-          <h3 class="card-title">Mantenimientos por responsable</h3>
-          <div id="dashBarChart"></div>
-        </div>
-        <div class="card chart-col">
-          <h3 class="card-title">Mantenimientos por mes</h3>
-          <div id="dashWave"></div>
-        </div>
-      </div>
-
-      <div class="chart-row">
-        <div class="card chart-col">
-          <h3 class="card-title">Mantenimientos vencidos</h3>
-          <div id="dashVencBar"></div>
-        </div>
-        <div class="card chart-col">
-          <h3 class="card-title">Reprogramados y finalizados</h3>
-          <div class="wave-legend">
-            <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramados</span>
-            <span class="legend-item"><i class="dot dot-fin"></i>Finalizados</span>
-          </div>
-          <div id="dashReproFinWave"></div>
         </div>
       </div>
     </section>

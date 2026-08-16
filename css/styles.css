@@ -296,6 +296,16 @@ body {
 .wave-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; color: var(--text-muted); }
 .bar-fill.danger { background: var(--danger); }
 
+.cat-chart { display: flex; gap: 24px; align-items: flex-end; height: 190px; padding-top: 18px; }
+.cat-col { flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.cat-val { font-size: 16px; font-weight: 800; color: var(--rojo-700); margin-bottom: 4px; }
+.cat-track { flex: 1; width: 100%; max-width: 90px; display: flex; align-items: flex-end; background: var(--rojo-50); border-radius: 10px 10px 0 0; overflow: hidden; }
+.cat-fill { width: 100%; min-height: 4px; transition: height .3s ease; border-radius: 10px 10px 0 0; }
+.cat-fill.netbook { background: linear-gradient(180deg, #2563EB 0%, #3B82F6 100%); }
+.cat-fill.probook { background: var(--rojo-grad); }
+.cat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 6px; }
+.cat-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+
 @media (max-width: 899px) {
   .chart-row { grid-template-columns: 1fr; }
 }

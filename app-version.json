@@ -1,6 +1,6 @@
 {
-  "version": "1.23.8",
+  "version": "1.23.9",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Dos gráficos nuevos en el Panel: mantenimientos vencidos (barras por responsable) y reprogramados y finalizados (onda por mes con 2 líneas). En las Alertas se agregó un combo para filtrar por responsable."
+  "changelog": "Los gráficos del Panel ahora se muestran primero (arriba de todo). Se reemplazó el gráfico por mes por uno de cantidad de equipos: Netbooks vs ProBooks."
 }

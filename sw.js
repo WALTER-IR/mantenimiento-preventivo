@@ -4,7 +4,7 @@
 //  nada externamente. La app solo se actualiza cuando el
 //  usuario lo pide explícitamente.
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v61";
+const CACHE_NAME = "mantenimiento-pwa-v62";
 
 const CORE_ASSETS = [
   "./",
