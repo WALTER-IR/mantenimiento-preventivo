@@ -1,6 +1,6 @@
 {
-  "version": "1.23.0",
+  "version": "1.23.1",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-15",
-  "changelog": "Lógica alineada con el APK: estados finales según el móvil (No realizado / No completado / No finalizado quedan pendientes y salen en alertas; Cancelado, Anulado, Atendido, Hecho, Completado son finales), marcador de tiempo finalizado_en para los últimos mantenimientos, login igual al móvil (admin/administrador, DNI o nombre) y visibilidad de equipos por usuario asignado o responsable."
+  "changelog": "Corregida la sincronización con el móvil: al abrir la web y al pulsar Sincronizar se descargan primero los datos de la nube (trae los cambios hechos en el APK); antes la web subía sus datos locales y pisaba la nube. Se añade la marca de tiempo sync_at para saber qué lado es más nuevo. Requiere el APK 3.37.4 en el móvil."
 }

@@ -1892,6 +1892,7 @@
       app: "Inventario de equipos",
       version: 4,
       exported: todayISO(),
+      sync_at: new Date().toISOString(),
       usuarios: uss,
       equipos: eqs,
       mantenimientos: mts,
@@ -2140,6 +2141,17 @@
   const SYNC_ENABLED = () => !!(CFG.SYNC_URL && CFG.SYNC_TOKEN);
   const syncNodeUrl = () => CFG.SYNC_URL.replace(/\/+$/, "") + "/" + CFG.SYNC_TOKEN + "/db.json?auth=" + encodeURIComponent(CFG.SYNC_SECRET || "");
 
+  // Última sincronización local (ms), igual que el APK (sync_ultima): con esto se decide
+  // si la nube es más nueva y, por tanto, si conviene bajar en lugar de subir.
+  const lastSyncAt = () => Number(localStorage.getItem("sync_ultima") || 0);
+  const setLastSyncAt = (ms) => localStorage.setItem("sync_ultima", String(ms));
+  // Marca de tiempo de la nube: sync_at (ISO con hora, que el APK sabe leer) o exported (solo fecha).
+  const cloudMs = (d) => {
+    if (d && d.sync_at) return Date.parse(d.sync_at);
+    if (d && d.exported) return Date.parse(d.exported);
+    return -1;
+  };
+
   // Sube la base local a la nube.
   async function syncSubir() {
     if (!SYNC_ENABLED() || !navigator.onLine) return;
@@ -2150,6 +2162,7 @@
         body: JSON.stringify(buildApkPayload())
       });
       if (!res.ok) throw new Error("http " + res.status);
+      setLastSyncAt(Date.now());
     } catch (e) { /* sin conexión: se reintenta en la próxima edición */ }
   }
 
@@ -2164,6 +2177,8 @@
       const conDatos = [data.usuarios, data.equipos, data.mantenimientos, data.feriados]
         .some((a) => Array.isArray(a) && a.length > 0);
       if (!conDatos) return false;
+      const cloud = cloudMs(data);
+      if (cloud > 0 && cloud <= lastSyncAt()) return false; // la nube no es más nueva
       await reemplazarDatos(convertirRespaldoApk(data), true);
       await auditar("SINCRONIZAR", "Datos recibidos desde la nube");
       await reload();
@@ -2173,18 +2188,22 @@
         await DB.clearSesion();
         showLogin();
       }
+      setLastSyncAt(Date.now());
       return true;
     } catch (e) { return false; }
   }
 
-  // Sube la copia local y luego baja la nube (unifica ambos lados).
+  // Sincroniza "hacia abajo" primero: si la nube tiene datos más nuevos (o aún no se ha
+  // sincronizado esta web), los baja; solo si no bajó nada nuevo sube la copia local.
+  // Así los cambios hechos en el móvil siempre llegan a la web, en lugar de que la web
+  // pise la nube con sus datos locales como ocurría antes.
   async function sincronizarAhora() {
     if (!SYNC_ENABLED()) return toast("Sincronización no configurada", "err");
     if (!navigator.onLine) return toast("Sin conexión a internet", "err");
     toast("Sincronizando…");
-    await syncSubir();
     const ok = await syncBajar();
-    await auditar("SINCRONIZAR", ok ? "Datos sincronizados con la nube" : "Copia local subida a la nube");
+    if (!ok) await syncSubir();
+    await auditar("SINCRONIZAR", ok ? "Datos recibidos desde la nube" : "Copia local subida a la nube");
     toast(ok ? "Sincronización completada" : "Datos subidos a la nube", ok ? "ok" : "warn");
   }
 
@@ -3008,6 +3027,9 @@
         } else {
           showLogin();
         }
+        // Como el APK al abrir: si hay conexión y la nube es más nueva que la última
+        // sincronización, baja los datos (trae a la web lo que se hizo en el móvil).
+        if (navigator.onLine) syncBajar();
         /* Service Worker en modo SOLO CACHÉ (sin red): mantiene el
            funcionamiento sin conexión pero NO sincroniza nada en
            segundo plano. La actualización automática está deshabilitada;
