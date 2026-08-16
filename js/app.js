@@ -2155,9 +2155,18 @@
     return -1;
   };
 
-  // Sube la base local a la nube.
+  // ¿La base local tiene datos reales (equipos con serie/hostname o mants con equipo)?
+  const tieneDatosReales = () => {
+    const p = buildApkPayload();
+    return (p.equipos && p.equipos.some((e) => (e.serie || e.hostname))) ||
+      (p.mantenimientos && p.mantenimientos.some((m) => m.equipo_id));
+  };
+
+  // Sube la base local a la nube. Nunca sube una base vacía: si no hay datos reales,
+  // no pisa la nube (protege los datos de los otros dispositivos).
   async function syncSubir() {
     if (!SYNC_ENABLED() || !navigator.onLine) return;
+    if (!tieneDatosReales()) return;
     try {
       const res = await fetch(syncNodeUrl(), {
         method: "PUT",
@@ -2169,6 +2178,15 @@
     } catch (e) { /* sin conexión: se reintenta en la próxima edición */ }
   }
 
+  // ¿La nube tiene datos reales? Un equipo con serie/hostname o un mantenimiento con equipo.
+  const nubeConDatosReales = (data) => {
+    if (!data) return false;
+    const eqs = Array.isArray(data.equipos) ? data.equipos : [];
+    const mts = Array.isArray(data.mantenimientos) ? data.mantenimientos : [];
+    return eqs.some((e) => e && (e.serie || e.hostname)) ||
+      mts.some((m) => m && m.equipo_id);
+  };
+
   // Baja la base de la nube y reemplaza la local. Devuelve true si cambió algo.
   async function syncBajar() {
     if (!SYNC_ENABLED() || !navigator.onLine) return false;
@@ -2177,9 +2195,9 @@
       if (!res.ok) throw new Error("http " + res.status);
       const data = await res.json();
       if (!data || typeof data !== "object") return false;
-      const conDatos = [data.usuarios, data.equipos, data.mantenimientos, data.feriados]
-        .some((a) => Array.isArray(a) && a.length > 0);
-      if (!conDatos) return false;
+      // Solo reemplaza si la nube trae datos reales; una nube vacía o corrupta no debe
+      // borrar la base local (esto fue lo que vació los datos de la web).
+      if (!nubeConDatosReales(data)) return false;
       const cloud = cloudMs(data);
       if (cloud > 0 && cloud <= lastSyncAt()) return false; // la nube no es más nueva
       await reemplazarDatos(convertirRespaldoApk(data), true);

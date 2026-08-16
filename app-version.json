@@ -1,6 +1,6 @@
 {
-  "version": "1.23.2",
+  "version": "1.23.3",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-15",
-  "changelog": "Nueva carga masiva de feriados (Excel) con las columnas TIPO; FECHA; MOTIVO en la web y en el APK 3.37.6. Los feriados ahora tienen un Tipo (Nacional, Escolar, etc.) que se muestra en la lista y viaja en la sincronización. Si la FECHA ya existe, se reemplaza; los demás se conservan."
+  "changelog": "Protección de sincronización: la app ya no sube a la nube una base vacía o parcial (evita sobrescribir los datos de otros dispositivos) y ya no descarga ni reemplaza su base local cuando la nube trae datos corruptos (equipos/mantenimientos vacíos). Incluye la recuperación de la nube con los datos restaurados (807 equipos, 807 mantenimientos, 5 usuarios, 15 feriados)."
 }
