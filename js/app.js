@@ -1421,6 +1421,7 @@
     $("#cardAuditoria").classList.toggle("hidden", !admin);
     $("#btnNuevoUsuario").classList.toggle("hidden", !admin);
     $("#cardProgramacion").classList.toggle("hidden", !admin);
+    $("#cardCargaMasiva").classList.toggle("hidden", !admin);
     $("#cardCorreo").classList.toggle("hidden", !edicion);
     $("#cardMant2026").classList.toggle("hidden", !admin);
     $("#cardDatos").classList.toggle("hidden", !admin);
@@ -2109,7 +2110,7 @@
   }
 
   function importData(file) {
-    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    if (!esAdmin()) return toast("Solo el administrador", "err");
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -2291,14 +2292,14 @@
   }
 
   function abrirMasiva(tipo) {
-    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    if (!esAdmin()) return toast("Solo el administrador", "err");
     const input = $("#fileMasiva");
     input.dataset.tipo = tipo;
     input.click();
   }
 
   async function procesarMasiva(file, tipo) {
-    if (!puedeEditar()) return toast("Tu permiso es de solo lectura", "err");
+    if (!esAdmin()) return toast("Solo el administrador", "err");
     const res = $("#masivaResultado");
     res.classList.remove("hidden");
     res.textContent = "Columnas: " + (COLUMNAS_MASIVA[tipo] || "") + "\n\nLeyendo archivo...";

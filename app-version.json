@@ -1,6 +1,6 @@
 {
-  "version": "1.23.3",
+  "version": "1.23.4",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-15",
-  "changelog": "Protección de sincronización: la app ya no sube a la nube una base vacía o parcial (evita sobrescribir los datos de otros dispositivos) y ya no descarga ni reemplaza su base local cuando la nube trae datos corruptos (equipos/mantenimientos vacíos). Incluye la recuperación de la nube con los datos restaurados (807 equipos, 807 mantenimientos, 5 usuarios, 15 feriados)."
+  "changelog": "Permisos de seguridad: la carga masiva (Excel), la importación de respaldos, la programación de mantenimientos y vaciar la base de datos ahora son SOLO para el administrador. Los técnicos ya no pueden usar la carga masiva (una carga de feriados/equipos vacíos corrompió la base) ni programar ni vaciar datos."
 }
