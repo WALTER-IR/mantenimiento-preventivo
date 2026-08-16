@@ -139,6 +139,21 @@
           <div id="dashWave"></div>
         </div>
       </div>
+
+      <div class="chart-row">
+        <div class="card chart-col">
+          <h3 class="card-title">Mantenimientos vencidos</h3>
+          <div id="dashVencBar"></div>
+        </div>
+        <div class="card chart-col">
+          <h3 class="card-title">Reprogramados y finalizados</h3>
+          <div class="wave-legend">
+            <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramados</span>
+            <span class="legend-item"><i class="dot dot-fin"></i>Finalizados</span>
+          </div>
+          <div id="dashReproFinWave"></div>
+        </div>
+      </div>
     </section>
 
     <!-- ============================ RENDIMIENTO ============================ -->
@@ -270,6 +285,9 @@
           <option value="7">Próximos 7 días</option>
           <option value="15">Próximos 15 días</option>
           <option value="30">Próximos 30 días</option>
+        </select>
+        <select id="filterAlertaResp" class="input select">
+          <option value="">Todos los responsables</option>
         </select>
         <input type="search" id="searchAlerta" class="input" placeholder="Buscar por usuario asignado, serie o hostname..." />
       </div>

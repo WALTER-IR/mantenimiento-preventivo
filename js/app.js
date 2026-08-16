@@ -352,6 +352,15 @@
 
     // Onda: mantenimientos por mes.
     $("#dashWave").innerHTML = waveChartHTML(mantsPorMes(visIds));
+
+    // Barras: mantenimientos vencidos por responsable.
+    $("#dashVencBar").innerHTML = vencidosBarHTML(vencidosPorResponsable(visIds));
+
+    // Onda doble: reprogramados y finalizados por mes.
+    $("#dashReproFinWave").innerHTML = wave2ChartHTML(
+      mantsPorMes(visIds, (m) => estadoMant(m) === "reprogramado"),
+      mantsPorMes(visIds, (m) => estadoMant(m) === "finalizado")
+    );
   }
 
   // ============================================================
@@ -379,12 +388,14 @@
     }).join("") + `</div>`;
   }
 
-  // Conteo de mantenimientos por mes (según su fecha).
-  function mantsPorMes(scope) {
+  // Conteo de mantenimientos por mes (según su fecha efectiva: reprogramada o programada).
+  // filtro: opcional, fn(m) para limitar (p. ej. solo vencidos, solo finalizados).
+  function mantsPorMes(scope, filtro) {
     const porMes = new Map();
     mantenimientos.forEach((m) => {
       if (scope && !scope.has(String(m.equipoId))) return;
-      const f = String(m.fecha || m.fechaProgramada || "");
+      if (filtro && !filtro(m)) return;
+      const f = String(normFecha(m.fechaReprogramada) || normFecha(m.fecha) || "");
       if (!/^\d{4}-\d{2}/.test(f)) return;
       const ym = f.slice(0, 7);
       porMes.set(ym, (porMes.get(ym) || 0) + 1);
@@ -393,7 +404,7 @@
     return [...porMes.keys()].sort().map((ym) => {
       const idx = parseInt(ym.slice(5, 7), 10) - 1;
       const y = ym.slice(0, 4);
-      return { label: MESES_CORTOS[idx] + (y === String(anio) ? "" : " '" + y.slice(2, 4)), value: porMes.get(ym) };
+      return { ym, label: MESES_CORTOS[idx] + (y === String(anio) ? "" : " '" + y.slice(2, 4)), value: porMes.get(ym) };
     });
   }
 
@@ -422,6 +433,89 @@
       </svg>
       <div class="wave-labels">${pts.map((p) => `<span>${esc(p.label)}</span>`).join("")}</div>
     </div>`;
+  }
+
+  // Onda de dos líneas (reprogramados y finalizados) alineadas por mes.
+  function wave2ChartHTML(sA, sB) {
+    const mA = new Map(sA.map((s) => [s.ym, s.value]));
+    const mB = new Map(sB.map((s) => [s.ym, s.value]));
+    const yms = [...new Set([...mA.keys(), ...mB.keys()])].sort();
+    if (!yms.length) return `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin datos.</p></div>`;
+    const anio = new Date().getFullYear();
+    const labelOf = (ym) => {
+      const idx = parseInt(ym.slice(5, 7), 10) - 1;
+      const y = ym.slice(0, 4);
+      return MESES_CORTOS[idx] + (y === String(anio) ? "" : " '" + y.slice(2, 4));
+    };
+    const max = Math.max(...yms.map((ym) => Math.max(mA.get(ym) || 0, mB.get(ym) || 0)), 1);
+    const W = 600, H = 180, PAD = 10;
+    const n = yms.length;
+    const step = n > 1 ? (W - PAD * 2) / (n - 1) : 0;
+    const make = (m) => yms.map((ym, i) => ({
+      x: n > 1 ? PAD + i * step : W / 2,
+      y: H - PAD - ((m.get(ym) || 0) / max) * (H - PAD * 2),
+      value: m.get(ym) || 0,
+      label: labelOf(ym)
+    }));
+    const ptsA = make(mA), ptsB = make(mB);
+    const line = (pts) => pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+    const dots = (pts, cls) => pts.map((p) =>
+      `<circle class="wave-dot ${cls}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5"><title>${esc(p.label)}: ${p.value} mant.</title></circle>`).join("");
+    return `<div class="wave-wrap">
+      <svg class="wave-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <polyline class="wave-line reprog" points="${line(ptsA)}"/>
+        <polyline class="wave-line fin" points="${line(ptsB)}"/>
+        ${dots(ptsA, "reprog")}${dots(ptsB, "fin")}
+      </svg>
+      <div class="wave-labels">${yms.map((ym) => `<span>${esc(labelOf(ym))}</span>`).join("")}</div>
+    </div>`;
+  }
+
+  // Un mantenimiento (no finalizado) está vencido si su fecha efectiva ya pasó.
+  function esVencido(m) {
+    if (esFinalizado(m)) return false;
+    const fe = normFecha(m.fechaReprogramada) || normFecha(m.fecha) || "";
+    return !!fe && fe < todayISO();
+  }
+
+  // Vencidos agrupados por responsable (solo equipos visibles para este usuario).
+  function vencidosPorResponsable(scope) {
+    const eqById = new Map(equipos.map((e) => [String(e.id), e]));
+    const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+    const buckets = new Map();
+    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
+    tecnicos.forEach((u) => buckets.set(u.id, { nombre: u.nombre, val: 0, equipos: new Set() }));
+    const sin = { nombre: "Sin asignar", val: 0, equipos: new Set() };
+    buckets.set("__sin__", sin);
+    mantenimientos.forEach((m) => {
+      if (scope && !scope.has(String(m.equipoId))) return;
+      if (!esVencido(m)) return;
+      const eq = eqById.get(String(m.equipoId));
+      let b = sin;
+      if (eq) {
+        const resp = norm(eq.responsable);
+        const asig = norm(eq.usuarioAsignado);
+        const tec = tecnicos.find((u) => norm(u.nombre) === resp) ||
+          (asig && tecnicos.find((u) => norm(u.nombre) === asig));
+        b = buckets.get(tec ? tec.id : "__sin__");
+      }
+      b.val++;
+      b.equipos.add(eq ? String(eq.id) : "?");
+    });
+    return [...buckets.values()].filter((b) => b.val).sort((a, b) => b.val - a.val || a.nombre.localeCompare(b.nombre));
+  }
+
+  // Barras de vencidos por responsable.
+  function vencidosBarHTML(rows) {
+    if (!rows.length) return `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin mantenimientos vencidos.</p></div>`;
+    const max = Math.max(...rows.map((r) => r.val), 1);
+    return `<div class="bar-chart">` + rows.map((r) => `
+      <div class="bar-col" title="${esc(r.nombre)} · ${r.val} vencidos">
+        <div class="bar-val">${r.val}</div>
+        <div class="bar-track"><div class="bar-fill danger" style="height:${(r.val / max) * 100}%"></div></div>
+        <div class="bar-label">${esc(shortName(r.nombre))}</div>
+        <div class="bar-sub">${r.equipos.size} equipo${r.equipos.size === 1 ? "" : "s"}</div>
+      </div>`).join("") + `</div>`;
   }
 
   // ============================================================
@@ -1172,6 +1266,14 @@
     const vencidos = alertTab === "vencidos";
     const dias = parseInt($("#filterAlertaTipo").value || "30", 10);
     const busqueda = ($("#searchAlerta").value || "").trim().toLowerCase();
+    const respSel = $("#filterAlertaResp");
+    const prevResp = respSel.value;
+    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
+    const respOpts = ['<option value="">Todos los responsables</option>']
+      .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`));
+    if (respSel.innerHTML !== respOpts.join("")) respSel.innerHTML = respOpts.join("");
+    if (![...respSel.options].some((o) => o.value === prevResp)) respSel.value = "";
+    const respVal = respSel.value;
     let list = equipos
       .filter(esVisibleEquipo)
       .map((e) => ({ eq: e, st: statusOf(e) }))
@@ -1180,6 +1282,13 @@
         // Proximos: filtrar por dias
         if (x.st.key !== "proximo") return false;
         return x.st.days <= dias;
+      })
+      .filter((x) => {
+        // Filtro por responsable
+        if (!respVal) return true;
+        const a = (x.eq.usuarioAsignado || "").trim();
+        const r = (x.eq.responsable || "").trim();
+        return a.toLowerCase() === respVal.toLowerCase() || r.toLowerCase() === respVal.toLowerCase();
       })
       .filter((x) => {
         // Buscar por usuario asignado, serie y hostname
@@ -3062,6 +3171,7 @@
 
     // Alertas: combo y buscador
     $("#filterAlertaTipo").addEventListener("change", () => { alertTab = "proximos"; renderAlertas(); });
+    $("#filterAlertaResp").addEventListener("change", renderAlertas);
     $("#btnAlertVencidos").addEventListener("click", () => { alertTab = "vencidos"; renderAlertas(); });
     $("#searchAlerta").addEventListener("input", renderAlertas);
 
