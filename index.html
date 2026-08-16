@@ -211,10 +211,11 @@
 
       <div class="card" id="cardCargaMasiva">
         <h3 class="card-title">Cargas masivas (Excel)</h3>
-        <p class="card-text">Importa responsables, equipos y mantenimientos desde un archivo Excel (.xlsx) con validación. La carga de equipos NO crea usuarios: el responsable debe existir (importa primero el archivo de responsables). Requiere internet la primera vez.</p>
+        <p class="card-text">Importa responsables, equipos, mantenimientos y feriados desde un archivo Excel (.xlsx) con validación. La carga de equipos NO crea usuarios: el responsable debe existir (importa primero el archivo de responsables). Requiere internet la primera vez.</p>
         <button class="btn btn-outline btn-block" id="btnCargarResponsables">⬆ Cargar responsables</button>
         <button class="btn btn-outline btn-block" id="btnCargarEquipos">⬆ Cargar equipos</button>
         <button class="btn btn-outline btn-block" id="btnCargarMantenimientos">⬆ Cargar mantenimientos</button>
+        <button class="btn btn-outline btn-block" id="btnCargarFeriados">⬆ Cargar feriados</button>
         <pre id="masivaResultado" class="masiva-result hidden"></pre>
         <input type="file" id="fileMasiva" class="hidden" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </div>
@@ -242,6 +243,8 @@
         <h4 class="card-subtitle">Días feriados</h4>
         <label class="field-label" for="fdFecha">Fecha del feriado</label>
         <input type="date" id="fdFecha" class="input" />
+        <label class="field-label" for="fdTipo">Tipo (ej. Nacional, Escolar, Festivo)</label>
+        <input type="text" id="fdTipo" class="input" placeholder="Tipo" />
         <label class="field-label" for="fdMotivo">Motivo (ej. Navidad)</label>
         <input type="text" id="fdMotivo" class="input" placeholder="Motivo" />
         <button class="btn btn-primary" id="btnAgregarFeriado">Agregar feriado</button>

@@ -1,6 +1,6 @@
 {
-  "version": "1.23.1",
+  "version": "1.23.2",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-15",
-  "changelog": "Corregida la sincronización con el móvil: al abrir la web y al pulsar Sincronizar se descargan primero los datos de la nube (trae los cambios hechos en el APK); antes la web subía sus datos locales y pisaba la nube. Se añade la marca de tiempo sync_at para saber qué lado es más nuevo. Requiere el APK 3.37.4 en el móvil."
+  "changelog": "Nueva carga masiva de feriados (Excel) con las columnas TIPO; FECHA; MOTIVO en la web y en el APK 3.37.6. Los feriados ahora tienen un Tipo (Nacional, Escolar, etc.) que se muestra en la lista y viaja en la sincronización. Si la FECHA ya existe, se reemplaza; los demás se conservan."
 }

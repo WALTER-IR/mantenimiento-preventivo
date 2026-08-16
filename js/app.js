@@ -1594,7 +1594,7 @@
       .map((f) => `
       <div class="user-row">
         <div class="user-info">
-          <div class="user-name">📅 ${esc(fmtDate(f.fecha))}</div>
+          <div class="user-name">📅 ${esc(fmtDate(f.fecha))}${f.tipo ? ` <span class="badge">${esc(f.tipo)}</span>` : ""}</div>
           <div class="user-sub">${esc(f.motivo || "")}</div>
         </div>
         <button class="btn btn-ghost" data-del-feriado="${esc(f.id)}">Eliminar</button>
@@ -1605,9 +1605,10 @@
     if (!esAdmin()) return toast("Solo el administrador", "err");
     const fecha = $("#fdFecha").value;
     if (!fecha) return toast("Selecciona la fecha del feriado", "err");
+    const tipo = $("#fdTipo").value.trim();
     const motivo = $("#fdMotivo").value.trim();
     const prev = feriados.find((x) => x.fecha === fecha);
-    const f = { id: prev ? prev.id : "fd-" + Date.now(), fecha, motivo };
+    const f = { id: prev ? prev.id : "fd-" + Date.now(), fecha, tipo, motivo };
     if (prev) {
       const i = feriados.findIndex((x) => x.id === prev.id);
       feriados[i] = f;
@@ -1616,9 +1617,10 @@
     }
     await DB.put("feriados", f);
     $("#fdFecha").value = "";
+    $("#fdTipo").value = "";
     $("#fdMotivo").value = "";
     toast("Feriado registrado", "ok");
-    auditar("ALTA FERIADO", fmtDate(fecha) + (motivo ? " · " + motivo : ""));
+    auditar("ALTA FERIADO", fmtDate(fecha) + (tipo ? " · " + tipo : "") + (motivo ? " · " + motivo : ""));
     renderFeriados();
     syncSubir();
   }
@@ -1887,7 +1889,7 @@
       observaciones: m.obs || "",
       finalizado_en: m.finalizadoEn || (m.estado === "finalizado" ? (m.fechaReal || "") : "")
     }));
-    const fds = feriados.map((f, i) => ({ id: i + 1, fecha: f.fecha || "", motivo: f.motivo || "" }));
+    const fds = feriados.map((f, i) => ({ id: i + 1, fecha: f.fecha || "", tipo: f.tipo || "", motivo: f.motivo || "" }));
     return {
       app: "Inventario de equipos",
       version: 4,
@@ -2083,6 +2085,7 @@
     const feriadosWeb = fds.map((f) => ({
       id: "fe-" + Date.now() + "-" + Math.floor(Math.random() * 1e5),
       fecha: xlsxToDate(f.fecha),
+      tipo: String(f.tipo || "").trim(),
       motivo: String(f.motivo || "").trim()
     }));
 
@@ -2212,7 +2215,8 @@
   const COLUMNAS_MASIVA = {
     responsables: "RESPONSABLE (o NOMBRE); DNI; ZONA; SUBDIVISION; CECO SAP; AREA; CARGO; EMAIL; CLAVE",
     equipos: "SERIE DE EQUIPO; USUARIO ASIGNADO; RESPONSABLE; DNI; HOSTNAME; DIR. IP; UBICACIÓN FISICA; EQUIPO; COD. INVENTARIO; MARCA; MODELO; CONTRATO DE ARRENDAMIENTO; STATUS; AREA; CARGO",
-    mantenimientos: "SERIE DE EQUIPO; PRIORIDAD; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES; ACTIVIDADES REALIZADAS; PROXIMO MANTENIMIENTO"
+    mantenimientos: "SERIE DE EQUIPO; PRIORIDAD; FECHA PROGRAMADA; FECHA REPROGRAMADA; FECHA REAL; ESTADO; OBSERVACIONES; ACTIVIDADES REALIZADAS; PROXIMO MANTENIMIENTO",
+    feriados: "TIPO; FECHA; MOTIVO"
   };
 
   function cargarLibreriaXlsx() {
@@ -2300,6 +2304,7 @@
         let r;
         if (tipo === "responsables") r = await importarResponsables(filas, errores);
         else if (tipo === "equipos") r = await importarEquipos(filas, errores);
+        else if (tipo === "feriados") r = await importarFeriados(filas, errores);
         else r = await importarMantenimientos(filas, errores);
         await reload();
         let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
@@ -2612,6 +2617,46 @@
     return [ok, err];
   }
 
+  // Importa feriados desde el Excel. Columnas: TIPO; FECHA; MOTIVO.
+  // La FECHA es obligatoria; si ya existe un feriado en esa fecha se reemplaza
+  // (igual que el APK), los demás se conservan.
+  async function importarFeriados(aoa, errores) {
+    const headers = aoa[0].map((h) => String(h == null ? "" : h).trim());
+    const filas = aoa.slice(1);
+    const colTipo = findCol(headers, "TIPO");
+    const colFecha = findCol(headers, "FECHA");
+    const colMotivo = findCol(headers, "MOTIVO");
+
+    if (colFecha < 0) {
+      errores.push("Falta la columna FECHA.");
+      return [0, filas.length];
+    }
+
+    const indice = new Map(feriados.map((x) => [x.fecha, x]));
+    let ok = 0, err = 0;
+    for (let i = 0; i < filas.length; i++) {
+      const f = filas[i];
+      if (!Array.isArray(f)) continue;
+      if (!f.some((c) => String(c == null ? "" : c).trim() !== "")) continue;
+      const fecha = xlsxToDate(valCelda(f, colFecha));
+      if (!fecha) { err++; addError(errores, i, "fecha vacía o inválida"); continue; }
+      const tipo = valCelda(f, colTipo);
+      const motivo = valCelda(f, colMotivo);
+      const prev = indice.get(fecha);
+      const fd = { id: prev ? prev.id : "fe-" + Date.now() + "-" + Math.floor(Math.random() * 1e5), fecha, tipo, motivo };
+      if (prev) {
+        const j = feriados.findIndex((x) => x.id === prev.id);
+        if (j >= 0) feriados[j] = fd;
+      } else {
+        feriados.push(fd);
+        indice.set(fecha, fd);
+      }
+      await DB.put("feriados", fd);
+      ok++;
+    }
+    return [ok, err];
+  }
+
   // ============================================================
   //  ACTUALIZACIÓN POR INTERNET (solo bajo petición explícita)
   // ============================================================
@@ -2746,6 +2791,7 @@
     $("#btnCargarResponsables").addEventListener("click", () => abrirMasiva("responsables"));
     $("#btnCargarEquipos").addEventListener("click", () => abrirMasiva("equipos"));
     $("#btnCargarMantenimientos").addEventListener("click", () => abrirMasiva("mantenimientos"));
+    $("#btnCargarFeriados").addEventListener("click", () => abrirMasiva("feriados"));
     $("#fileMasiva").addEventListener("change", (e) => {
       const f = e.target.files[0];
       const tipo = e.target.dataset.tipo;
