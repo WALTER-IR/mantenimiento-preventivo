@@ -1,6 +1,6 @@
 {
-  "version": "1.23.6",
+  "version": "1.23.7",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Vista de rendimiento con selector de responsable (combo) para ver el avance de cada técnico; gráfico de avance global y por responsable en el Panel de control; sincronización protegida: la nube ya no se sobrescribe cuando otro dispositivo tiene más equipos."
+  "changelog": "Panel de control simplificado: se ocultaron las alertas y la actividad reciente; los gráficos ahora son de barras (mantenimientos por responsable) y de onda (mantenimientos por mes)."
 }

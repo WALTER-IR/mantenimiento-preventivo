@@ -346,27 +346,82 @@
       `<span class="reprog-t">${prog.reprogramado} reprogram.</span>` +
       `<span class="fin-t">${prog.finalizado} finaliz.</span>`;
 
-    // Avance por responsable (solo equipos visibles para este usuario).
+    // Barras: mantenimientos por responsable.
     const perf = avancePorUsuario(visIds);
-    $("#dashPerfList").innerHTML = perf.rows.length
-      ? perf.rows.map(barHTML).join("")
-      : `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin mantenimientos para mostrar.</p></div>`;
+    $("#dashBarChart").innerHTML = barChartHTML(perf.rows);
 
-    const alerts = vis
-      .map((e) => ({ eq: e, st: statusOf(e) }))
-      .filter((x) => x.st.key !== "ok")
-      .sort((a, b) => (a.st.days > b.st.days ? 1 : -1));
+    // Onda: mantenimientos por mes.
+    $("#dashWave").innerHTML = waveChartHTML(mantsPorMes(visIds));
+  }
 
-    $("#alertList").innerHTML = alerts.slice(0, 6).map(alertHTML).join("");
-    $("#alertEmpty").classList.toggle("hidden", alerts.length > 0);
+  // ============================================================
+  //  GRÁFICOS DEL PANEL (barras y onda)
+  // ============================================================
+  const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-    const recent = [...mantenimientos]
-      .filter((m) => visIds.has(String(m.equipoId)) && esFinalizado(m))
-      .sort((a, b) => (b.finalizadoEn || b.fechaReal || b.fechaReprogramada || b.fecha || "")
-        .localeCompare(a.finalizadoEn || a.fechaReal || a.fechaReprogramada || a.fecha || ""))
-      .slice(0, 3);
-    $("#recentList").innerHTML = recent.map(recentHTML).join("");
-    $("#recentEmpty").classList.toggle("hidden", recent.length > 0);
+  function shortName(n) {
+    const s = String(n || "");
+    return s.length > 18 ? s.slice(0, 17) + "…" : s;
+  }
+
+  function barChartHTML(rows) {
+    if (!rows.length) return `<div class="empty-state"><div class="empty-icon">📊</div><p>Sin datos.</p></div>`;
+    const max = Math.max(...rows.map((r) => r.prog + r.reprog + r.fin), 1);
+    return `<div class="bar-chart">` + rows.map((r) => {
+      const t = r.prog + r.reprog + r.fin;
+      const pct = t ? Math.round((r.fin / t) * 100) : 0;
+      return `<div class="bar-col" title="${esc(r.nombre)} · ${t} mant. · ${pct}% finalizado">
+        <div class="bar-val">${t}</div>
+        <div class="bar-track"><div class="bar-fill" style="height:${(t / max) * 100}%"></div></div>
+        <div class="bar-label">${esc(shortName(r.nombre))}</div>
+        <div class="bar-sub">${pct}% fin.</div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
+  // Conteo de mantenimientos por mes (según su fecha).
+  function mantsPorMes(scope) {
+    const porMes = new Map();
+    mantenimientos.forEach((m) => {
+      if (scope && !scope.has(String(m.equipoId))) return;
+      const f = String(m.fecha || m.fechaProgramada || "");
+      if (!/^\d{4}-\d{2}/.test(f)) return;
+      const ym = f.slice(0, 7);
+      porMes.set(ym, (porMes.get(ym) || 0) + 1);
+    });
+    const anio = new Date().getFullYear();
+    return [...porMes.keys()].sort().map((ym) => {
+      const idx = parseInt(ym.slice(5, 7), 10) - 1;
+      const y = ym.slice(0, 4);
+      return { label: MESES_CORTOS[idx] + (y === String(anio) ? "" : " '" + y.slice(2, 4)), value: porMes.get(ym) };
+    });
+  }
+
+  // Onda (línea) por mes, con relleno inferior. SVG puro, funciona sin conexión.
+  function waveChartHTML(series) {
+    if (!series.length) return `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin datos.</p></div>`;
+    const W = 600, H = 180, PAD = 10;
+    const max = Math.max(...series.map((s) => s.value), 1);
+    const n = series.length;
+    const step = n > 1 ? (W - PAD * 2) / (n - 1) : 0;
+    const pts = series.map((s, i) => ({
+      x: n > 1 ? PAD + i * step : W / 2,
+      y: H - PAD - (s.value / max) * (H - PAD * 2),
+      label: s.label,
+      value: s.value
+    }));
+    const line = pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+    const area = "M " + pts[0].x.toFixed(1) + " " + H +
+      " L " + pts.map((p) => p.x.toFixed(1) + " " + p.y.toFixed(1)).join(" L ") +
+      " L " + pts[pts.length - 1].x.toFixed(1) + " " + H + " Z";
+    return `<div class="wave-wrap">
+      <svg class="wave-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <path class="wave-area" d="${area}"/>
+        <polyline class="wave-line" points="${line}"/>
+        ${pts.map((p) => `<circle class="wave-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4"><title>${esc(p.label)}: ${p.value} mant.</title></circle>`).join("")}
+      </svg>
+      <div class="wave-labels">${pts.map((p) => `<span>${esc(p.label)}</span>`).join("")}</div>
+    </div>`;
   }
 
   // ============================================================
@@ -2945,7 +3000,6 @@
     $("#btnNuevoEquipo").addEventListener("click", () => openEquipoModal(null));
     $("#btnGuardarEquipo").addEventListener("click", saveEquipo);
     $("#btnGuardarMant").addEventListener("click", saveMant);
-    $("#btnVerTodasAlertas").addEventListener("click", () => setView("alertas"));
     $("#btnGuardarConfig").addEventListener("click", saveConfig);
     $("#btnExportar").addEventListener("click", exportData);
     $("#btnExportarApk").addEventListener("click", exportApk);

@@ -268,6 +268,32 @@ body {
 .perf-nums .reprog-t { color: var(--warn); font-weight: 700; }
 .perf-nums .fin-t { color: var(--success); font-weight: 700; }
 
+/* ---------------- Gráficos del panel (barras + onda) ---------------- */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chart-col { margin-bottom: 0; min-width: 0; }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 210px; padding-top: 18px; }
+.bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.bar-val { font-size: 12px; font-weight: 800; color: var(--rojo-700); margin-bottom: 4px; }
+.bar-track {
+  flex: 1; width: 100%; max-width: 46px; display: flex; align-items: flex-end;
+  background: var(--rojo-50); border-radius: 8px 8px 0 0; overflow: hidden;
+}
+.bar-fill { width: 100%; background: var(--rojo-grad); border-radius: 8px 8px 0 0; min-height: 4px; transition: height .3s ease; }
+.bar-label { font-size: 10.5px; font-weight: 700; color: var(--text-muted); margin-top: 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+.bar-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+.wave-wrap { width: 100%; }
+.wave-chart { width: 100%; height: auto; display: block; }
+.wave-area { fill: rgba(220, 38, 38, .14); stroke: none; }
+.wave-line { fill: none; stroke: var(--rojo-600); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.wave-dot { fill: var(--rojo-600); stroke: #fff; stroke-width: 1.5; }
+.wave-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10.5px; color: var(--text-muted); font-weight: 600; }
+
+@media (max-width: 899px) {
+  .chart-row { grid-template-columns: 1fr; }
+}
+
 /* ---------------- Modal ---------------- */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 100; background: rgba(60, 15, 15, .55);

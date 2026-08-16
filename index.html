@@ -127,27 +127,17 @@
         </div>
         <div class="perf-bar perf-bar-lg" id="dashBar"></div>
         <div class="perf-nums" id="dashNums"></div>
-        <div class="section-head"><h3>Avance por responsable</h3></div>
-        <div id="dashPerfList" class="perf-list"></div>
       </div>
 
-      <div class="section-head">
-        <h3>Alertas de mantenimiento</h3>
-        <button class="btn btn-ghost" id="btnVerTodasAlertas">Ver todas</button>
-      </div>
-      <div id="alertList" class="alert-list"></div>
-      <div id="alertEmpty" class="empty-state hidden">
-        <div class="empty-icon">✅</div>
-        <p>No hay alertas pendientes.</p>
-      </div>
-
-      <div class="section-head">
-        <h3>Actividad reciente</h3>
-      </div>
-      <div id="recentList" class="recent-list"></div>
-      <div id="recentEmpty" class="empty-state hidden">
-        <div class="empty-icon">📋</div>
-        <p>Aún no hay mantenimientos registrados.</p>
+      <div class="chart-row">
+        <div class="card chart-col">
+          <h3 class="card-title">Mantenimientos por responsable</h3>
+          <div id="dashBarChart"></div>
+        </div>
+        <div class="card chart-col">
+          <h3 class="card-title">Mantenimientos por mes</h3>
+          <div id="dashWave"></div>
+        </div>
       </div>
     </section>
 
