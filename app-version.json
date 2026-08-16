@@ -1,6 +1,6 @@
 {
-  "version": "1.23.4",
+  "version": "1.23.5",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-15",
-  "changelog": "Permisos de seguridad: la carga masiva (Excel), la importación de respaldos, la programación de mantenimientos y vaciar la base de datos ahora son SOLO para el administrador. Los técnicos ya no pueden usar la carga masiva (una carga de feriados/equipos vacíos corrompió la base) ni programar ni vaciar datos."
+  "updated": "2026-08-16",
+  "changelog": "Nuevo diseño con menú lateral (sidebar) y nueva vista 'Rendimiento': avance por usuario con gráfico de barras apiladas (programado / reprogramado / finalizado) y tabla de detalle."
 }

@@ -273,6 +273,11 @@
   }
 
   // ---------------- Navegación ----------------
+  function toggleSidebar(open) {
+    $("#sidebar").classList.toggle("open", open);
+    $("#sidebarBackdrop").classList.toggle("show", open);
+  }
+
   function setView(view) {
     currentView = view;
     $$(".view").forEach((v) => v.classList.add("hidden"));
@@ -280,6 +285,7 @@
     $$(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
     window.scrollTo({ top: 0 });
     if (view === "dashboard") renderDashboard();
+    if (view === "rendimiento") renderRendimiento();
     if (view === "equipos") renderEquipos();
     if (view === "mantenimientos") renderMantenimientos();
     if (view === "alertas") renderAlertas();
@@ -342,6 +348,93 @@
       .slice(0, 3);
     $("#recentList").innerHTML = recent.map(recentHTML).join("");
     $("#recentEmpty").classList.toggle("hidden", recent.length > 0);
+  }
+
+  // ============================================================
+  //  RENDIMIENTO POR USUARIO
+  // ============================================================
+  function renderRendimiento() {
+    const eqById = new Map(equipos.map((e) => [String(e.id), e]));
+    const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+
+    // Un "bucket" por usuario con rol de edición/administración (los técnicos).
+    const buckets = new Map();
+    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
+    tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, equipos: new Set() }));
+    const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, equipos: new Set() };
+    buckets.set("__sin__", sin);
+
+    mantenimientos.forEach((m) => {
+      const eq = eqById.get(String(m.equipoId));
+      let b = sin;
+      if (eq) {
+        const resp = norm(eq.responsable);
+        const asig = norm(eq.usuarioAsignado);
+        const tec = tecnicos.find((u) => norm(u.nombre) === resp) ||
+          (asig && tecnicos.find((u) => norm(u.nombre) === asig));
+        b = buckets.get(tec ? tec.id : "__sin__");
+      }
+      b.equipos.add(eq ? String(eq.id) : "?");
+      const e = estadoMant(m);
+      if (e === "finalizado") b.fin++;
+      else if (e === "reprogramado") b.reprog++;
+      else b.prog++;
+    });
+
+    const rows = [...buckets.values()].filter((b) => b.prog || b.reprog || b.fin);
+    rows.sort((a, b) => ((b.prog + b.reprog + b.fin) - (a.prog + a.reprog + a.fin)) || a.nombre.localeCompare(b.nombre));
+
+    const tot = { prog: 0, reprog: 0, fin: 0, total: 0 };
+    rows.forEach((b) => { tot.prog += b.prog; tot.reprog += b.reprog; tot.fin += b.fin; });
+    tot.total = tot.prog + tot.reprog + tot.fin;
+
+    $("#perfProg").textContent = tot.prog;
+    $("#perfReprog").textContent = tot.reprog;
+    $("#perfFin").textContent = tot.fin;
+    $("#perfTotal").textContent = tot.total;
+    $("#perfPct").textContent = tot.total ? Math.round((tot.fin / tot.total) * 100) + "%" : "0%";
+
+    const barHTML = (b) => {
+      const t = b.prog + b.reprog + b.fin;
+      const pct = t ? Math.round((b.fin / t) * 100) : 0;
+      const seg = t
+        ? `<div class="perf-seg prog" style="flex:${(b.prog / t) * 100}"></div>` +
+          `<div class="perf-seg reprog" style="flex:${(b.reprog / t) * 100}"></div>` +
+          `<div class="perf-seg fin" style="flex:${(b.fin / t) * 100}"></div>`
+        : `<div class="perf-seg empty" style="flex:1"></div>`;
+      return `
+      <div class="perf-row">
+        <div class="perf-head">
+          <span class="perf-name">${esc(b.nombre)}</span>
+          <span class="perf-meta">${b.equipos.size} equipo${b.equipos.size === 1 ? "" : "s"} · ${t} mant. · <b>${pct}%</b> completado</span>
+        </div>
+        <div class="perf-bar">${seg}</div>
+        <div class="perf-nums">
+          <span class="prog-t">${b.prog} program.</span>
+          <span class="reprog-t">${b.reprog} reprogram.</span>
+          <span class="fin-t">${b.fin} finaliz.</span>
+        </div>
+      </div>`;
+    };
+
+    $("#perfList").innerHTML = rows.length
+      ? rows.map(barHTML).join("")
+      : `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin mantenimientos para mostrar.</p></div>`;
+
+    $("#perfTbody").innerHTML = rows.length
+      ? rows.map((b) => {
+        const t = b.prog + b.reprog + b.fin;
+        const pct = t ? Math.round((b.fin / t) * 100) : 0;
+        return `<tr>
+          <td>${esc(b.nombre)}</td>
+          <td>${b.prog}</td>
+          <td>${b.reprog}</td>
+          <td>${b.fin}</td>
+          <td><b>${t}</b></td>
+          <td><b>${pct}%</b></td>
+        </tr>`;
+      }).join("")
+      : `<tr><td colspan="6" class="empty-cell">Sin datos.</td></tr>`;
   }
 
   function eqName(id) {
@@ -2775,8 +2868,11 @@
   }
 
   function bindEvents() {
-    // navegación inferior
-    $$(".nav-item").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+    // navegación (sidebar)
+    $$(".nav-item").forEach((b) => b.addEventListener("click", () => { setView(b.dataset.view); toggleSidebar(false); }));
+    $("#btnMenu").addEventListener("click", () => toggleSidebar(true));
+    $("#sidebarBackdrop").addEventListener("click", () => toggleSidebar(false));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleSidebar(false); });
 
     // sesión
     $("#btnLogin").addEventListener("click", doLogin);

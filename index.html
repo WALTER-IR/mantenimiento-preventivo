@@ -38,6 +38,7 @@
 
   <header class="topbar">
     <div class="topbar-inner">
+      <button class="hamburger" id="btnMenu" aria-label="Abrir menú">☰</button>
       <div class="brand">
         <span class="brand-icon">🛠️</span>
         <div>
@@ -45,12 +46,32 @@
           <div class="brand-sub" id="brandSub">Laptops y Computadoras</div>
         </div>
       </div>
-      <div class="topbar-actions">
-        <span id="sesionChip" class="sesion-chip hidden"></span>
-        <button class="btn btn-ghost" id="btnLogout">Salir</button>
-      </div>
     </div>
   </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <span class="brand-icon">🛠️</span>
+      <div>
+        <div class="sidebar-title">Mantenimiento</div>
+        <div class="sidebar-sub">Preventivo · Laptops y Computadoras</div>
+      </div>
+    </div>
+    <nav class="side-nav">
+      <button class="nav-item active" data-view="dashboard"><span class="nav-ico">📊</span><span>Panel</span></button>
+      <button class="nav-item" data-view="rendimiento"><span class="nav-ico">📈</span><span>Rendimiento</span></button>
+      <button class="nav-item" data-view="equipos"><span class="nav-ico">💻</span><span>Equipos</span></button>
+      <button class="nav-item" data-view="mantenimientos"><span class="nav-ico">🔧</span><span>Historial</span></button>
+      <button class="nav-item" data-view="alertas"><span class="nav-ico">🔔</span><span>Alertas</span></button>
+      <button class="nav-item" data-view="config"><span class="nav-ico">⚙️</span><span>Ajustes</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <span id="sesionChip" class="sesion-chip hidden"></span>
+      <button class="btn btn-ghost" id="btnLogout">Salir</button>
+    </div>
+  </aside>
+
+  <div class="backdrop" id="sidebarBackdrop"></div>
 
   <main class="content">
     <!-- ============================ DASHBOARD ============================ -->
@@ -114,6 +135,56 @@
       <div id="recentEmpty" class="empty-state hidden">
         <div class="empty-icon">📋</div>
         <p>Aún no hay mantenimientos registrados.</p>
+      </div>
+    </section>
+
+    <!-- ============================ RENDIMIENTO ============================ -->
+    <section id="view-rendimiento" class="view hidden">
+      <h2 class="view-title">Rendimiento por usuario</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card info">
+          <div class="stat-num" id="perfProg">0</div>
+          <div class="stat-label">Programados</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-num" id="perfReprog">0</div>
+          <div class="stat-label">Reprogramados</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-num" id="perfFin">0</div>
+          <div class="stat-label">Finalizados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="perfTotal">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="perfPct">0%</div>
+          <div class="stat-label">Avance global</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Avance por usuario</h3>
+        <div class="chart-legend">
+          <span class="legend-item"><i class="dot dot-prog"></i>Programado</span>
+          <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramado</span>
+          <span class="legend-item"><i class="dot dot-fin"></i>Finalizado</span>
+        </div>
+        <div id="perfList" class="perf-list"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Detalle por usuario</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Usuario</th><th>Programado</th><th>Reprogramado</th><th>Finalizado</th><th>Total</th><th>Avance</th></tr>
+            </thead>
+            <tbody id="perfTbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -372,14 +443,6 @@ Atentamente,</textarea>
       </div>
     </section>
   </main>
-
-  <nav class="bottomnav">
-    <button class="nav-item active" data-view="dashboard"><span class="nav-ico">📊</span><span>Panel</span></button>
-    <button class="nav-item" data-view="equipos"><span class="nav-ico">💻</span><span>Equipos</span></button>
-    <button class="nav-item" data-view="mantenimientos"><span class="nav-ico">🔧</span><span>Historial</span></button>
-    <button class="nav-item" data-view="alertas"><span class="nav-ico">🔔</span><span>Alertas</span></button>
-    <button class="nav-item" data-view="config"><span class="nav-ico">⚙️</span><span>Ajustes</span></button>
-  </nav>
 
   <!-- ============================ MODAL EQUIPO ============================ -->
   <div id="modalEquipo" class="modal-overlay hidden">
