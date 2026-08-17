@@ -865,7 +865,11 @@
   function eqType(eq) {
     const n = (eq.nombre || "").trim().toUpperCase();
     const prefix = n.split(/[-\s]/)[0];
-    if (["NOTEBOOK", "DESKTOP", "CONVERTIBLE"].includes(prefix)) return prefix;
+    if (prefix.startsWith("NOTEBOOK")) return "NOTEBOOK";
+    if (prefix.startsWith("DESKTOP")) return "DESKTOP";
+    if (prefix.startsWith("CONVERTIBLE")) return "CONVERTIBLE";
+    if (prefix.startsWith("ALLINONE") || prefix.startsWith("ALL-IN-ONE") || prefix === "AIO") return "ALLINONE";
+    if (prefix.startsWith("SERVIDOR") || prefix.startsWith("SERVER")) return "SERVIDOR";
     return (eq.tipo || "").trim() || "Otro";
   }
 
@@ -1377,31 +1381,50 @@
     ubicSel.innerHTML = `<option value="">Todas las ubicaciones</option>` +
       ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
     if (ubics.includes(curUbic)) ubicSel.value = curUbic;
+
+    // Combo de usuarios (solo los asignados a equipos visibles, sin repetir).
+    const usrSel = $("#filterUsuarioMant");
+    const curUsr = usrSel.value;
+    const userSet = new Set();
+    vis.forEach((e) => {
+      const u = (e.usuarioAsignado || "").trim();
+      if (u) userSet.add(u);
+    });
+    const userOpts = [...userSet].sort().map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+    usrSel.innerHTML = `<option value="">Todos los usuarios</option>` + userOpts;
+    if ([...userSet].includes(curUsr)) usrSel.value = curUsr;
+
+    // Combo de tipo de equipo (misma lógica que vista Equipos).
     const fSel = $("#filterEquipo");
     const cur = fSel.value;
-    fSel.innerHTML = `<option value="">Todos los equipos</option>` +
-      vis.map((e) => `<option value="${e.id}">${esc(e.nombre)}</option>`).join("");
-    if (vis.some((e) => e.id === cur)) fSel.value = cur;
+    const tiposExistentes = [...new Set(vis.map(eqType).filter(Boolean))].sort();
+    fSel.innerHTML = `<option value="">Todos los tipos</option>` +
+      tiposExistentes.map((t) => `<option value="${esc(t)}">${esc(tipoLabel(t))}</option>`).join("");
+    if (tiposExistentes.includes(cur)) fSel.value = cur;
+
     const fEq = fSel.value;
     const fTipo = $("#filterTipoMant").value;
     const fEstado = $("#filterEstadoMant").value;
     const fUbic = ubicSel.value;
     const fDesde = $("#filterFechaDesde").value;
     const fHasta = $("#filterFechaHasta").value;
-    const fUsuario = ($("#filterUsuarioMant").value || "").trim().toLowerCase();
+    const fUsuario = usrSel.value;
+    const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
       if (fUbic && (ubicMap.get(m.equipoId) || "") !== fUbic) return false;
-      if (fEq && m.equipoId !== fEq) return false;
+      if (fEq) {
+        const eq = eqById.get(String(m.equipoId));
+        if (!eq || eqType(eq) !== fEq) return false;
+      }
       if (fTipo && m.tipo !== fTipo) return false;
       if (fEstado && estadoMant(m) !== fEstado) return false;
       if (fDesde && m.fecha < fDesde) return false;
       if (fHasta && m.fecha > fHasta) return false;
-      // Filtrar por usuario asignado
       if (fUsuario) {
-        const eq = equipos.find((x) => x.id === m.equipoId) || {};
-        const usuarioEq = (eq.usuarioAsignado || eq.responsable || "").toLowerCase();
-        if (!usuarioEq.includes(fUsuario)) return false;
+        const eq = eqById.get(String(m.equipoId)) || {};
+        const u = (eq.usuarioAsignado || "").trim();
+        if (u !== fUsuario) return false;
       }
       return true;
     });
@@ -3390,10 +3413,12 @@
     $("#filterEquipo").addEventListener("change", renderMantenimientos);
     $("#filterTipoMant").addEventListener("change", renderMantenimientos);
     $("#filterEstadoMant").addEventListener("change", renderMantenimientos);
+    $("#filterUsuarioMant").addEventListener("change", renderMantenimientos);
     $("#btnBuscarMant").addEventListener("click", renderMantenimientos);
     $("#btnLimpiarMant").addEventListener("click", () => {
       $("#filterUbicacion").value = "";
       $("#filterEquipo").value = "";
+      $("#filterUsuarioMant").value = "";
       $("#filterTipoMant").value = "";
       $("#filterEstadoMant").value = "";
       $("#filterFechaDesde").value = "";
