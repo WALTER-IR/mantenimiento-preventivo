@@ -268,10 +268,11 @@ body {
 .perf-nums .reprog-t { color: var(--warn); font-weight: 700; }
 .perf-nums .fin-t { color: var(--success); font-weight: 700; }
 
-/* ---------------- Gráficos del panel (barras + onda) ---------------- */
+/* ---------------- Gráficos del panel ---------------- */
 .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .chart-col { margin-bottom: 0; min-width: 0; }
 
+/* Barras (por responsable) */
 .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 210px; padding-top: 18px; }
 .bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
 .bar-val { font-size: 12px; font-weight: 800; color: var(--rojo-700); margin-bottom: 4px; }
@@ -283,28 +284,22 @@ body {
 .bar-label { font-size: 10.5px; font-weight: 700; color: var(--text-muted); margin-top: 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 .bar-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
 
-.wave-wrap { width: 100%; }
-.wave-chart { width: 100%; height: auto; display: block; }
-.wave-area { fill: rgba(220, 38, 38, .14); stroke: none; }
-.wave-line { fill: none; stroke: var(--rojo-600); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.wave-line.reprog { stroke: var(--warn); }
-.wave-line.fin { stroke: var(--success); }
-.wave-dot { fill: var(--rojo-600); stroke: #fff; stroke-width: 1.5; }
-.wave-dot.reprog { fill: var(--warn); }
-.wave-dot.fin { fill: var(--success); }
-.wave-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10.5px; color: var(--text-muted); font-weight: 600; }
-.wave-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; color: var(--text-muted); }
-.bar-fill.danger { background: var(--danger); }
-
-.cat-chart { display: flex; gap: 24px; align-items: flex-end; height: 190px; padding-top: 18px; }
+/* Categorías de equipos (dinámico, barras) */
+.cat-chart { display: flex; gap: 16px; align-items: flex-end; height: 190px; padding-top: 18px; }
 .cat-col { flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; height: 100%; }
 .cat-val { font-size: 16px; font-weight: 800; color: var(--rojo-700); margin-bottom: 4px; }
 .cat-track { flex: 1; width: 100%; max-width: 90px; display: flex; align-items: flex-end; background: var(--rojo-50); border-radius: 10px 10px 0 0; overflow: hidden; }
 .cat-fill { width: 100%; min-height: 4px; transition: height .3s ease; border-radius: 10px 10px 0 0; }
-.cat-fill.netbook { background: linear-gradient(180deg, #2563EB 0%, #3B82F6 100%); }
-.cat-fill.probook { background: var(--rojo-grad); }
 .cat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 6px; }
 .cat-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+
+/* Torta (pie) y anillo (donut) */
+.pie-wrap, .donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 10px 0 0; }
+.pie-chart { width: 60%; max-width: 180px; height: auto; }
+.pie-legend, .donut-legend { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
+.donut-chart { width: 55%; max-width: 160px; height: auto; }
+.pie-legend span, .donut-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.pie-legend .dot, .donut-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
 @media (max-width: 899px) {
   .chart-row { grid-template-columns: 1fr; }

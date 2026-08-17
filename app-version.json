@@ -1,6 +1,6 @@
 {
-  "version": "1.23.9",
+  "version": "1.24.0",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Los gráficos del Panel ahora se muestran primero (arriba de todo). Se reemplazó el gráfico por mes por uno de cantidad de equipos: Netbooks vs ProBooks."
+  "changelog": "Gráficos renovados: cantidad de equipos ahora muestra todas las categorías de forma dinámica; mantenimientos vencidos como gráfico de torta; reprogramados y finalizados como gráfico de anillo."
 }

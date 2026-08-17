@@ -350,17 +350,21 @@
     const perf = avancePorUsuario(visIds);
     $("#dashBarChart").innerHTML = barChartHTML(perf.rows);
 
-    // Barras: cantidad de equipos (Netbook y ProBook).
+    // Categorías de equipos (dinámico).
     $("#dashCatBar").innerHTML = equiposCatHTML(visIds);
 
-    // Barras: mantenimientos vencidos por responsable.
-    $("#dashVencBar").innerHTML = vencidosBarHTML(vencidosPorResponsable(visIds));
+    // Torta: estados de los equipos (vencidos / próximos / al día).
+    $("#dashVencPie").innerHTML = pieChartHTML([
+      { label: "Vencidos", value: stats.vencidos, color: "#E11D48" },
+      { label: "Próximos", value: stats.proximos, color: "#D97706" },
+      { label: "Al día", value: stats.ok, color: "#059669" }
+    ]);
 
-    // Onda doble: reprogramados y finalizados por mes.
-    $("#dashReproFinWave").innerHTML = wave2ChartHTML(
-      mantsPorMes(visIds, (m) => estadoMant(m) === "reprogramado"),
-      mantsPorMes(visIds, (m) => estadoMant(m) === "finalizado")
-    );
+    // Anillo: reprogramados vs finalizados.
+    $("#dashReproFinDonut").innerHTML = donutChartHTML([
+      { label: "Reprogramados", value: prog.reprogramado, color: "#D97706" },
+      { label: "Finalizados", value: prog.finalizado, color: "#059669" }
+    ]);
   }
 
   // ============================================================
@@ -478,81 +482,104 @@
     return !!fe && fe < todayISO();
   }
 
-  // Conteo de equipos por categoría: Netbook (NOTEBOOK/CONVERTIBLE) y ProBook (HP PROBOOK).
+  // Conteo de equipos por categoría (dinámico: detecta todas las categorías existentes).
   function equiposPorCategoria(scope) {
-    let netbook = 0, probook = 0;
+    const cats = new Map();
     equipos.forEach((e) => {
       if (scope && !scope.has(String(e.id))) return;
       if (!esVisibleEquipo(e)) return;
-      const modelo = String(e.modelo || "").toUpperCase();
-      if (modelo.indexOf("PROBOOK") >= 0) { probook++; return; }
-      const nom = String(e.nombre || "").toUpperCase();
-      if (nom.indexOf("NOTEBOOK") >= 0 || nom.indexOf("CONVERTIBLE") >= 0) netbook++;
+      const cat = String(e.nombre || "").trim() || "Sin categoría";
+      cats.set(cat, (cats.get(cat) || 0) + 1);
     });
-    return { netbook, probook };
+    return [...cats.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
   }
 
-  // Barras grandes de Netbook vs ProBook.
+  const CAT_COLORS = ["#2563EB", "#DC2626", "#059669", "#D97706", "#7C3AED", "#EC4899", "#06B6D4", "#64748B"];
+
+  // Barras de categorías de equipos (colores dinámicos, soporta N categorías).
   function equiposCatHTML(scope) {
-    const c = equiposPorCategoria(scope);
-    const total = c.netbook + c.probook;
-    if (!total) return `<div class="empty-state"><div class="empty-icon">💻</div><p>Sin equipos.</p></div>`;
-    const max = Math.max(c.netbook, c.probook, 1);
-    const pct = (n) => Math.round((n / total) * 100) + "%";
-    return `<div class="cat-chart">
-      <div class="cat-col">
-        <div class="cat-val">${c.netbook}</div>
-        <div class="cat-track"><div class="cat-fill netbook" style="height:${(c.netbook / max) * 100}%"></div></div>
-        <div class="cat-label">Netbooks</div>
-        <div class="cat-sub">${pct(c.netbook)} del total</div>
-      </div>
-      <div class="cat-col">
-        <div class="cat-val">${c.probook}</div>
-        <div class="cat-track"><div class="cat-fill probook" style="height:${(c.probook / max) * 100}%"></div></div>
-        <div class="cat-label">ProBooks</div>
-        <div class="cat-sub">${pct(c.probook)} del total</div>
-      </div>
+    const cats = equiposPorCategoria(scope);
+    if (!cats.length) return `<div class="empty-state"><div class="empty-icon">💻</div><p>Sin equipos.</p></div>`;
+    const total = cats.reduce((a, c) => a + c.value, 0);
+    const max = Math.max(...cats.map((c) => c.value), 1);
+    return `<div class="cat-chart">` + cats.map((c, i) => {
+      const color = CAT_COLORS[i % CAT_COLORS.length];
+      const pct = Math.round((c.value / total) * 100);
+      return `<div class="cat-col" title="${esc(c.label)}: ${c.value} equipos">
+        <div class="cat-val">${c.value}</div>
+        <div class="cat-track"><div class="cat-fill" style="height:${(c.value / max) * 100}%;background:${color}"></div></div>
+        <div class="cat-label">${esc(c.label)}</div>
+        <div class="cat-sub">${pct}%</div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
+  // -------------------------------------------------------
+  //  GRÁFICOS DE TORTA (pie) Y ANILLO (donut) — SVG puro
+  // -------------------------------------------------------
+  function pieChartHTML(slices) {
+    const total = slices.reduce((a, s) => a + s.value, 0);
+    if (!total) return `<div class="empty-state"><div class="empty-icon">📊</div><p>Sin datos.</p></div>`;
+    const R = 85, CX = 100, CY = 100;
+    let angle = -90;
+    const paths = [];
+    slices.forEach((s) => {
+      if (!s.value) return;
+      const sweep = (s.value / total) * 360;
+      if (sweep >= 359.99) {
+        paths.push(`<circle cx="${CX}" cy="${CY}" r="${R}" fill="${s.color}" stroke="#fff" stroke-width="2"><title>${esc(s.label)}: ${s.value}</title></circle>`);
+      } else {
+        const sr = angle * Math.PI / 180;
+        const er = (angle + sweep) * Math.PI / 180;
+        const x1 = CX + R * Math.cos(sr), y1 = CY + R * Math.sin(sr);
+        const x2 = CX + R * Math.cos(er), y2 = CY + R * Math.sin(er);
+        const lg = sweep > 180 ? 1 : 0;
+        paths.push(`<path d="M ${CX} ${CY} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 ${lg} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z" fill="${s.color}" stroke="#fff" stroke-width="2"><title>${esc(s.label)}: ${s.value}</title></path>`);
+      }
+      angle += sweep;
+    });
+    angle = -90;
+    const labels = slices.filter((s) => s.value > 0).map((s) => {
+      const sweep = (s.value / total) * 360;
+      const mid = (angle + sweep / 2) * Math.PI / 180;
+      const pct = Math.round(s.value / total * 100);
+      angle += sweep;
+      if (pct < 5) return "";
+      const lx = CX + R * 0.58 * Math.cos(mid);
+      const ly = CY + R * 0.58 * Math.sin(mid);
+      return `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="800" fill="#fff" style="pointer-events:none">${pct}%</text>`;
+    });
+    return `<div class="pie-wrap">
+      <svg class="pie-chart" viewBox="0 0 200 200" aria-hidden="true">${paths.join("")}${labels.join("")}</svg>
+      <div class="pie-legend">${slices.filter((s) => s.value > 0).map((s) =>
+        `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)} (${s.value})</span>`).join("")}</div>
     </div>`;
   }
 
-  // Vencidos agrupados por responsable (solo equipos visibles para este usuario).
-  function vencidosPorResponsable(scope) {
-    const eqById = new Map(equipos.map((e) => [String(e.id), e]));
-    const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
-    const buckets = new Map();
-    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
-    tecnicos.forEach((u) => buckets.set(u.id, { nombre: u.nombre, val: 0, equipos: new Set() }));
-    const sin = { nombre: "Sin asignar", val: 0, equipos: new Set() };
-    buckets.set("__sin__", sin);
-    mantenimientos.forEach((m) => {
-      if (scope && !scope.has(String(m.equipoId))) return;
-      if (!esVencido(m)) return;
-      const eq = eqById.get(String(m.equipoId));
-      let b = sin;
-      if (eq) {
-        const resp = norm(eq.responsable);
-        const asig = norm(eq.usuarioAsignado);
-        const tec = tecnicos.find((u) => norm(u.nombre) === resp) ||
-          (asig && tecnicos.find((u) => norm(u.nombre) === asig));
-        b = buckets.get(tec ? tec.id : "__sin__");
-      }
-      b.val++;
-      b.equipos.add(eq ? String(eq.id) : "?");
+  function donutChartHTML(slices) {
+    const total = slices.reduce((a, s) => a + s.value, 0);
+    if (!total) return `<div class="empty-state"><div class="empty-icon">📊</div><p>Sin datos.</p></div>`;
+    const R = 42, SW = 22;
+    const circ = 2 * Math.PI * R;
+    let offset = 0;
+    const circles = slices.filter((s) => s.value > 0).map((s) => {
+      const len = (s.value / total) * circ;
+      const gap = circ - len;
+      const html = `<circle cx="100" cy="100" r="${R}" fill="none" stroke="${s.color}" stroke-width="${SW}" stroke-dasharray="${len.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 100 100)"><title>${esc(s.label)}: ${s.value}</title></circle>`;
+      offset += len;
+      return html;
     });
-    return [...buckets.values()].filter((b) => b.val).sort((a, b) => b.val - a.val || a.nombre.localeCompare(b.nombre));
-  }
-
-  // Barras de vencidos por responsable.
-  function vencidosBarHTML(rows) {
-    if (!rows.length) return `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin mantenimientos vencidos.</p></div>`;
-    const max = Math.max(...rows.map((r) => r.val), 1);
-    return `<div class="bar-chart">` + rows.map((r) => `
-      <div class="bar-col" title="${esc(r.nombre)} · ${r.val} vencidos">
-        <div class="bar-val">${r.val}</div>
-        <div class="bar-track"><div class="bar-fill danger" style="height:${(r.val / max) * 100}%"></div></div>
-        <div class="bar-label">${esc(shortName(r.nombre))}</div>
-        <div class="bar-sub">${r.equipos.size} equipo${r.equipos.size === 1 ? "" : "s"}</div>
-      </div>`).join("") + `</div>`;
+    return `<div class="donut-wrap">
+      <svg class="donut-chart" viewBox="0 0 200 200" aria-hidden="true">
+        ${circles.join("")}
+        <text x="100" y="94" text-anchor="middle" font-size="22" font-weight="800" fill="#B91C1C" style="pointer-events:none">${total}</text>
+        <text x="100" y="112" text-anchor="middle" font-size="10" fill="#64748B" style="pointer-events:none">total</text>
+      </svg>
+      <div class="donut-legend">${slices.filter((s) => s.value > 0).map((s) =>
+        `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)}: ${s.value}</span>`).join("")}</div>
+    </div>`;
   }
 
   // ============================================================
