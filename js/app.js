@@ -694,8 +694,8 @@
     // Un "bucket" por usuario (excluye administradores).
     const buckets = new Map();
     const tecnicos = usuarios.filter((u) => u.rol !== ROL.ADMIN);
-    tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, equipos: new Set() }));
-    const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, equipos: new Set() };
+    tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }));
+    const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() };
     buckets.set("__sin__", sin);
 
     mantenimientos.forEach((m) => {
@@ -714,6 +714,14 @@
       if (e === "finalizado") b.fin++;
       else if (e === "reprogramado") b.reprog++;
       else b.prog++;
+    });
+
+    // Contar equipos vencidos por bucket.
+    buckets.forEach((b) => {
+      b.equipos.forEach((eid) => {
+        const eq = eqById.get(eid);
+        if (eq && statusOf(eq).key === "vencido") b.vencidos++;
+      });
     });
 
     const rows = [...buckets.values()].filter((b) => b.prog || b.reprog || b.fin);
@@ -739,7 +747,7 @@
       <div class="perf-row">
         <div class="perf-head">
           <span class="perf-name">${esc(b.nombre)}</span>
-          <span class="perf-meta">${b.equipos.size} equipo${b.equipos.size === 1 ? "" : "s"} · ${t} mant. · <b>${pct}%</b> completado</span>
+          <span class="perf-meta">${b.equipos.size} equipo${b.equipos.size === 1 ? "" : "s"} · ${t} mant. · <b>${pct}%</b> completado${b.vencidos ? ` · <span style="color:#E11D48;font-weight:700">${b.vencidos} vencido${b.vencidos === 1 ? "" : "s"}</span>` : ""}</span>
         </div>
         <div class="perf-bar">${seg}</div>
         <div class="perf-nums">
@@ -793,11 +801,12 @@
           <td>${b.prog}</td>
           <td>${b.reprog}</td>
           <td>${b.fin}</td>
+          <td style="color:#E11D48;font-weight:700">${b.vencidos}</td>
           <td><b>${t}</b></td>
           <td><b>${pct}%</b></td>
         </tr>`;
       }).join("")
-      : `<tr><td colspan="6" class="empty-cell">Sin datos.</td></tr>`;
+      : `<tr><td colspan="7" class="empty-cell">Sin datos.</td></tr>`;
   }
 
   function eqName(id) {
