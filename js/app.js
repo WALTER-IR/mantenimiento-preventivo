@@ -572,26 +572,27 @@
     }).join("") + `</div>`;
   }
 
-  function paginationHTML(total, page, pageSize, onPageChange) {
-    if (total <= 50) return "";
+  function paginationHTML(total, page, pageSize) {
+    if (total <= pageSize) return "";
     const sizes = [50, 100, 0];
-    const sizeLabels = ["50", "100", "Todos"];
+    const sizeLabels = ["50", "100", "Todo"];
     const totalPages = Math.ceil(total / pageSize);
     const curPage = Math.min(page, totalPages);
-    let html = `<div class="pagination">`;
-    html += `<div class="pag-sizes">`;
+    let html = `<div class="pagination-bar">`;
+    html += `<span class="pag-info">${total} reg.</span>`;
+    html += `<span class="pag-sizes">`;
     sizes.forEach((s, i) => {
       const active = (s === 0 && pageSize >= total) || s === pageSize;
-      html += `<button class="btn btn-ghost pag-size${active ? " active" : ""}" data-page-size="${s || total}">${sizeLabels[i]}</button>`;
+      html += `<button class="pag-size${active ? " active" : ""}" data-page-size="${s || total}">${sizeLabels[i]}</button>`;
     });
-    html += `</div>`;
-    html += `<div class="pag-info">${curPage} / ${totalPages} · ${total} registros</div>`;
-    html += `<div class="pag-btns">`;
-    html += `<button class="btn btn-ghost" data-page="1" ${curPage <= 1 ? "disabled" : ""}>«</button>`;
-    html += `<button class="btn btn-ghost" data-page="${curPage - 1}" ${curPage <= 1 ? "disabled" : ""}>‹</button>`;
-    html += `<button class="btn btn-ghost" data-page="${curPage + 1}" ${curPage >= totalPages ? "disabled" : ""}>›</button>`;
-    html += `<button class="btn btn-ghost" data-page="${totalPages}" ${curPage >= totalPages ? "disabled" : ""}>»</button>`;
-    html += `</div></div>`;
+    html += `</span>`;
+    html += `<span class="pag-nav">`;
+    html += `<button data-page="1" ${curPage <= 1 ? "disabled" : ""}>«</button>`;
+    html += `<button data-page="${curPage - 1}" ${curPage <= 1 ? "disabled" : ""}>‹</button>`;
+    html += `<span class="pag-info">${curPage}/${totalPages}</span>`;
+    html += `<button data-page="${curPage + 1}" ${curPage >= totalPages ? "disabled" : ""}>›</button>`;
+    html += `<button data-page="${totalPages}" ${curPage >= totalPages ? "disabled" : ""}>»</button>`;
+    html += `</span></div>`;
     return html;
   }
 
@@ -828,13 +829,20 @@
   //  EQUIPOS
   // ============================================================
   function tipoLabel(t) {
-    return { laptop: "Laptop", desktop: "Escritorio", allinone: "Todo en uno", servidor: "Servidor" }[t] || t;
+    const map = { NOTEBOOK: "Notebook", DESKTOP: "Desktop", CONVERTIBLE: "Convertible", laptop: "Laptop", desktop: "Escritorio", allinone: "Todo en uno", servidor: "Servidor" };
+    return map[t] || t;
+  }
+  function eqType(eq) {
+    const n = (eq.nombre || "").trim().toUpperCase();
+    const prefix = n.split(/[-\s]/)[0];
+    if (["NOTEBOOK", "DESKTOP", "CONVERTIBLE"].includes(prefix)) return prefix;
+    return (eq.tipo || "").trim() || "Otro";
   }
 
   function renderEquipos() {
     const q = ($("#searchEquipo").value || "").trim().toLowerCase();
     const tipo = $("#filterTipo").value;
-    const tiposExistentes = [...new Set(equipos.map((e) => String(e.tipo || "").trim()).filter(Boolean))].sort();
+    const tiposExistentes = [...new Set(equipos.map(eqType).filter(Boolean))].sort();
     const fTipo = $("#filterTipo");
     const curTipo = fTipo.value;
     fTipo.innerHTML = `<option value="">Todos los tipos</option>` +
@@ -843,7 +851,7 @@
     const tipoVal = fTipo.value;
     let list = equipos.filter((e) => {
       if (!esVisibleEquipo(e)) return false;
-      if (tipoVal && e.tipo !== tipoVal) return false;
+      if (tipoVal && eqType(e) !== tipoVal) return false;
       if (!q) return true;
       return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.cargo, e.responsable, e.modelo]
         .join(" ").toLowerCase().includes(q);
@@ -856,7 +864,7 @@
     const start = (eqPage - 1) * eqPageSize;
     const pageList = list.slice(start, start + eqPageSize);
     const pag = paginationHTML(totalAll, eqPage, eqPageSize);
-    $("#equipoList").innerHTML = `<div class="equipo-counter">${totalAll} equipo${totalAll === 1 ? "" : "s"} registrado${totalAll === 1 ? "" : "s"}</div>` + pag +
+    $("#equipoList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${totalAll} equipo${totalAll === 1 ? "" : "s"}</span>${pag}</div>` +
       pageList.map((e) => {
       const st = statusOf(e);
       const badge = st.key === "vencido"
@@ -1370,9 +1378,8 @@
     const start = (mantPage - 1) * mantPageSize;
     const pageList = list.slice(start, start + mantPageSize);
     const pag = paginationHTML(totalAll, mantPage, mantPageSize);
-    const contador = `<div class="mant-counter">${totalAll} registro${totalAll === 1 ? "" : "s"} encontrado${totalAll === 1 ? "" : "s"}</div>`;
 
-    $("#mantList").innerHTML = contador + pag + pageList.map((m) => {
+    $("#mantList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${totalAll} registros</span>${pag}</div>` + pageList.map((m) => {
       const eq = equipos.find((x) => x.id === m.equipoId) || {};
       const subSerie = [eq.serie, eq.hostname].filter(Boolean).join(" - ") || "—";
       const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
@@ -1431,7 +1438,7 @@
     const busqueda = ($("#searchAlerta").value || "").trim().toLowerCase();
     const respSel = $("#filterAlertaResp");
     const prevResp = respSel.value;
-    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
+    const tecnicos = usuarios.filter((u) => u.rol > 0 && u.rol < ROL.ADMIN);
     const respOpts = ['<option value="">Todos los responsables</option>']
       .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`));
     if (respSel.innerHTML !== respOpts.join("")) respSel.innerHTML = respOpts.join("");
@@ -1471,8 +1478,7 @@
     const pageList = list.slice(start, start + alertPageSize);
     const pag = paginationHTML(totalAll, alertPage, alertPageSize);
     $("#alertFullList").innerHTML = `
-      <div class="alert-counter">${totalAll} registro${totalAll === 1 ? "" : "s"} ${tipoLabel.toLowerCase()}</div>
-      ${pag}
+      <div class="list-toolbar"><span class="equipo-counter">${totalAll} ${tipoLabel.toLowerCase()}</span>${pag}</div>
       ${pageList.map(alertHTML).join("")}
     `;
     $("#alertFullEmpty").classList.toggle("hidden", list.length > 0);
@@ -1497,7 +1503,7 @@
     $("#detalleTitle").innerHTML = `${esc(eq.nombre)} ${badge}`;
     const cells = [
       ["Usuario asignado", eq.usuarioAsignado || "—"],
-      ["Tipo", tipoLabel(eq.tipo)],
+      ["Tipo", tipoLabel(eqType(eq))],
       ["Marca", eq.marca || "—"],
       ["Modelo", eq.modelo || "—"],
       ["No. serie", eq.serie || "—"],

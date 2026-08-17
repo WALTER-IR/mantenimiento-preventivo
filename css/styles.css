@@ -188,7 +188,6 @@ body {
 .due-line { font-size: 11px; margin-top: 5px; font-weight: 600; }
 
 /* ---------------- Alerts ---------------- */
-.alert-counter { font-size: 13px; font-weight: 700; color: var(--rojo-700); padding: 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
 .alert-item {
   background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--warn);
   border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm);
@@ -518,17 +517,20 @@ body {
 /* Login logo */
 .login-logo-img { width: 80px; height: 80px; border-radius: 16px; object-fit: contain; margin-bottom: 8px; background: #fff; padding: 4px; }
 
-/* Equipo counter */
-.equipo-counter { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+/* Toolbar de lista: contador + paginación en una línea */
+.list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; padding: 6px 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
+.equipo-counter { font-size: 13px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
 
-/* Paginación */
-.pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
-.pag-sizes { display: flex; gap: 4px; }
-.pag-size { padding: 4px 10px !important; font-size: 12px !important; border: 1px solid var(--border) !important; border-radius: 6px !important; }
-.pag-size.active { background: var(--rojo) !important; color: #fff !important; border-color: var(--rojo) !important; }
-.pag-info { font-size: 13px; color: var(--text-muted); }
-.pag-btns { display: flex; gap: 4px; }
-.pag-btns .btn { padding: 4px 10px !important; font-size: 14px !important; }
+/* Paginación inline */
+.pagination-bar { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.pagination-bar .pag-info { color: var(--text-muted); white-space: nowrap; }
+.pagination-bar .pag-sizes { display: flex; gap: 2px; }
+.pagination-bar .pag-size { padding: 2px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.pagination-bar .pag-size.active { background: var(--rojo); color: #fff; border-color: var(--rojo); }
+.pagination-bar .pag-nav { display: flex; align-items: center; gap: 2px; }
+.pagination-bar .pag-nav button { padding: 2px 7px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.pagination-bar .pag-nav button:disabled { opacity: .35; cursor: default; }
+.pagination-bar .pag-nav button:not(:disabled):hover { background: var(--rojo); color: #fff; border-color: var(--rojo); }
 
 @media print {
   body.imprimiendo { background: #fff; }
