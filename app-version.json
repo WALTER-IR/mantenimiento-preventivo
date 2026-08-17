@@ -1,6 +1,6 @@
 {
-  "version": "1.24.2",
+  "version": "1.24.3",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Gráfico por marca de equipos; tipos de equipo dinámicos; paginación 50/100/Todos en equipos, historial y alertas; logo en login; topbar solo en móvil."
+  "changelog": "Service Worker simplificado (network-first). Eliminado loop de recarga infinito. Login siempre se muestra."
 }

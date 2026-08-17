@@ -1,10 +1,8 @@
 // ============================================================
-//  Service Worker - SOLO CACHÉ (sin conexión a internet)
-//  Mantiene el funcionamiento sin conexión pero NO sincroniza
-//  nada externamente. La app solo se actualiza cuando el
-//  usuario lo pide explícitamente.
+//  Service Worker v66 - Network-first (fiabilidad)
+//  Prioriza servir desde la RED. Si falla, usa caché como respaldo.
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v65";
+const CACHE_NAME = "mantenimiento-pwa-v66";
 
 const CORE_ASSETS = [
   "./",
@@ -21,7 +19,9 @@ const CORE_ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .catch(() => {})
   );
   self.skipWaiting();
 });
@@ -39,56 +39,24 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Cache-only: NUNCA se conecta a la red. Todo se sirve desde la caché local.
+// Network-first: siempre intenta la red primero. Si falla, usa caché.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
-  // app-version.json se consulta solo cuando el usuario pulsa "Buscar actualizaciones":
-  // red primero (para detectar la versión nueva) y caché como respaldo sin conexión.
-  if (url.pathname.endsWith("/app-version.json")) {
-    event.respondWith(
-      fetch(event.request)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return resp;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // El código de la app (index.html, *.js, *.css) se sirve RED PRIMERO: si hay
-  // internet siempre se usa la versión más reciente y se actualiza la caché.
-  // Sin conexión se usa la caché como respaldo.
-  const esCodigo = event.request.mode === "navigate" || /\.(js|css|html)$/.test(url.pathname);
-  if (esCodigo) {
-    event.respondWith(
-      fetch(event.request)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return resp;
-        })
-        .catch(() =>
-          caches.match(event.request).then((cached) => {
-            if (cached) return cached;
-            if (event.request.mode === "navigate") return caches.match("./index.html");
-            return new Response("", { status: 200, statusText: "ok" });
-          })
-        )
-    );
-    return;
-  }
-
-  // Cache-only para el resto (offline).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      if (event.request.mode === "navigate") return caches.match("./index.html");
-      return new Response("", { status: 200, statusText: "ok" });
-    })
+    fetch(event.request)
+      .then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return resp;
+      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          return new Response("Sin conexión", { status: 503, statusText: "Offline" });
+        })
+      )
   );
 });

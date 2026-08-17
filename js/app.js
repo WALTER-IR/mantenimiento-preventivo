@@ -3707,25 +3707,7 @@
            actualizaciones". */
         if ("serviceWorker" in navigator) {
           try {
-            const reg = navigator.serviceWorker.register("sw.js");
-            reg.then((r) => {
-              // Cuando se instala una versión nueva del SW, se recarga la app
-              // automáticamente para aplicar la actualización.
-              r.addEventListener("updatefound", () => {
-                const nw = r.installing;
-                if (!nw) return;
-                nw.addEventListener("statechange", () => {
-                  if (nw.state === "activated" && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.addEventListener("controllerchange", () => {
-                      if (sessionStorage.getItem("recargadoPorSw") !== "1") {
-                        sessionStorage.setItem("recargadoPorSw", "1");
-                        location.reload();
-                      }
-                    });
-                  }
-                });
-              });
-            }).catch(() => {});
+            navigator.serviceWorker.register("sw.js").catch(() => {});
           } catch (e) { /* sin soporte */ }
         }
       })
