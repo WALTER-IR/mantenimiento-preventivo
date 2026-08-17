@@ -1382,17 +1382,18 @@
       ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
     if (ubics.includes(curUbic)) ubicSel.value = curUbic;
 
-    // Combo de usuarios (solo los asignados a equipos visibles, sin repetir).
+    // Combo de responsables (excluye admin, incluye lectura; desde campo responsable del equipo).
     const usrSel = $("#filterUsuarioMant");
     const curUsr = usrSel.value;
-    const userSet = new Set();
+    const noAdmins = usuarios.filter((u) => u.rol !== ROL.ADMIN);
+    const respSet = new Set();
     vis.forEach((e) => {
-      const u = (e.usuarioAsignado || "").trim();
-      if (u) userSet.add(u);
+      const r = (e.responsable || "").trim();
+      if (r) respSet.add(r);
     });
-    const userOpts = [...userSet].sort().map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
-    usrSel.innerHTML = `<option value="">Todos los usuarios</option>` + userOpts;
-    if ([...userSet].includes(curUsr)) usrSel.value = curUsr;
+    const respOpts = [...respSet].sort().map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+    usrSel.innerHTML = `<option value="">Todos los responsables</option>` + respOpts;
+    if ([...respSet].includes(curUsr)) usrSel.value = curUsr;
 
     // Combo de tipo de equipo (misma lógica que vista Equipos).
     const fSel = $("#filterEquipo");
@@ -1423,8 +1424,8 @@
       if (fHasta && m.fecha > fHasta) return false;
       if (fUsuario) {
         const eq = eqById.get(String(m.equipoId)) || {};
-        const u = (eq.usuarioAsignado || "").trim();
-        if (u !== fUsuario) return false;
+        const r = (eq.responsable || "").trim();
+        if (r !== fUsuario) return false;
       }
       return true;
     });
@@ -1503,7 +1504,7 @@
     const busqueda = ($("#searchAlerta").value || "").trim().toLowerCase();
     const respSel = $("#filterAlertaResp");
     const prevResp = respSel.value;
-    const tecnicos = usuarios.filter((u) => u.rol > 0 && u.rol < ROL.ADMIN);
+    const tecnicos = usuarios.filter((u) => u.rol !== ROL.ADMIN);
     const respOpts = ['<option value="">Todos los responsables</option>']
       .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`));
     if (respSel.innerHTML !== respOpts.join("")) respSel.innerHTML = respOpts.join("");
