@@ -247,7 +247,7 @@
       err.classList.remove("hidden");
       return;
     }
-    const pwOk = u.clave ? u.clave === clave : u.dni === clave;
+    const pwOk = u.clave ? u.clave === clave.trim() : u.dni === clave.trim();
     if (!pwOk) {
       err.textContent = "Usuario o contraseña incorrectos";
       err.classList.remove("hidden");
@@ -3477,9 +3477,9 @@
         } else {
           showLogin();
         }
-        // Como el APK al abrir: si hay conexión y la nube es más nueva que la última
-        // sincronización, baja los datos (trae a la web lo que se hizo en el móvil).
-        if (navigator.onLine) syncBajar();
+        // Sincronización con la nube: solo si hay sesión activa (evita que syncBajar
+        // reemplace los usuarios locales antes de que el usuario pueda iniciar sesión).
+        if (sesion && navigator.onLine) syncBajar();
         /* Service Worker en modo SOLO CACHÉ (sin red): mantiene el
            funcionamiento sin conexión pero NO sincroniza nada en
            segundo plano. La actualización automática está deshabilitada;
@@ -3509,7 +3509,7 @@
           } catch (e) { /* sin soporte */ }
         }
       })
-      .catch((e) => {
+      .catch(async (e) => {
         // modo degradado: la app abre con datos en memoria (sin guardar)
         equipos = [];
         mantenimientos = [];
@@ -3517,7 +3517,8 @@
         appConfig = { empresa: "Empresa", intervalo: 90 };
         window.__STORAGE_OK__ = false;
         console.error("Error de almacenamiento:", e);
-        setView("dashboard");
+        await ensureAdmin();
+        showLogin();
         toast("Aviso: no se pudo abrir el almacenamiento local. La app funciona en modo temporal.", "err");
       });
   }
