@@ -377,12 +377,34 @@
     // Equipos por marca (dinámico).
     $("#dashMarcaBar").innerHTML = marcasEquipoHTML(visIds);
 
-    // Torta: estados de los equipos (vencidos / próximos / al día).
-    $("#dashVencPie").innerHTML = pieChartHTML([
-      { label: "Vencidos", value: stats.vencidos, color: "#E11D48" },
-      { label: "Próximos", value: stats.proximos, color: "#D97706" },
-      { label: "Al día", value: stats.ok, color: "#059669" }
-    ]);
+    // Vencidos por responsable (excluye admins).
+    const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+    const adminNames = usuarios.filter((u) => u.rol === ROL.ADMIN).map((u) => norm(u.nombre));
+    const vencByResp = new Map();
+    vis.filter((e) => statusOf(e).key === "vencido").forEach((e) => {
+      const resp = norm(e.responsable || e.usuarioAsignado || "");
+      const key = resp || "sin responsable";
+      if (adminNames.includes(norm(e.responsable)) && !norm(e.usuarioAsignado)) return;
+      vencByResp.set(key, (vencByResp.get(key) || 0) + 1);
+    });
+    const vencRows = [...vencByResp.entries()]
+      .map(([name, count]) => ({ nombre: name === "sin responsable" ? "Sin responsable" : name, value: count }))
+      .sort((a, b) => b.value - a.value);
+    const vencTotal = vencRows.reduce((s, r) => s + r.value, 0);
+    const vencMax = vencRows.length ? Math.max(...vencRows.map((r) => r.value)) : 1;
+    if (vencRows.length) {
+      $("#dashVencPie").innerHTML = `<div class="bar-chart">` + vencRows.map((r) => {
+        const pct = vencTotal ? Math.round((r.value / vencTotal) * 100) : 0;
+        return `<div class="bar-col" title="${esc(r.nombre)}: ${r.value} vencidos (${pct}%)">
+          <div class="bar-val">${r.value}</div>
+          <div class="bar-track"><div class="bar-fill" style="height:${(r.value / vencMax) * 100}%;background:#E11D48"></div></div>
+          <div class="bar-label">${esc(shortName(r.nombre))}</div>
+          <div class="bar-sub">${pct}%</div>
+        </div>`;
+      }).join("") + `</div>`;
+    } else {
+      $("#dashVencPie").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin vencidos.</p></div>`;
+    }
 
     // Anillo: reprogramados vs finalizados.
     $("#dashReproFinDonut").innerHTML = donutChartHTML([
@@ -669,9 +691,9 @@
     const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-    // Un "bucket" por usuario (todos los usuarios, incluyendo lectura).
+    // Un "bucket" por usuario (excluye administradores).
     const buckets = new Map();
-    const tecnicos = usuarios.slice();
+    const tecnicos = usuarios.filter((u) => u.rol !== ROL.ADMIN);
     tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, equipos: new Set() }));
     const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, equipos: new Set() };
     buckets.set("__sin__", sin);
@@ -863,7 +885,13 @@
     const start = (eqPage - 1) * eqPageSize;
     const pageList = list.slice(start, start + eqPageSize);
     const pag = paginationHTML(totalAll, eqPage, eqPageSize);
-    $("#equipoList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${totalAll} equipo${totalAll === 1 ? "" : "s"}</span>${pag}</div>` +
+    const showing = eqPageSize >= totalAll ? totalAll : Math.min(eqPageSize, totalAll - start);
+    const from = totalAll === 0 ? 0 : start + 1;
+    const to = totalAll === 0 ? 0 : start + showing;
+    const counter = eqPageSize >= totalAll
+      ? `${totalAll} equipo${totalAll === 1 ? "" : "s"}`
+      : `${from}-${to} de ${totalAll} equipo${totalAll === 1 ? "" : "s"}`;
+    $("#equipoList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${counter}</span>${pag}</div>` +
       pageList.map((e) => {
       const st = statusOf(e);
       const badge = st.key === "vencido"
@@ -1377,8 +1405,14 @@
     const start = (mantPage - 1) * mantPageSize;
     const pageList = list.slice(start, start + mantPageSize);
     const pag = paginationHTML(totalAll, mantPage, mantPageSize);
+    const showing = mantPageSize >= totalAll ? totalAll : Math.min(mantPageSize, totalAll - start);
+    const from = totalAll === 0 ? 0 : start + 1;
+    const to = totalAll === 0 ? 0 : start + showing;
+    const counter = mantPageSize >= totalAll
+      ? `${totalAll} registros`
+      : `${from}-${to} de ${totalAll} registros`;
 
-    $("#mantList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${totalAll} registros</span>${pag}</div>` + pageList.map((m) => {
+    $("#mantList").innerHTML = `<div class="list-toolbar"><span class="equipo-counter">${counter}</span>${pag}</div>` + pageList.map((m) => {
       const eq = equipos.find((x) => x.id === m.equipoId) || {};
       const subSerie = [eq.serie, eq.hostname].filter(Boolean).join(" - ") || "—";
       const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
@@ -1476,8 +1510,14 @@
     const start = (alertPage - 1) * alertPageSize;
     const pageList = list.slice(start, start + alertPageSize);
     const pag = paginationHTML(totalAll, alertPage, alertPageSize);
+    const showing = alertPageSize >= totalAll ? totalAll : Math.min(alertPageSize, totalAll - start);
+    const from = totalAll === 0 ? 0 : start + 1;
+    const to = totalAll === 0 ? 0 : start + showing;
+    const counter = alertPageSize >= totalAll
+      ? `${totalAll} ${tipoLabel.toLowerCase()}`
+      : `${from}-${to} de ${totalAll} ${tipoLabel.toLowerCase()}`;
     $("#alertFullList").innerHTML = `
-      <div class="list-toolbar"><span class="equipo-counter">${totalAll} ${tipoLabel.toLowerCase()}</span>${pag}</div>
+      <div class="list-toolbar"><span class="equipo-counter">${counter}</span>${pag}</div>
       ${pageList.map(alertHTML).join("")}
     `;
     $("#alertFullEmpty").classList.toggle("hidden", list.length > 0);
