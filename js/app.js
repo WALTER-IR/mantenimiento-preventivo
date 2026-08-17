@@ -325,6 +325,14 @@
     $("#" + id).classList.remove("hidden");
   }
   function closeModal(id) { $("#" + id).classList.add("hidden"); if (id === "modalDetalle") currentDetailId = null; }
+  function refreshView() {
+    if (currentView === "dashboard") renderDashboard();
+    else if (currentView === "equipos") renderEquipos();
+    else if (currentView === "mantenimientos") renderMantenimientos();
+    else if (currentView === "alertas") renderAlertas();
+    else if (currentView === "rendimiento") renderRendimiento();
+    else if (currentView === "config") renderConfig();
+  }
 
   // ============================================================
   //  DASHBOARD
@@ -1193,7 +1201,7 @@
     toast("Mantenimiento guardado", "ok");
     auditar(id ? "EDICION MANTENIMIENTO" : "ALTA MANTENIMIENTO",
       "Equipo: " + eqName(equipoId) + " · Fecha: " + fecha + " · " + (data.tipo === "preventivo" ? "Preventivo" : "Correctivo"));
-    renderMantenimientos();
+    refreshView();
     syncSubir();
   }
 
@@ -1368,6 +1376,7 @@
     auditar(id ? "EDICION MANTENIMIENTO" : "ALTA MANTENIMIENTO",
       "Equipo: " + eqName(equipoId) + " · Fecha: " + fecha + " · " + (data.tipo === "preventivo" ? "Preventivo" : "Correctivo"));
     renderDetalle(equipoId);
+    refreshView();
     syncSubir();
   }
 
@@ -1490,7 +1499,7 @@
     equipos = await DB.getAll("equipos");
     toast("Mantenimiento eliminado");
     auditar("BAJA MANTENIMIENTO", "Equipo: " + eqName(m.equipoId) + " · Fecha: " + m.fecha);
-    renderMantenimientos();
+    refreshView();
     if (currentDetailId) renderDetalle(currentDetailId);
     syncSubir();
   }
@@ -3434,9 +3443,9 @@
     $("#searchAlerta").addEventListener("input", renderAlertas);
 
     // cierre de modales
-    $$("[data-close]").forEach((b) => b.addEventListener("click", () => closeModal(b.dataset.close)));
+    $$("[data-close]").forEach((b) => b.addEventListener("click", () => { closeModal(b.dataset.close); refreshView(); }));
     $$(".modal-overlay").forEach((o) => o.addEventListener("click", (e) => {
-      if (e.target === o) o.classList.add("hidden");
+      if (e.target === o) { o.classList.add("hidden"); if (o.id === "modalDetalle") currentDetailId = null; refreshView(); }
     }));
 
     // checklist

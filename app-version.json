@@ -1,6 +1,6 @@
 {
-  "version": "1.24.3",
+  "version": "1.24.4",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Service Worker simplificado (network-first). Eliminado loop de recarga infinito. Login siempre se muestra."
+  "changelog": "Estado de mantenimiento se actualiza inmediatamente al cerrar el modal."
 }
