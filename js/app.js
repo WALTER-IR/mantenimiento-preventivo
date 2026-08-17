@@ -573,10 +573,9 @@
   }
 
   function paginationHTML(total, page, pageSize) {
-    if (total <= pageSize) return "";
     const sizes = [50, 100, 0];
     const sizeLabels = ["50", "100", "Todo"];
-    const totalPages = Math.ceil(total / pageSize);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const curPage = Math.min(page, totalPages);
     let html = `<div class="pagination-bar">`;
     html += `<span class="pag-info">${total} reg.</span>`;
@@ -670,9 +669,9 @@
     const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-    // Un "bucket" por usuario con rol de edición/administración (los técnicos).
+    // Un "bucket" por usuario (todos los usuarios, incluyendo lectura).
     const buckets = new Map();
-    const tecnicos = usuarios.filter((u) => u.rol >= ROL.EDICION);
+    const tecnicos = usuarios.slice();
     tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, equipos: new Set() }));
     const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, equipos: new Set() };
     buckets.set("__sin__", sin);
@@ -1483,7 +1482,11 @@
     `;
     $("#alertFullEmpty").classList.toggle("hidden", list.length > 0);
     const chip = $("#btnAlertVencidos");
-    if (chip) chip.classList.toggle("active", vencidos);
+    if (chip) {
+      chip.classList.toggle("active", vencidos);
+      const vencCount = equipos.filter(esVisibleEquipo).filter((e) => statusOf(e).key === "vencido").length;
+      chip.textContent = "Vencidos (" + vencCount + ")";
+    }
   }
 
   // ============================================================
