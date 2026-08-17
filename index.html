@@ -24,9 +24,10 @@
 
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
-      <div class="login-logo">🔐</div>
+      <img id="loginLogo" class="login-logo-img hidden" alt="Logo" />
+      <div class="login-logo" id="loginLogoEmoji">🔐</div>
       <h2>Mantenimiento Preventivo</h2>
-      <p class="login-sub">Inicia sesión para continuar</p>
+      <p class="login-sub" id="loginEmpresaSub">Inicia sesión para continuar</p>
       <label class="field-label" for="loginUsuario">Usuario</label>
       <input type="text" id="loginUsuario" class="input" placeholder="DNI o nombre" autocomplete="username" />
       <label class="field-label" for="loginClave">Contraseña</label>
@@ -102,9 +103,16 @@
 
       <div class="chart-row">
         <div class="card chart-col">
+          <h3 class="card-title">Equipos por marca</h3>
+          <div id="dashMarcaBar"></div>
+        </div>
+        <div class="card chart-col">
           <h3 class="card-title">Mantenimientos vencidos</h3>
           <div id="dashVencPie"></div>
         </div>
+      </div>
+
+      <div class="chart-row">
         <div class="card chart-col">
           <h3 class="card-title">Reprogramados y finalizados</h3>
           <div id="dashReproFinDonut"></div>

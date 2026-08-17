@@ -422,7 +422,7 @@ body {
 
 @media (min-width: 900px) {
   .hamburger { display: none; }
-  .topbar { margin-left: 256px; }
+  .topbar { display: none; }
   .content { margin-left: 256px; padding: 24px 32px 48px; }
   .backdrop { display: none; }
 }
@@ -514,6 +514,21 @@ body {
 .logo-upload-row .field-label { margin: 0; }
 .logo-preview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* Login logo */
+.login-logo-img { width: 80px; height: 80px; border-radius: 16px; object-fit: contain; margin-bottom: 8px; background: #fff; padding: 4px; }
+
+/* Equipo counter */
+.equipo-counter { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+
+/* Paginación */
+.pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
+.pag-sizes { display: flex; gap: 4px; }
+.pag-size { padding: 4px 10px !important; font-size: 12px !important; border: 1px solid var(--border) !important; border-radius: 6px !important; }
+.pag-size.active { background: var(--rojo) !important; color: #fff !important; border-color: var(--rojo) !important; }
+.pag-info { font-size: 13px; color: var(--text-muted); }
+.pag-btns { display: flex; gap: 4px; }
+.pag-btns .btn { padding: 4px 10px !important; font-size: 14px !important; }
 
 @media print {
   body.imprimiendo { background: #fff; }

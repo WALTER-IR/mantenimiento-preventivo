@@ -1,6 +1,6 @@
 {
-  "version": "1.24.1",
+  "version": "1.24.2",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-16",
-  "changelog": "Corrección crítica: el login dejó de funcionar después de 1.24.0. syncBajar ya no se ejecuta automáticamente antes del inicio de sesión; se asegura el admin en modo degradado."
+  "changelog": "Gráfico por marca de equipos; tipos de equipo dinámicos; paginación 50/100/Todos en equipos, historial y alertas; logo en login; topbar solo en móvil."
 }

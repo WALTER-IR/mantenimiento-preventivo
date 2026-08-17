@@ -19,6 +19,12 @@
   let currentDetailId = null;
   let usuarioPerfilMode = false;
   let feriados = [];
+  let eqPage = 1;
+  let eqPageSize = 50;
+  let mantPage = 1;
+  let mantPageSize = 50;
+  let alertPage = 1;
+  let alertPageSize = 50;
 
   // ---------------- Roles y sesión ----------------
   const ROL = { LECTURA: 0, EDICION: 1, ADMIN: 2 };
@@ -184,6 +190,21 @@
   function showLogin() {
     $("#loginScreen").classList.remove("hidden");
     $("#loginClave").value = "";
+    const b64 = getLogoData();
+    const img = $("#loginLogo");
+    const emoji = $("#loginLogoEmoji");
+    if (b64) {
+      img.src = "data:image/png;base64," + b64;
+      img.classList.remove("hidden");
+      emoji.classList.add("hidden");
+    } else {
+      img.classList.add("hidden");
+      emoji.classList.remove("hidden");
+    }
+    const empresa = (appConfig && appConfig.empresa && appConfig.empresa !== "Empresa") ? appConfig.empresa : "";
+    const sub = $("#loginEmpresaSub");
+    if (empresa) sub.textContent = empresa + " · Laptops y Computadoras";
+    else sub.textContent = "Inicia sesión para continuar";
   }
 
   function applySessionUI() {
@@ -353,6 +374,9 @@
     // Categorías de equipos (dinámico).
     $("#dashCatBar").innerHTML = equiposCatHTML(visIds);
 
+    // Equipos por marca (dinámico).
+    $("#dashMarcaBar").innerHTML = marcasEquipoHTML(visIds);
+
     // Torta: estados de los equipos (vencidos / próximos / al día).
     $("#dashVencPie").innerHTML = pieChartHTML([
       { label: "Vencidos", value: stats.vencidos, color: "#E11D48" },
@@ -514,6 +538,61 @@
         <div class="cat-sub">${pct}%</div>
       </div>`;
     }).join("") + `</div>`;
+  }
+
+  function marcasPorEquipo(scope) {
+    const cats = new Map();
+    equipos.forEach((e) => {
+      if (scope && !scope.has(String(e.id))) return;
+      if (!esVisibleEquipo(e)) return;
+      const cat = String(e.marca || "").trim() || "Sin marca";
+      cats.set(cat, (cats.get(cat) || 0) + 1);
+    });
+    return [...cats.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  const MARCA_COLORS = ["#2563EB", "#DC2626", "#059669", "#D97706", "#7C3AED", "#EC4899", "#06B6D4", "#64748B", "#EA580C", "#4F46E5"];
+
+  function marcasEquipoHTML(scope) {
+    const cats = marcasPorEquipo(scope);
+    if (!cats.length) return `<div class="empty-state"><div class="empty-icon">💻</div><p>Sin equipos.</p></div>`;
+    const total = cats.reduce((a, c) => a + c.value, 0);
+    const max = Math.max(...cats.map((c) => c.value), 1);
+    return `<div class="cat-chart">` + cats.map((c, i) => {
+      const color = MARCA_COLORS[i % MARCA_COLORS.length];
+      const pct = Math.round((c.value / total) * 100);
+      return `<div class="cat-col" title="${esc(c.label)}: ${c.value} equipos">
+        <div class="cat-val">${c.value}</div>
+        <div class="cat-track"><div class="cat-fill" style="height:${(c.value / max) * 100}%;background:${color}"></div></div>
+        <div class="cat-label">${esc(shortName(c.label))}</div>
+        <div class="cat-sub">${pct}%</div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
+  function paginationHTML(total, page, pageSize, onPageChange) {
+    if (total <= 50) return "";
+    const sizes = [50, 100, 0];
+    const sizeLabels = ["50", "100", "Todos"];
+    const totalPages = Math.ceil(total / pageSize);
+    const curPage = Math.min(page, totalPages);
+    let html = `<div class="pagination">`;
+    html += `<div class="pag-sizes">`;
+    sizes.forEach((s, i) => {
+      const active = (s === 0 && pageSize >= total) || s === pageSize;
+      html += `<button class="btn btn-ghost pag-size${active ? " active" : ""}" data-page-size="${s || total}">${sizeLabels[i]}</button>`;
+    });
+    html += `</div>`;
+    html += `<div class="pag-info">${curPage} / ${totalPages} · ${total} registros</div>`;
+    html += `<div class="pag-btns">`;
+    html += `<button class="btn btn-ghost" data-page="1" ${curPage <= 1 ? "disabled" : ""}>«</button>`;
+    html += `<button class="btn btn-ghost" data-page="${curPage - 1}" ${curPage <= 1 ? "disabled" : ""}>‹</button>`;
+    html += `<button class="btn btn-ghost" data-page="${curPage + 1}" ${curPage >= totalPages ? "disabled" : ""}>›</button>`;
+    html += `<button class="btn btn-ghost" data-page="${totalPages}" ${curPage >= totalPages ? "disabled" : ""}>»</button>`;
+    html += `</div></div>`;
+    return html;
   }
 
   // -------------------------------------------------------
@@ -755,16 +834,30 @@
   function renderEquipos() {
     const q = ($("#searchEquipo").value || "").trim().toLowerCase();
     const tipo = $("#filterTipo").value;
+    const tiposExistentes = [...new Set(equipos.map((e) => String(e.tipo || "").trim()).filter(Boolean))].sort();
+    const fTipo = $("#filterTipo");
+    const curTipo = fTipo.value;
+    fTipo.innerHTML = `<option value="">Todos los tipos</option>` +
+      tiposExistentes.map((t) => `<option value="${esc(t)}">${esc(tipoLabel(t))}</option>`).join("");
+    if (tiposExistentes.includes(curTipo)) fTipo.value = curTipo;
+    const tipoVal = fTipo.value;
     let list = equipos.filter((e) => {
       if (!esVisibleEquipo(e)) return false;
-      if (tipo && e.tipo !== tipo) return false;
+      if (tipoVal && e.tipo !== tipoVal) return false;
       if (!q) return true;
       return [e.nombre, e.serie, e.hostname, e.marca, e.ubicacion, e.ip, e.departamento, e.cargo, e.responsable, e.modelo]
         .join(" ").toLowerCase().includes(q);
     });
     list.sort((a, b) => (a.nombre < b.nombre ? -1 : 1));
-
-    $("#equipoList").innerHTML = list.map((e) => {
+    const totalAll = list.length;
+    if (eqPageSize >= totalAll) eqPage = 1;
+    const totalPages = Math.max(1, Math.ceil(totalAll / eqPageSize));
+    if (eqPage > totalPages) eqPage = totalPages;
+    const start = (eqPage - 1) * eqPageSize;
+    const pageList = list.slice(start, start + eqPageSize);
+    const pag = paginationHTML(totalAll, eqPage, eqPageSize);
+    $("#equipoList").innerHTML = `<div class="equipo-counter">${totalAll} equipo${totalAll === 1 ? "" : "s"} registrado${totalAll === 1 ? "" : "s"}</div>` + pag +
+      pageList.map((e) => {
       const st = statusOf(e);
       const badge = st.key === "vencido"
         ? `<span class="badge danger">Vencido</span>`
@@ -1270,10 +1363,16 @@
     });
     list.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 
-    // Contador de registros
-    const contador = `<div class="mant-counter">${list.length} registro${list.length === 1 ? "" : "s"} encontrado${list.length === 1 ? "" : "s"}</div>`;
+    const totalAll = list.length;
+    if (mantPageSize >= totalAll) mantPage = 1;
+    const totalPages = Math.max(1, Math.ceil(totalAll / mantPageSize));
+    if (mantPage > totalPages) mantPage = totalPages;
+    const start = (mantPage - 1) * mantPageSize;
+    const pageList = list.slice(start, start + mantPageSize);
+    const pag = paginationHTML(totalAll, mantPage, mantPageSize);
+    const contador = `<div class="mant-counter">${totalAll} registro${totalAll === 1 ? "" : "s"} encontrado${totalAll === 1 ? "" : "s"}</div>`;
 
-    $("#mantList").innerHTML = contador + list.map((m) => {
+    $("#mantList").innerHTML = contador + pag + pageList.map((m) => {
       const eq = equipos.find((x) => x.id === m.equipoId) || {};
       const subSerie = [eq.serie, eq.hostname].filter(Boolean).join(" - ") || "—";
       const prog = [fmtDate(m.fecha), m.prioridad].filter(Boolean).join(" - ") || "—";
@@ -1364,9 +1463,17 @@
       })
       .sort((a, b) => (a.st.days > b.st.days ? 1 : -1));
     const tipoLabel = vencidos ? "Vencidos" : "Próximos " + dias + " días";
+    const totalAll = list.length;
+    if (alertPageSize >= totalAll) alertPage = 1;
+    const totalPages = Math.max(1, Math.ceil(totalAll / alertPageSize));
+    if (alertPage > totalPages) alertPage = totalPages;
+    const start = (alertPage - 1) * alertPageSize;
+    const pageList = list.slice(start, start + alertPageSize);
+    const pag = paginationHTML(totalAll, alertPage, alertPageSize);
     $("#alertFullList").innerHTML = `
-      <div class="alert-counter">${list.length} registro${list.length === 1 ? "" : "s"} ${tipoLabel.toLowerCase()}</div>
-      ${list.map(alertHTML).join("")}
+      <div class="alert-counter">${totalAll} registro${totalAll === 1 ? "" : "s"} ${tipoLabel.toLowerCase()}</div>
+      ${pag}
+      ${pageList.map(alertHTML).join("")}
     `;
     $("#alertFullEmpty").classList.toggle("hidden", list.length > 0);
     const chip = $("#btnAlertVencidos");
@@ -2499,6 +2606,8 @@
           sesion = null;
           await DB.clearSesion();
           showLogin();
+        } else {
+          setView(currentView);
         }
         syncSubir();
         toast("Datos importados correctamente", "ok");
@@ -2586,6 +2695,7 @@
       await auditar("SINCRONIZAR", "Datos recibidos desde la nube");
       await reload();
       await ensureAdmin();
+      if (sesion) setView(currentView);
       if (sesion && !usuarios.some((u) => u.id === sesion.id)) {
         sesion = null;
         await DB.clearSesion();
@@ -2707,6 +2817,7 @@
         else if (tipo === "feriados") r = await importarFeriados(filas, errores);
         else r = await importarMantenimientos(filas, errores);
         await reload();
+        setView(currentView);
         let txt = "Importados: " + r[0] + "   ·   Inválidos: " + r[1];
         if (errores.length) txt += "\n\nErrores de validación:\n" + errores.join("\n");
         if (tipo === "equipos" && r[1] > 0) {
@@ -3143,7 +3254,6 @@
     if (mCamb) await DB.bulkPut("mantenimientos", mantenimientos);
     if (eCamb) await DB.bulkPut("equipos", equipos);
     renderConfig();
-    setView(currentView);
   }
 
   // ============================================================
@@ -3278,6 +3388,31 @@
 
     // delegación de clics
     document.addEventListener("click", (e) => {
+      // Paginación
+      const pagBtn = e.target.closest("[data-page]");
+      if (pagBtn && !pagBtn.disabled) {
+        const p = parseInt(pagBtn.dataset.page, 10);
+        const view = pagBtn.closest(".view");
+        if (view) {
+          const vid = view.id;
+          if (vid === "view-equipos") { eqPage = p; renderEquipos(); }
+          else if (vid === "view-mantenimientos") { mantPage = p; renderMantenimientos(); }
+          else if (vid === "view-alertas") { alertPage = p; renderAlertas(); }
+        }
+        return;
+      }
+      const pagSize = e.target.closest("[data-page-size]");
+      if (pagSize) {
+        const s = parseInt(pagSize.dataset.pageSize, 10);
+        const view = pagSize.closest(".view");
+        if (view) {
+          const vid = view.id;
+          if (vid === "view-equipos") { eqPageSize = s; eqPage = 1; renderEquipos(); }
+          else if (vid === "view-mantenimientos") { mantPageSize = s; mantPage = 1; renderMantenimientos(); }
+          else if (vid === "view-alertas") { alertPageSize = s; alertPage = 1; renderAlertas(); }
+        }
+        return;
+      }
       const editUsr = e.target.closest("[data-edit-usuario]");
       if (editUsr) {
         const u = usuarios.find((x) => x.id === editUsr.dataset.editUsuario);
@@ -3424,6 +3559,7 @@
     await reload();
     await ensureAdmin();
     await reload();
+    setView(currentView);
     toast("Base de datos vaciada", "ok");
     auditar("VACIAR BASE DE DATOS", "Se eliminaron todos los registros");
     syncSubir();
