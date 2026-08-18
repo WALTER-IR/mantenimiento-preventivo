@@ -414,11 +414,56 @@
       $("#dashVencPie").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin vencidos.</p></div>`;
     }
 
-    // Anillo: reprogramados vs finalizados.
-    $("#dashReproFinDonut").innerHTML = donutChartHTML([
-      { label: "Reprogramados", value: prog.reprogramado, color: "#D97706" },
-      { label: "Finalizados", value: prog.finalizado, color: "#059669" }
-    ]);
+    // KPI Cards: reprogramados y finalizados.
+    var now = new Date();
+    var monthlyReprog = [];
+    var monthlyFin = [];
+    for (var mi = 5; mi >= 0; mi--) {
+      var d = new Date(now.getFullYear(), now.getMonth() - mi, 1);
+      var ym = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
+      var rc = 0, fc = 0;
+      mantenimientos.forEach(function (m) {
+        if (!visIds.has(m.equipoId)) return;
+        if (m.fecha && m.fecha.indexOf(ym) === 0) {
+          var es = estadoMant(m);
+          if (es === "reprogramado") rc++;
+          if (es === "finalizado") fc++;
+        }
+      });
+      monthlyReprog.push(rc);
+      monthlyFin.push(fc);
+    }
+    var curReprog = monthlyReprog[monthlyReprog.length - 1];
+    var prevReprog = monthlyReprog[monthlyReprog.length - 2];
+    var diffReprog = curReprog - prevReprog;
+    var pctDiffReprog = prevReprog ? Math.round((diffReprog / prevReprog) * 100) : (curReprog > 0 ? 100 : 0);
+    var curFin = monthlyFin[monthlyFin.length - 1];
+    var prevFin = monthlyFin[monthlyFin.length - 2];
+    var diffFin = curFin - prevFin;
+    var pctDiffFin = prevFin ? Math.round((diffFin / prevFin) * 100) : (curFin > 0 ? 100 : 0);
+    var updDate = now.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
+    $("#kpiReprogramados").innerHTML = kpiCardHTML({
+      title: "Reprogramados",
+      value: curReprog,
+      trendPct: pctDiffReprog,
+      trendLabel: diffReprog >= 0 ? "+" + pctDiffReprog + "%" : pctDiffReprog + "%",
+      trendPositive: diffReprog >= 0,
+      period: "vs mes anterior",
+      updateDate: updDate,
+      color: "#D97706",
+      sparkData: monthlyReprog
+    });
+    $("#kpiFinalizados").innerHTML = kpiCardHTML({
+      title: "Finalizados",
+      value: curFin,
+      trendPct: pctDiffFin,
+      trendLabel: diffFin >= 0 ? "+" + pctDiffFin + "%" : pctDiffFin + "%",
+      trendPositive: diffFin >= 0,
+      period: "vs mes anterior",
+      updateDate: updDate,
+      color: "#059669",
+      sparkData: monthlyFin
+    });
   }
 
   // ============================================================
@@ -429,6 +474,37 @@
   function shortName(n) {
     const s = String(n || "");
     return s.length > 18 ? s.slice(0, 17) + "…" : s;
+  }
+
+  function kpiCardHTML(o) {
+    var sparkW = 100, sparkH = 32;
+    var data = o.sparkData || [];
+    var maxVal = Math.max.apply(null, data.concat([1]));
+    var pts = data.map(function (v, i) {
+      var x = data.length > 1 ? (i / (data.length - 1)) * sparkW : sparkW / 2;
+      var y = maxVal ? sparkH - (v / maxVal) * (sparkH - 4) : sparkH / 2;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    });
+    var sparkSvg = '<svg width="' + sparkW + '" height="' + sparkH + '" viewBox="0 0 ' + sparkW + ' ' + sparkH + '" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<polyline points="' + pts.join(" ") + '" stroke="' + o.color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+      '<circle cx="' + pts[pts.length - 1].split(",")[0] + '" cy="' + pts[pts.length - 1].split(",")[1] + '" r="3" fill="' + o.color + '"/>' +
+      '</svg>';
+    var trendColor = o.trendPositive ? "#059669" : "#DC2626";
+    var trendIcon = o.trendPositive ? "&#9650;" : "&#9660;";
+    return '<div class="kpi-inner">' +
+      '<div class="kpi-top">' +
+        '<span class="kpi-title">' + esc(o.title) + '</span>' +
+        '<span class="kpi-date">' + esc(o.updateDate) + '</span>' +
+      '</div>' +
+      '<div class="kpi-middle">' +
+        '<span class="kpi-value">' + o.value + '</span>' +
+        '<span class="kpi-trend" style="color:' + trendColor + '">' + trendIcon + ' ' + esc(o.trendLabel) + '</span>' +
+      '</div>' +
+      '<div class="kpi-bottom">' +
+        '<span class="kpi-period">' + esc(o.period) + '</span>' +
+        '<div class="kpi-spark">' + sparkSvg + '</div>' +
+      '</div>' +
+      '</div>';
   }
 
   function barChartHTML(rows) {

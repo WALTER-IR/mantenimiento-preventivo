@@ -303,6 +303,19 @@ body {
 .rd-val { font-size: 12px; color: var(--text-muted, #64748B); margin-left: auto; white-space: nowrap; }
 .rd-pct { font-weight: 400; }
 
+/* KPI Metric Cards */
+.kpi-card { padding: 0 !important; overflow: hidden; }
+.kpi-inner { padding: 18px 20px 14px; }
+.kpi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.kpi-title { font-size: 13px; font-weight: 600; color: var(--text-muted, #64748B); text-transform: uppercase; letter-spacing: .4px; }
+.kpi-date { font-size: 10.5px; color: var(--text-muted, #94A3B8); }
+.kpi-middle { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.kpi-value { font-size: 32px; font-weight: 800; color: var(--text-main, #1E293B); line-height: 1; }
+.kpi-trend { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.kpi-bottom { display: flex; justify-content: space-between; align-items: center; }
+.kpi-period { font-size: 11px; color: var(--text-muted, #94A3B8); }
+.kpi-spark { display: flex; align-items: center; }
+
 /* Torta (pie) y anillo (donut) */
 .pie-wrap, .donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 10px 0 0; }
 .pie-chart { width: 60%; max-width: 180px; height: auto; }
