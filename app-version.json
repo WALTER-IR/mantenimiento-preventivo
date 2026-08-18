@@ -1,6 +1,6 @@
 {
-  "version": "1.24.8",
+  "version": "1.24.9",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Título dinámico de avance con cantidad de equipos. Secciones de encabezado removidas."
+  "changelog": "Removidas tarjetas de estadísticas del panel de control."
 }

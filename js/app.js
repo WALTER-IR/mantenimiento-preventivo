@@ -346,22 +346,13 @@
     const visIds = new Set(vis.map((e) => String(e.id)));
     const mes = mantenimientos.filter((m) => visIds.has(m.equipoId) && m.fecha >= firstOfMonth).length;
 
-    $("#statTotal").textContent = total;
     $("#dashAvanceTitle").textContent = "Gráfico de avance \u2014 " + total + " Equipos";
-    $("#statResp").textContent = usuarios.length;
-    $("#cardResp").classList.toggle("hidden", !esAdmin());
-    $("#statVencidos").textContent = stats.vencidos;
-    $("#statProximos").textContent = stats.proximos;
-    $("#statMes").textContent = mes;
 
     const prog = { programado: 0, reprogramado: 0, finalizado: 0 };
     mantenimientos.forEach((m) => {
       if (!visIds.has(m.equipoId)) return;
       prog[estadoMant(m)]++;
     });
-    $("#statProg").textContent = prog.programado;
-    $("#statReprog").textContent = prog.reprogramado;
-    $("#statFin").textContent = prog.finalizado;
 
     // Gráfico de avance global (barras apiladas).
     const totP = prog.programado + prog.reprogramado + prog.finalizado;
