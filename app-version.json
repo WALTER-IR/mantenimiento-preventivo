@@ -1,6 +1,6 @@
 {
-  "version": "1.24.5",
+  "version": "1.24.6",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-16",
-  "changelog": "Ubicaciones en historial se filtran por responsable seleccionado."
+  "updated": "2026-08-18",
+  "changelog": "Gráfico radial de categorías de equipos (anillos concéntricos)."
 }

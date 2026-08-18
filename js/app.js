@@ -552,22 +552,50 @@
 
   const CAT_COLORS = ["#2563EB", "#DC2626", "#059669", "#D97706", "#7C3AED", "#EC4899", "#06B6D4", "#64748B"];
 
-  // Barras de categorías de equipos (colores dinámicos, soporta N categorías).
+  // Gráfico radial de categorías de equipos (anillos concéntricos).
   function equiposCatHTML(scope) {
     const cats = equiposPorCategoria(scope);
     if (!cats.length) return `<div class="empty-state"><div class="empty-icon">💻</div><p>Sin equipos.</p></div>`;
     const total = cats.reduce((a, c) => a + c.value, 0);
-    const max = Math.max(...cats.map((c) => c.value), 1);
-    return `<div class="cat-chart">` + cats.map((c, i) => {
-      const color = CAT_COLORS[i % CAT_COLORS.length];
-      const pct = Math.round((c.value / total) * 100);
-      return `<div class="cat-col" title="${esc(c.label)}: ${c.value} equipos">
-        <div class="cat-val">${c.value}</div>
-        <div class="cat-track"><div class="cat-fill" style="height:${(c.value / max) * 100}%;background:${color}"></div></div>
-        <div class="cat-label">${esc(c.label)}</div>
-        <div class="cat-sub">${pct}%</div>
-      </div>`;
-    }).join("") + `</div>`;
+    const colors = CAT_COLORS;
+    const cx = 100, cy = 100, startDeg = 150, maxSweep = 290;
+    const rings = [{ r: 84, w: 22 }, { r: 58, w: 22 }, { r: 32, w: 22 }];
+    const toRad = (d) => d * Math.PI / 180;
+    const arcD = (r, sweep) => {
+      if (sweep <= 0) return "";
+      const sx = cx + r * Math.cos(toRad(startDeg));
+      const sy = cy + r * Math.sin(toRad(startDeg));
+      const ex = cx + r * Math.cos(toRad(startDeg + sweep));
+      const ey = cy + r * Math.sin(toRad(startDeg + sweep));
+      return "M" + sx.toFixed(2) + "," + sy.toFixed(2) + " A" + r + "," + r + " 0 " + (sweep > 180 ? 1 : 0) + " 1 " + ex.toFixed(2) + "," + ey.toFixed(2);
+    };
+    const dc = cats.slice(0, 3);
+    const bgSvg = dc.map(function (_, i) {
+      return '<path d="' + arcD(rings[i].r, maxSweep) + '" fill="none" stroke="#E2E8F0" stroke-width="' + rings[i].w + '" stroke-linecap="round"/>';
+    }).join("");
+    const valSvg = dc.map(function (cat, i) {
+      var pct = total ? cat.value / total : 0;
+      var sw = pct > 0 ? Math.max(pct * maxSweep, 4) : 0;
+      if (sw <= 0) return "";
+      return '<path d="' + arcD(rings[i].r, sw) + '" fill="none" stroke="' + colors[i % colors.length] + '" stroke-width="' + rings[i].w + '" stroke-linecap="round" opacity="0.92"/>';
+    }).join("");
+    var centerSvg = '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" font-size="30" font-weight="700" fill="#1E293B" font-family="system-ui,sans-serif">' + total + '</text>' +
+      '<text x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle" font-size="9" fill="#94A3B8" font-family="system-ui,sans-serif" letter-spacing="1">TOTAL</text>';
+    var personSvg = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 21v-1a6.5 6.5 0 0 1 13 0v1"/></svg>';
+    var legendHtml = dc.map(function (cat, i) {
+      var color = colors[i % colors.length];
+      var pct = total ? Math.round((cat.value / total) * 100) : 0;
+      return '<div class="rd-leg">' +
+        '<span class="rd-dot" style="background:' + color + '"></span>' +
+        '<span class="rd-name">' + esc(cat.label) + '</span>' +
+        '<span class="rd-val">' + cat.value + ' <span class="rd-pct">(' + pct + '%)</span></span>' +
+        '</div>';
+    }).join("");
+    return '<div class="rd-wrap">' +
+      '<div class="rd-person">' + personSvg + '</div>' +
+      '<svg viewBox="0 0 200 200" class="rd-svg">' + bgSvg + valSvg + centerSvg + '</svg>' +
+      '<div class="rd-legend">' + legendHtml + '</div>' +
+      '</div>';
   }
 
   function marcasPorEquipo(scope) {

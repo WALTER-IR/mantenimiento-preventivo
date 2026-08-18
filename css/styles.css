@@ -292,6 +292,17 @@ body {
 .cat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 6px; }
 .cat-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
 
+/* Radial dashboard chart */
+.rd-wrap { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.rd-person { flex-shrink: 0; display: flex; align-items: center; }
+.rd-svg { width: 160px; height: 160px; flex-shrink: 0; }
+.rd-legend { display: flex; flex-direction: column; gap: 14px; }
+.rd-leg { display: flex; align-items: center; gap: 8px; }
+.rd-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.rd-name { font-size: 13px; font-weight: 600; color: var(--text-main, #1E293B); white-space: nowrap; }
+.rd-val { font-size: 12px; color: var(--text-muted, #64748B); margin-left: auto; white-space: nowrap; }
+.rd-pct { font-weight: 400; }
+
 /* Torta (pie) y anillo (donut) */
 .pie-wrap, .donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 10px 0 0; }
 .pie-chart { width: 60%; max-width: 180px; height: auto; }
