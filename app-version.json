@@ -1,6 +1,6 @@
 {
-  "version": "1.24.7",
+  "version": "1.24.8",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "KPI Metric Cards para Reprogramados y Finalizados con sparkline y tendencia."
+  "changelog": "Título dinámico de avance con cantidad de equipos. Secciones de encabezado removidas."
 }

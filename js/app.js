@@ -347,6 +347,7 @@
     const mes = mantenimientos.filter((m) => visIds.has(m.equipoId) && m.fecha >= firstOfMonth).length;
 
     $("#statTotal").textContent = total;
+    $("#dashAvanceTitle").textContent = "Gráfico de avance \u2014 " + total + " Equipos";
     $("#statResp").textContent = usuarios.length;
     $("#cardResp").classList.toggle("hidden", !esAdmin());
     $("#statVencidos").textContent = stats.vencidos;
