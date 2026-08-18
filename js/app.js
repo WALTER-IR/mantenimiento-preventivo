@@ -1383,18 +1383,10 @@
   function renderMantenimientos() {
     const vis = equiposVisibles();
     const visIds = new Set(vis.map((e) => e.id));
-    const ubicMap = new Map(vis.map((e) => [e.id, (e.ubicacion || "").trim()]));
-    const ubicSel = $("#filterUbicacion");
-    const curUbic = ubicSel.value;
-    const ubics = [...new Set(ubicMap.values())].filter(Boolean).sort();
-    ubicSel.innerHTML = `<option value="">Todas las ubicaciones</option>` +
-      ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
-    if (ubics.includes(curUbic)) ubicSel.value = curUbic;
 
     // Combo de responsables (excluye admin, incluye lectura; desde campo responsable del equipo).
     const usrSel = $("#filterUsuarioMant");
     const curUsr = usrSel.value;
-    const noAdmins = usuarios.filter((u) => u.rol !== ROL.ADMIN);
     const respSet = new Set();
     vis.forEach((e) => {
       const r = (e.responsable || "").trim();
@@ -1403,6 +1395,17 @@
     const respOpts = [...respSet].sort().map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
     usrSel.innerHTML = `<option value="">Todos los responsables</option>` + respOpts;
     if ([...respSet].includes(curUsr)) usrSel.value = curUsr;
+    const fUsuario = usrSel.value;
+
+    // Combo de ubicaciones: si hay usuario seleccionado, solo las ubicaciones de ese usuario.
+    const visFiltrados = fUsuario ? vis.filter((e) => (e.responsable || "").trim() === fUsuario) : vis;
+    const ubicMap = new Map(visFiltrados.map((e) => [e.id, (e.ubicacion || "").trim()]));
+    const ubicSel = $("#filterUbicacion");
+    const curUbic = ubicSel.value;
+    const ubics = [...new Set(ubicMap.values())].filter(Boolean).sort();
+    ubicSel.innerHTML = `<option value="">Todas las ubicaciones</option>` +
+      ubics.map((u) => `<option value="${esc(u)}">${esc(u)}</option>`).join("");
+    if (ubics.includes(curUbic)) ubicSel.value = curUbic;
 
     // Combo de tipo de equipo (misma lógica que vista Equipos).
     const fSel = $("#filterEquipo");
@@ -1418,7 +1421,6 @@
     const fUbic = ubicSel.value;
     const fDesde = $("#filterFechaDesde").value;
     const fHasta = $("#filterFechaHasta").value;
-    const fUsuario = usrSel.value;
     const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     let list = mantenimientos.filter((m) => {
       if (!visIds.has(m.equipoId)) return false;
