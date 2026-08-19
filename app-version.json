@@ -1,6 +1,6 @@
 {
-  "version": "1.24.44",
+  "version": "1.24.45",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Logo: boton Guardar, preview antes de guardar, sync despues de bajar datos."
+  "changelog": "Logo fijo en login, sidebar y topbar. Logo se preserva en cloud y DB."
 }

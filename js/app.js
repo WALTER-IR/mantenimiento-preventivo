@@ -2903,7 +2903,7 @@
       motivo: String(f.motivo || "").trim()
     }));
 
-    return { usuarios: usuariosWeb, equipos: equiposWeb, mantenimientos: mantenimientosWeb, feriados: feriadosWeb };
+    return { logo: d.logo || "", usuarios: usuariosWeb, equipos: equiposWeb, mantenimientos: mantenimientosWeb, feriados: feriadosWeb };
   }
 
   // Reemplaza TODOS los datos por los del respaldo (igual que la app móvil).
@@ -2916,6 +2916,7 @@
     if (Array.isArray(data.equipos) && data.equipos.length) await DB.bulkPut("equipos", data.equipos);
     if (Array.isArray(data.mantenimientos) && data.mantenimientos.length) await DB.bulkPut("mantenimientos", data.mantenimientos);
     if (Array.isArray(data.feriados) && data.feriados.length) await DB.bulkPut("feriados", data.feriados);
+    if (data.logo) await DB.setConfig("logo", data.logo);
     if (!esApk && data.config) {
       await DB.setConfig("empresa", data.config.empresa || "Empresa");
       await DB.setConfig("intervalo", data.config.intervalo || 90);
@@ -3567,6 +3568,7 @@
     appConfig = await DB.getConfig();
     if (!getLogoData() && appConfig.logo) {
       try { localStorage.setItem("formato_logo_base64", appConfig.logo); } catch (e) { /* */ }
+      applyLogoToUI(appConfig.logo);
     }
     // Corrige fechas dañadas (formato JavaScript/Excel) guardadas por versiones anteriores.
     let mCamb = false;
@@ -3832,6 +3834,22 @@
       else localStorage.removeItem("formato_logo_base64");
     } catch (e) {}
     DB.setConfig("logo", b64 || "").catch(() => {});
+    applyLogoToUI(b64);
+  }
+  function applyLogoToUI(b64) {
+    var src = b64 ? "data:image/png;base64," + b64 : "";
+    var els = ["#logoPreview", "#topbarLogo", "#sidebarLogo"];
+    var icons = ["#topbarIcon", "#sidebarIcon"];
+    els.forEach(function (sel) {
+      var el = $(sel);
+      if (!el) return;
+      if (src) { el.src = src; el.classList.remove("hidden"); } else { el.classList.add("hidden"); }
+    });
+    icons.forEach(function (sel) {
+      var el = $(sel);
+      if (!el) return;
+      el.classList.toggle("hidden", !!src);
+    });
   }
   function processLogo(file) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -3873,9 +3891,8 @@
     $("#logoInput").value = "";
     if (navigator.onLine) syncSubir();
   });
-  // Restore logo preview on load
-  const savedLogo = getLogoData();
-  if (savedLogo) { $("#logoPreview").src = savedLogo; $("#logoPreview").classList.remove("hidden"); }
+  // Restore logo on load
+  applyLogoToUI(getLogoData());
 
   // ---------------- Errores guardados ----------------
   const ERR_KEY = "errores_guardados";
@@ -3963,8 +3980,7 @@
         sesion = await DB.getSesion();
         window.__STORAGE_OK__ = true;
         applySessionUI();
-        var logoNow = getLogoData();
-        if (logoNow) { $("#logoPreview").src = "data:image/png;base64," + logoNow; $("#logoPreview").classList.remove("hidden"); }
+        applyLogoToUI(getLogoData());
         if (sesion) {
           $("#loginScreen").classList.add("hidden");
           setView(currentView || "dashboard");
@@ -3975,8 +3991,7 @@
         // reemplace los usuarios locales antes de que el usuario pueda iniciar sesión).
         if (sesion && navigator.onLine) {
           await syncBajar();
-          var logoSync = getLogoData();
-          if (logoSync) { $("#logoPreview").src = "data:image/png;base64," + logoSync; $("#logoPreview").classList.remove("hidden"); }
+          applyLogoToUI(getLogoData());
         }
         /* Service Worker en modo SOLO CACHÉ (sin red): mantiene el
            funcionamiento sin conexión pero NO sincroniza nada en

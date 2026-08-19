@@ -71,6 +71,7 @@ body {
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-icon { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+.brand-logo { width: 42px; height: 42px; border-radius: 8px; object-fit: contain; background: #fff; padding: 2px; }
 .brand-name { font-weight: 700; font-size: 18px; line-height: 1.2; }
 .brand-sub { font-size: 12px; opacity: .92; }
 
@@ -87,6 +88,7 @@ body {
   padding: 22px 18px 18px; border-bottom: 1px solid rgba(255,255,255,.22);
 }
 .sidebar-head .brand-icon { font-size: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+.sidebar-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background: #fff; padding: 2px; }
 .sidebar-title { font-weight: 800; font-size: 16px; line-height: 1.2; }
 .sidebar-sub { font-size: 11px; opacity: .9; margin-top: 2px; }
 
