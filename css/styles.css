@@ -315,6 +315,10 @@ body {
 .kpi-bottom { display: flex; justify-content: space-between; align-items: center; }
 .kpi-period { font-size: 11px; color: var(--text-muted, #94A3B8); }
 .kpi-spark { display: flex; align-items: center; }
+.kpi-details { margin-top: 10px; border-top: 1px solid var(--border, #334155); padding-top: 8px; }
+.kpi-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 12px; }
+.kpi-detail-name { color: var(--text-muted, #94A3B8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+.kpi-detail-count { font-weight: 700; font-size: 13px; }
 
 /* Torta (pie) y anillo (donut) */
 .pie-wrap, .donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 10px 0 0; }

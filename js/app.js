@@ -408,6 +408,9 @@
 
     // KPI Cards: reprogramados y finalizados (por fecha real de ocurrencia).
     var now = new Date();
+    var ymCur = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2);
+    var reprogByUser = {};
+    var finByUser = {};
     var monthlyReprog = [];
     var monthlyFin = [];
     for (var mi = 5; mi >= 0; mi--) {
@@ -417,12 +420,26 @@
       mantenimientos.forEach(function (m) {
         if (!visIds.has(m.equipoId)) return;
         var es = estadoMant(m);
-        if (es === "reprogramado" && m.fechaReprogramada && m.fechaReprogramada.indexOf(ym) === 0) rc++;
-        if (es === "finalizado" && m.fechaReal && m.fechaReal.indexOf(ym) === 0) fc++;
+        if (es === "reprogramado" && m.fechaReprogramada && m.fechaReprogramada.indexOf(ym) === 0) {
+          rc++;
+          if (ym === ymCur) {
+            var t = (m.tecnico || "Sin asignar").trim();
+            reprogByUser[t] = (reprogByUser[t] || 0) + 1;
+          }
+        }
+        if (es === "finalizado" && m.fechaReal && m.fechaReal.indexOf(ym) === 0) {
+          fc++;
+          if (ym === ymCur) {
+            var t2 = (m.tecnico || "Sin asignar").trim();
+            finByUser[t2] = (finByUser[t2] || 0) + 1;
+          }
+        }
       });
       monthlyReprog.push(rc);
       monthlyFin.push(fc);
     }
+    var reprogDetails = Object.entries(reprogByUser).map(function (e) { return { name: e[0], count: e[1] }; }).sort(function (a, b) { return b.count - a.count; });
+    var finDetails = Object.entries(finByUser).map(function (e) { return { name: e[0], count: e[1] }; }).sort(function (a, b) { return b.count - a.count; });
     var curReprog = monthlyReprog[monthlyReprog.length - 1];
     var prevReprog = monthlyReprog[monthlyReprog.length - 2];
     var diffReprog = curReprog - prevReprog;
@@ -441,7 +458,8 @@
       period: "vs mes anterior",
       updateDate: updDate,
       color: "#D97706",
-      sparkData: monthlyReprog
+      sparkData: monthlyReprog,
+      details: reprogDetails
     });
     $("#kpiFinalizados").innerHTML = kpiCardHTML({
       title: "Finalizados",
@@ -452,7 +470,8 @@
       period: "vs mes anterior",
       updateDate: updDate,
       color: "#059669",
-      sparkData: monthlyFin
+      sparkData: monthlyFin,
+      details: finDetails
     });
   }
 
@@ -481,7 +500,7 @@
       '</svg>';
     var trendColor = o.trendPositive ? "#059669" : "#DC2626";
     var trendIcon = o.trendPositive ? "&#9650;" : "&#9660;";
-    return '<div class="kpi-inner">' +
+    var html = '<div class="kpi-inner">' +
       '<div class="kpi-top">' +
         '<span class="kpi-title">' + esc(o.title) + '</span>' +
         '<span class="kpi-date">' + esc(o.updateDate) + '</span>' +
@@ -493,8 +512,19 @@
       '<div class="kpi-bottom">' +
         '<span class="kpi-period">' + esc(o.period) + '</span>' +
         '<div class="kpi-spark">' + sparkSvg + '</div>' +
-      '</div>' +
       '</div>';
+    if (o.details && o.details.length) {
+      html += '<div class="kpi-details">';
+      o.details.forEach(function (d) {
+        html += '<div class="kpi-detail-row">' +
+          '<span class="kpi-detail-name">' + esc(shortName(d.name)) + '</span>' +
+          '<span class="kpi-detail-count" style="color:' + o.color + '">' + d.count + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
   }
 
   function barChartHTML(rows) {

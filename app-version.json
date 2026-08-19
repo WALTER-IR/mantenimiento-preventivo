@@ -1,6 +1,6 @@
 {
-  "version": "1.24.10",
+  "version": "1.24.11",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "KPI Cards ahora usan fecha real de ocurrencia (fechaReprogramada/fechaReal) en vez de fecha programada."
+  "changelog": "KPI Cards ahora muestran desglose por técnico (reprogramados y finalizados del mes actual)."
 }
