@@ -1,6 +1,6 @@
 {
-  "version": "1.24.24",
+  "version": "1.24.25",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Nombres en mayuscula, titulo cambiado a Mantenimiento Vencido."
+  "changelog": "Subtexto de piramide reducido a 10px para mostrar nombre completo."
 }
