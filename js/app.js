@@ -3617,6 +3617,11 @@
     $("#loginClave").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
     $("#loginUsuario").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#loginClave").focus(); });
 
+    // Acordeones de configuración
+    document.querySelectorAll(".card.accordion > .card-title").forEach((title) => {
+      title.addEventListener("click", () => title.closest(".card.accordion").classList.toggle("open"));
+    });
+
     // botones
     $("#btnNuevoEquipo").addEventListener("click", () => openEquipoModal(null));
     $("#btnGuardarEquipo").addEventListener("click", saveEquipo);

@@ -1,6 +1,6 @@
 {
-  "version": "1.24.40",
+  "version": "1.24.41",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Logo se sincroniza en la nube. Se mantiene al borrar cache o importar respaldo."
+  "changelog": "Configuracion con acordeones colapsables."
 }

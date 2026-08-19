@@ -587,3 +587,12 @@ body {
   body.imprimiendo #view-formato { position: absolute; left: 0; top: 0; width: 100%; }
   body.imprimiendo .btn-row { display: none; }
 }
+
+/* Acordeón de configuración */
+.card.accordion > .card-title { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; }
+.card.accordion > .card-title::after { content: "▸"; font-size: 14px; color: var(--text-muted, #94A3B8); transition: transform 0.2s; }
+.card.accordion.open > .card-title::after { transform: rotate(90deg); }
+.card.accordion > .card-title + :not(.accordion-body) { display: none; }
+.card.accordion > .accordion-body { display: none; }
+.card.accordion.open > .accordion-body { display: block; }
+.card.accordion.open > .card-title { margin-bottom: 12px; }

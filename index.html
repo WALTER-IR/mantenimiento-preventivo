@@ -131,7 +131,7 @@
         </select>
       </div>
 
-      <div class="stats-grid">
+      <div class="stats-grid" id="perfStatsGrid">
         <div class="stat-card info">
           <div class="stat-num" id="perfProg">0</div>
           <div class="stat-label">Programados</div>
@@ -268,66 +268,75 @@
     <section id="view-config" class="view hidden">
       <h2 class="view-title">Configuración</h2>
 
-      <div class="card" id="cardMiCuenta">
+      <div class="card accordion open" id="cardMiCuenta">
         <h3 class="card-title">Mi cuenta</h3>
-        <p class="card-text" id="miCuentaInfo"></p>
-        <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
+        <div class="accordion-body">
+          <p class="card-text" id="miCuentaInfo"></p>
+          <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
+        </div>
       </div>
 
-      <div class="card" id="cardCargaMasiva">
+      <div class="card accordion" id="cardCargaMasiva">
         <h3 class="card-title">Cargas masivas (Excel)</h3>
-        <p class="card-text">Importa responsables, equipos, mantenimientos y feriados desde un archivo Excel (.xlsx) con validación. La carga de equipos NO crea usuarios: el responsable debe existir (importa primero el archivo de responsables). Requiere internet la primera vez.</p>
-        <button class="btn btn-outline btn-block" id="btnCargarResponsables">⬆ Cargar responsables</button>
-        <button class="btn btn-outline btn-block" id="btnCargarEquipos">⬆ Cargar equipos</button>
-        <button class="btn btn-outline btn-block" id="btnCargarMantenimientos">⬆ Cargar mantenimientos</button>
-        <button class="btn btn-outline btn-block" id="btnCargarFeriados">⬆ Cargar feriados</button>
-        <pre id="masivaResultado" class="masiva-result hidden"></pre>
-        <input type="file" id="fileMasiva" class="hidden" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        <div class="accordion-body">
+          <p class="card-text">Importa responsables, equipos, mantenimientos y feriados desde un archivo Excel (.xlsx) con validación. La carga de equipos NO crea usuarios: el responsable debe existir (importa primero el archivo de responsables). Requiere internet la primera vez.</p>
+          <button class="btn btn-outline btn-block" id="btnCargarResponsables">⬆ Cargar responsables</button>
+          <button class="btn btn-outline btn-block" id="btnCargarEquipos">⬆ Cargar equipos</button>
+          <button class="btn btn-outline btn-block" id="btnCargarMantenimientos">⬆ Cargar mantenimientos</button>
+          <button class="btn btn-outline btn-block" id="btnCargarFeriados">⬆ Cargar feriados</button>
+          <pre id="masivaResultado" class="masiva-result hidden"></pre>
+          <input type="file" id="fileMasiva" class="hidden" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        </div>
       </div>
 
-      <div class="card" id="cardEmpresa">
+      <div class="card accordion" id="cardEmpresa">
         <h3 class="card-title">Datos de la empresa</h3>
-        <label class="field-label" for="cfgEmpresa">Nombre de la empresa / departamento</label>
-        <input type="text" id="cfgEmpresa" class="input" placeholder="Ej. TI Corporativo" />
-        <label class="field-label" for="cfgIntervalo">Intervalo de mantenimiento (días)</label>
-        <input type="number" id="cfgIntervalo" class="input" min="1" value="90" />
-        <button class="btn btn-primary btn-block" id="btnGuardarConfig">Guardar configuración</button>
+        <div class="accordion-body">
+          <label class="field-label" for="cfgEmpresa">Nombre de la empresa / departamento</label>
+          <input type="text" id="cfgEmpresa" class="input" placeholder="Ej. TI Corporativo" />
+          <label class="field-label" for="cfgIntervalo">Intervalo de mantenimiento (días)</label>
+          <input type="number" id="cfgIntervalo" class="input" min="1" value="90" />
+          <button class="btn btn-primary btn-block" id="btnGuardarConfig">Guardar configuración</button>
+        </div>
       </div>
 
-      <div class="card" id="cardUsuarios">
+      <div class="card accordion" id="cardUsuarios">
         <h3 class="card-title">Usuarios y permisos</h3>
-        <p class="card-text">Cada responsable entra con su DNI o nombre (la contraseña inicial es el DNI). Aquí puedes cambiar los permisos.</p>
-        <button class="btn btn-primary btn-block" id="btnNuevoUsuario">+ Agregar usuario</button>
-        <div id="usuariosList" class="usuarios-list"></div>
+        <div class="accordion-body">
+          <p class="card-text">Cada responsable entra con su DNI o nombre (la contraseña inicial es el DNI). Aquí puedes cambiar los permisos.</p>
+          <button class="btn btn-primary btn-block" id="btnNuevoUsuario">+ Agregar usuario</button>
+          <div id="usuariosList" class="usuarios-list"></div>
+        </div>
       </div>
 
-      <div class="card hidden" id="cardProgramacion">
+      <div class="card accordion hidden" id="cardProgramacion">
         <h3 class="card-title">Programación de mantenimientos</h3>
-        <p class="card-text">Registra los días feriados y programa las fechas de mantenimiento desde una fecha inicial: solo días laborales (lun-vie, sin feriados), con máximo 3 equipos por día y por responsable.</p>
-
-        <h4 class="card-subtitle">Días feriados</h4>
-        <label class="field-label" for="fdFecha">Fecha del feriado</label>
-        <input type="date" id="fdFecha" class="input" />
-        <label class="field-label" for="fdTipo">Tipo (ej. Nacional, Escolar, Festivo)</label>
-        <input type="text" id="fdTipo" class="input" placeholder="Tipo" />
-        <label class="field-label" for="fdMotivo">Motivo (ej. Navidad)</label>
-        <input type="text" id="fdMotivo" class="input" placeholder="Motivo" />
-        <button class="btn btn-primary" id="btnAgregarFeriado">Agregar feriado</button>
-        <div id="feriadosList" class="usuarios-list"></div>
-
-        <h4 class="card-subtitle">Programar mantenimientos</h4>
-        <label class="field-label" for="progFechaInicial">Fecha inicial</label>
-        <input type="date" id="progFechaInicial" class="input" />
-        <button class="btn btn-primary btn-block" id="btnProgramar">Programar mantenimientos</button>
+        <div class="accordion-body">
+          <p class="card-text">Registra los días feriados y programa las fechas de mantenimiento desde una fecha inicial: solo días laborales (lun-vie, sin feriados), con máximo 3 equipos por día y por responsable.</p>
+          <h4 class="card-subtitle">Días feriados</h4>
+          <label class="field-label" for="fdFecha">Fecha del feriado</label>
+          <input type="date" id="fdFecha" class="input" />
+          <label class="field-label" for="fdTipo">Tipo (ej. Nacional, Escolar, Festivo)</label>
+          <input type="text" id="fdTipo" class="input" placeholder="Tipo" />
+          <label class="field-label" for="fdMotivo">Motivo (ej. Navidad)</label>
+          <input type="text" id="fdMotivo" class="input" placeholder="Motivo" />
+          <button class="btn btn-primary" id="btnAgregarFeriado">Agregar feriado</button>
+          <div id="feriadosList" class="usuarios-list"></div>
+          <h4 class="card-subtitle">Programar mantenimientos</h4>
+          <label class="field-label" for="progFechaInicial">Fecha inicial</label>
+          <input type="date" id="progFechaInicial" class="input" />
+          <button class="btn btn-primary btn-block" id="btnProgramar">Programar mantenimientos</button>
+        </div>
       </div>
 
-      <div class="card hidden" id="cardCorreo">
+      <div class="card accordion hidden" id="cardCorreo">
         <h3 class="card-title">Correo de programación</h3>
-        <p class="card-text">Redacta el correo que notificará la programación de mantenimientos. El detalle de los equipos se carga automáticamente según la ubicación.</p>
-        <label class="field-label" for="correoAsunto">Asunto</label>
-        <input type="text" id="correoAsunto" class="input" value="Programación de Mantenimiento de Equipos de Computo" />
-        <label class="field-label" for="correoCuerpo">Texto del correo</label>
-        <textarea id="correoCuerpo" class="input textarea" rows="10">Estimados señores:
+        <div class="accordion-body">
+          <p class="card-text">Redacta el correo que notificará la programación de mantenimientos. El detalle de los equipos se carga automáticamente según la ubicación.</p>
+          <label class="field-label" for="correoAsunto">Asunto</label>
+          <input type="text" id="correoAsunto" class="input" value="Programación de Mantenimiento de Equipos de Computo" />
+          <label class="field-label" for="correoCuerpo">Texto del correo</label>
+          <textarea id="correoCuerpo" class="input textarea" rows="10">Estimados señores:
 
 Por medio de la presente, les informamos que se ha programado una jornada de mantenimiento preventivo con el objetivo de garantizar el correcto funcionamiento de los equipos de cómputo y minimizar la probabilidad de fallas. A continuación se detallan las acciones previstas para la intervención.
 
@@ -340,86 +349,103 @@ Recomendaciones para los usuarios:
 
 Si tiene dudas o necesita más información, no dude en contactarnos.
 Atentamente,</textarea>
-        <label class="field-label" for="correoUbicacion">Ubicación</label>
-        <select id="correoUbicacion" class="input select"></select>
-        <h4 class="card-subtitle">Equipos incluidos</h4>
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Usuario asignado</th>
-                <th>Ubicación</th>
-                <th>Responsable</th>
-                <th>Fecha programada</th>
-              </tr>
-            </thead>
-            <tbody id="correoTbody"></tbody>
-          </table>
+          <label class="field-label" for="correoUbicacion">Ubicación</label>
+          <select id="correoUbicacion" class="input select"></select>
+          <h4 class="card-subtitle">Equipos incluidos</h4>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuario asignado</th>
+                  <th>Ubicación</th>
+                  <th>Responsable</th>
+                  <th>Fecha programada</th>
+                </tr>
+              </thead>
+              <tbody id="correoTbody"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-primary btn-block" id="btnEnviarCorreo">Enviar correo</button>
         </div>
-        <button class="btn btn-primary btn-block" id="btnEnviarCorreo">Enviar correo</button>
       </div>
 
-      <div class="card" id="cardAuditoria">
+      <div class="card accordion" id="cardAuditoria">
         <h3 class="card-title">Auditoría</h3>
-        <p class="card-text">Registro de las últimas acciones realizadas en la aplicación.</p>
-        <div id="auditoriaList" class="auditoria-list"></div>
-        <p id="auditoriaEmpty" class="card-text">Sin registros aún.</p>
+        <div class="accordion-body">
+          <p class="card-text">Registro de las últimas acciones realizadas en la aplicación.</p>
+          <div id="auditoriaList" class="auditoria-list"></div>
+          <p id="auditoriaEmpty" class="card-text">Sin registros aún.</p>
+        </div>
       </div>
 
-      <div class="card" id="cardBackup">
+      <div class="card accordion" id="cardBackup">
         <h3 class="card-title">Copia de seguridad</h3>
-        <p class="card-text">Descarga una copia de toda tu información o restaura desde un archivo. Al importar se reemplazan los datos actuales (antes se descarga un respaldo automático). Se puede importar el respaldo de la app móvil (APK): se integran responsables, equipos, mantenimientos y feriados.</p>
-        <div class="btn-row">
-          <button class="btn btn-outline" id="btnExportar">⬇ Exportar datos</button>
-          <button class="btn btn-outline" id="btnImportar">⬆ Importar datos</button>
+        <div class="accordion-body">
+          <p class="card-text">Descarga una copia de toda tu información o restaura desde un archivo. Al importar se reemplazan los datos actuales (antes se descarga un respaldo automático). Se puede importar el respaldo de la app móvil (APK): se integran responsables, equipos, mantenimientos y feriados.</p>
+          <div class="btn-row">
+            <button class="btn btn-outline" id="btnExportar">⬇ Exportar datos</button>
+            <button class="btn btn-outline" id="btnImportar">⬆ Importar datos</button>
+          </div>
+          <button class="btn btn-outline btn-block" id="btnExportarApk">⬇ Exportar para APK (móvil)</button>
+          <button class="btn btn-primary btn-block" id="btnExportarExcel">⬇ Exportar a Excel</button>
+          <input type="file" id="fileImport" class="hidden" accept="application/json" />
         </div>
-        <button class="btn btn-outline btn-block" id="btnExportarApk">⬇ Exportar para APK (móvil)</button>
-        <button class="btn btn-primary btn-block" id="btnExportarExcel">⬇ Exportar a Excel</button>
-        <input type="file" id="fileImport" class="hidden" accept="application/json" />
       </div>
 
-      <div class="card" id="cardSync">
+      <div class="card accordion" id="cardSync">
         <h3 class="card-title">Sincronización</h3>
-        <p class="card-text">Cada edición que hagas aquí se sube automáticamente a la nube y el móvil la descarga al abrir la app. Para traer al PC los cambios hechos en el móvil, pulsa "Sincronizar ahora" (primero se sube la copia local y luego se descarga la de la nube).</p>
-        <button class="btn btn-primary btn-block" id="btnSincronizar">🔄 Sincronizar ahora</button>
+        <div class="accordion-body">
+          <p class="card-text">Cada edición que hagas aquí se sube automáticamente a la nube y el móvil la descarga al abrir la app. Para traer al PC los cambios hechos en el móvil, pulsa "Sincronizar ahora" (primero se sube la copia local y luego se descarga la de la nube).</p>
+          <button class="btn btn-primary btn-block" id="btnSincronizar">🔄 Sincronizar ahora</button>
+        </div>
       </div>
 
-      <div class="card hidden" id="cardMant2026">
+      <div class="card accordion hidden" id="cardMant2026">
         <h3 class="card-title">Mantenimientos 2026</h3>
-        <p class="card-text">Deja como pendientes (PROGRAMADO) todos los mantenimientos programados para 2026 para que aparezcan activos en Alertas.</p>
-        <button class="btn btn-primary btn-block" id="btnActivar2026">Activar mantenimientos 2026</button>
+        <div class="accordion-body">
+          <p class="card-text">Deja como pendientes (PROGRAMADO) todos los mantenimientos programados para 2026 para que aparezcan activos en Alertas.</p>
+          <button class="btn btn-primary btn-block" id="btnActivar2026">Activar mantenimientos 2026</button>
+        </div>
       </div>
 
-      <div class="card hidden" id="cardDatos">
+      <div class="card accordion hidden" id="cardDatos">
         <h3 class="card-title">Datos</h3>
-        <p class="card-text">Borra todos los responsables, equipos y mantenimientos. Esta acción no se puede deshacer.</p>
-        <button class="btn btn-danger btn-block" id="btnVaciarBd">Vaciar base de datos</button>
-        <button class="btn btn-outline btn-block" id="btnVerErrores">Ver errores guardados</button>
+        <div class="accordion-body">
+          <p class="card-text">Borra todos los responsables, equipos y mantenimientos. Esta acción no se puede deshacer.</p>
+          <button class="btn btn-danger btn-block" id="btnVaciarBd">Vaciar base de datos</button>
+          <button class="btn btn-outline btn-block" id="btnVerErrores">Ver errores guardados</button>
+        </div>
       </div>
 
-      <div class="card" id="cardActualizaciones">
+      <div class="card accordion" id="cardActualizaciones">
         <h3 class="card-title">Actualizaciones</h3>
-        <p class="card-text">La aplicación funciona sin conexión. Solo se conecta a internet cuando usted pulsa "Buscar actualizaciones".</p>
-        <div class="btn-row">
-          <button class="btn btn-outline" id="btnCheckUpdate">🔄 Buscar actualizaciones</button>
+        <div class="accordion-body">
+          <p class="card-text">La aplicación funciona sin conexión. Solo se conecta a internet cuando usted pulsa "Buscar actualizaciones".</p>
+          <div class="btn-row">
+            <button class="btn btn-outline" id="btnCheckUpdate">🔄 Buscar actualizaciones</button>
+          </div>
+          <p id="updateStatus" class="update-status">Versión <span id="appVersion">1.0.0</span></p>
         </div>
-        <p id="updateStatus" class="update-status">Versión <span id="appVersion">1.0.0</span></p>
       </div>
 
-      <div class="card" id="cardLogo">
+      <div class="card accordion" id="cardLogo">
         <h3 class="card-title">Logo para el PDF</h3>
-        <p class="card-text">Seleccione un logotipo para aparecer en el encabezado del formato TI-F016.</p>
-        <div class="logo-upload-row">
-          <input type="file" id="logoInput" class="input" accept="image/*" />
-          <img id="logoPreview" class="logo-preview hidden" alt="Logo preview" />
-          <button class="btn btn-ghost btn-sm" id="btnClearLogo">✕ Quitar logo</button>
+        <div class="accordion-body">
+          <p class="card-text">Seleccione un logotipo para aparecer en el encabezado del formato TI-F016.</p>
+          <div class="logo-upload-row">
+            <input type="file" id="logoInput" class="input" accept="image/*" />
+            <img id="logoPreview" class="logo-preview hidden" alt="Logo preview" />
+            <button class="btn btn-ghost btn-sm" id="btnClearLogo">✕ Quitar logo</button>
+          </div>
         </div>
       </div>
 
-      <div class="card" id="cardAcerca">
+      <div class="card accordion" id="cardAcerca">
         <h3 class="card-title">Acerca de</h3>
-        <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión. Solo se conecta a internet cuando usted lo solicita.</p>
-        <p class="update-status" id="acercaInfo">❤️ Hecho con ❤️ · v1.0.0</p>
+        <div class="accordion-body">
+          <p class="card-text">Sistema de control de mantenimientos preventivos para laptops y computadoras.<br />Funciona sin conexión. Solo se conecta a internet cuando usted lo solicita.</p>
+          <p class="update-status" id="acercaInfo">❤️ Hecho con ❤️ · v1.0.0</p>
+        </div>
       </div>
     </section>
 
