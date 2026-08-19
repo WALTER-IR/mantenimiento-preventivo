@@ -1,6 +1,6 @@
 {
-  "version": "1.24.16",
+  "version": "1.24.17",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Grafico de lineas comparativo Reprogramados vs Finalizados (dual-series line chart)."
+  "changelog": "Restaurado donut chart de vencidos por responsable con CAT_COLORS."
 }

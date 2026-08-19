@@ -415,13 +415,22 @@
       monthlyFin.push(fc);
     }
 
-    // Gráfico de líneas comparativo: Reprogramados vs Finalizados.
-    $("#dashVencPie").innerHTML = dualLineChartHTML({
-      labels: monthLabels,
-      series: [
-        { name: "Reprogramados", data: monthlyReprog, color: "#D97706" },
-        { name: "Finalizados", data: monthlyFin, color: "#059669" }
-      ]
+    // Vencidos por responsable (excluye admins) — Donut chart.
+    var norm = function (s) { return String(s || "").trim().toLowerCase().replace(/\s+/g, " "); };
+    var adminNames = usuarios.filter(function (u) { return u.rol === ROL.ADMIN; }).map(function (u) { return norm(u.nombre); });
+    var vencByResp = new Map();
+    vis.filter(function (e) { return statusOf(e).key === "vencido"; }).forEach(function (e) {
+      var resp = norm(e.responsable || e.usuarioAsignado || "");
+      var key = resp || "sin responsable";
+      if (adminNames.includes(norm(e.responsable)) && !norm(e.usuarioAsignado)) return;
+      vencByResp.set(key, (vencByResp.get(key) || 0) + 1);
+    });
+    var vencRows = Array.from(vencByResp.entries())
+      .map(function (e) { return { nombre: e[0] === "sin responsable" ? "Sin responsable" : e[0], value: e[1] }; })
+      .sort(function (a, b) { return b.value - a.value; });
+    $("#dashVencPie").innerHTML = channelDistributionChartHTML({
+      categories: vencRows.map(function (r) { return r.nombre; }),
+      values: vencRows.map(function (r) { return r.value; })
     });
 
     // KPI Cards.
@@ -472,74 +481,69 @@
   }
 
   // ============================================================
-  //  Dual Series Line Chart (reusable)
+  //  Channel Distribution Donut Chart (reusable)
   // ============================================================
-  function dualLineChartHTML(o) {
-    var labels = o.labels || [];
-    var series = o.series || [];
-    if (!labels.length || !series.length) {
-      return '<div class="empty-state"><div class="empty-icon">&#128200;</div><p>Sin datos.</p></div>';
+  function channelDistributionChartHTML(o) {
+    var cats = o.categories || [];
+    var vals = o.values || [];
+    var palette = o.colors || CAT_COLORS;
+    var total = vals.reduce(function (s, v) { return s + v; }, 0);
+    if (!total || !cats.length) {
+      return '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin datos.</p></div>';
     }
-    var W = 520, H = 220, pad = { t: 24, r: 16, b: 36, l: 38 };
-    var gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
-    var allVals = [];
-    series.forEach(function (s) { allVals = allVals.concat(s.data); });
-    var maxVal = Math.max.apply(null, allVals.concat([1]));
-    var minVal = 0;
-    var range = maxVal - minVal || 1;
-    var n = labels.length;
-
-    // Grid lines
-    var gridLines = "";
-    var gridSteps = 4;
-    for (var gi = 0; gi <= gridSteps; gi++) {
-      var gy = pad.t + gH - (gi / gridSteps) * gH;
-      var gv = Math.round(minVal + (gi / gridSteps) * range);
-      gridLines += '<line x1="' + pad.l + '" y1="' + gy.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + gy.toFixed(1) + '" stroke="#E2E8F0" stroke-width="0.8" stroke-dasharray="3,3"/>';
-      gridLines += '<text x="' + (pad.l - 8) + '" y="' + (gy + 3).toFixed(1) + '" text-anchor="end" fill="#94A3B8" font-size="9" font-family="system-ui,sans-serif">' + gv + '</text>';
+    var size = 260, cx = size / 2, cy = size / 2, r = 68, ir = 40;
+    var pi2 = Math.PI * 2;
+    var startAngle = -Math.PI / 2;
+    var paths = [];
+    var labels = [];
+    var legendItems = [];
+    var angle = startAngle;
+    for (var i = 0; i < cats.length; i++) {
+      var pct = vals[i] / total;
+      var sweep = pct * pi2;
+      var endAngle = angle + sweep;
+      var midAngle = angle + sweep / 2;
+      if (sweep < 0.001) { angle = endAngle; continue; }
+      var ox1 = cx + r * Math.cos(angle);
+      var oy1 = cy + r * Math.sin(angle);
+      var ox2 = cx + r * Math.cos(endAngle);
+      var oy2 = cy + r * Math.sin(endAngle);
+      var ix1 = cx + ir * Math.cos(endAngle);
+      var iy1 = cy + ir * Math.sin(endAngle);
+      var ix2 = cx + ir * Math.cos(angle);
+      var iy2 = cy + ir * Math.sin(angle);
+      var largeArc = sweep > Math.PI ? 1 : 0;
+      var d = "M" + ox1.toFixed(2) + "," + oy1.toFixed(2) +
+        " A" + r + "," + r + " 0 " + largeArc + " 1 " + ox2.toFixed(2) + "," + oy2.toFixed(2) +
+        " L" + ix1.toFixed(2) + "," + iy1.toFixed(2) +
+        " A" + ir + "," + ir + " 0 " + largeArc + " 0 " + ix2.toFixed(2) + "," + iy2.toFixed(2) + " Z";
+      var col = palette[i % palette.length];
+      paths.push('<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1.5"/>');
+      var labelR = r + 12;
+      var lx = cx + labelR * Math.cos(midAngle);
+      var ly = cy + labelR * Math.sin(midAngle);
+      var tx = cx + (labelR + 30) * Math.cos(midAngle);
+      var ty = cy + (labelR + 30) * Math.sin(midAngle);
+      var anchor = Math.cos(midAngle) < -0.1 ? "end" : Math.cos(midAngle) > 0.1 ? "start" : "middle";
+      var pctLabel = Math.round(pct * 100) + "%";
+      labels.push(
+        '<polyline points="' + lx.toFixed(1) + ',' + ly.toFixed(1) + ' ' + tx.toFixed(1) + ',' + ty.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.2" opacity="0.5"/>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty - 4).toFixed(1) + '" text-anchor="' + anchor + '" fill="#64748B" font-size="10" font-weight="600">' + esc(shortName(cats[i])) + '</text>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty + 10).toFixed(1) + '" text-anchor="' + anchor + '" fill="' + col + '" font-size="9.5" font-weight="700">' + pctLabel + ' (' + vals[i] + ')</text>'
+      );
+      legendItems.push(
+        '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' +
+        esc(shortName(cats[i])) + ' (' + vals[i] + ')</span>'
+      );
+      angle = endAngle;
     }
-
-    // X-axis labels
-    var xLabels = "";
-    for (var xi = 0; xi < n; xi++) {
-      var xPos = pad.l + (xi / (n - 1 || 1)) * gW;
-      xLabels += '<text x="' + xPos.toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#64748B" font-size="9.5" font-weight="500" font-family="system-ui,sans-serif">' + esc(labels[xi]) + '</text>';
-    }
-
-    // Series
-    var seriesSvg = "";
-    var dotsSvg = "";
-    var valueLabelsSvg = "";
-    var legendHtml = "";
-    series.forEach(function (s, si) {
-      var col = s.color || "#2563EB";
-      var pts = [];
-      for (var pi = 0; pi < n; pi++) {
-        var px = pad.l + (pi / (n - 1 || 1)) * gW;
-        var py = pad.t + gH - ((s.data[pi] - minVal) / range) * gH;
-        pts.push(px.toFixed(1) + "," + py.toFixed(1));
-      }
-      // Area fill
-      var firstX = pad.l;
-      var lastX = pad.l + ((n - 1) / (n - 1 || 1)) * gW;
-      seriesSvg += '<polygon points="' + firstX + "," + (pad.t + gH) + " " + pts.join(" ") + " " + lastX + "," + (pad.t + gH) + '" fill="' + col + '" opacity="0.08"/>';
-      // Line
-      seriesSvg += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + col + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
-      // Dots + value labels
-      for (var di = 0; di < n; di++) {
-        var dx = pad.l + (di / (n - 1 || 1)) * gW;
-        var dy = pad.t + gH - ((s.data[di] - minVal) / range) * gH;
-        dotsSvg += '<circle cx="' + dx.toFixed(1) + '" cy="' + dy.toFixed(1) + '" r="3.2" fill="#fff" stroke="' + col + '" stroke-width="2"/>';
-        valueLabelsSvg += '<text x="' + dx.toFixed(1) + '" y="' + (dy - 8).toFixed(1) + '" text-anchor="middle" fill="' + col + '" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' + s.data[di] + '</text>';
-      }
-      legendHtml += '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' + esc(s.name) + '</span>';
-    });
-
     return '<div class="ch-wrap">' +
-      '<svg class="ch-svg ch-svg-line" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      gridLines + xLabels + seriesSvg + dotsSvg + valueLabelsSvg +
+      '<svg class="ch-svg" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">' +
+      paths.join("") + labels.join("") +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#1E293B" font-size="22" font-weight="800" font-family="system-ui,sans-serif">' + total + '</text>' +
+      '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" fill="#94A3B8" font-size="8" letter-spacing="0.8" font-family="system-ui,sans-serif">TOTAL</text>' +
       '</svg>' +
-      '<div class="ch-legend">' + legendHtml + '</div>' +
+      '<div class="ch-legend">' + legendItems.join("") + '</div>' +
       '</div>';
   }
 
