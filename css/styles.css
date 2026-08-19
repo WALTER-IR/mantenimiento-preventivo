@@ -291,6 +291,7 @@ body {
 .hbar-fill { height: 100%; border-radius: 6px; min-width: 3px; transition: width .3s ease; }
 .hbar-val { font-size: 12px; font-weight: 800; color: var(--rojo-700); min-width: 20px; text-align: right; }
 .hbar-sub { font-size: 10px; color: var(--text-muted); min-width: 30px; }
+.ch-svg-pyramid { width: 100%; max-width: 100%; height: auto; }
 
 /* Categorías de equipos (dinámico, barras) */
 .cat-chart { display: flex; gap: 16px; align-items: flex-end; height: 190px; padding-top: 18px; }

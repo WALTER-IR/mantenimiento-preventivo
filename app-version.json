@@ -1,6 +1,6 @@
 {
-  "version": "1.24.20",
+  "version": "1.24.21",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Grafico de piramide para vencidos por responsable con segmentos proporcionales."
+  "changelog": "Piramide con nombres por fuera conectados por flechas a cada segmento."
 }

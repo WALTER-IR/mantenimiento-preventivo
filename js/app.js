@@ -434,29 +434,38 @@
       var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
       var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
       var pySvg = "";
-      var pyLegend = "";
-      var svgH = 220, svgW = 280, segH = Math.min(svgH / vencRows.length, 36);
+      var svgH = 240, svgW = 420, cx = svgW / 2;
+      var segH = Math.min(svgH / vencRows.length, 40);
       var totalH = segH * vencRows.length;
       var startY = (svgH - totalH) / 2;
+      var maxW = svgW * 0.4;
+      var labelX = 16;
       for (var pi = 0; pi < vencRows.length; pi++) {
         var pctTop = pi === 0 ? 0 : vencRows.slice(0, pi).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
         var pctBot = vencRows.slice(0, pi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
-        var wTop = Math.max(pctTop * svgW * 0.85, 20);
-        var wBot = Math.max(pctBot * svgW * 0.85, 20);
+        var wTop = Math.max(pctTop * maxW, 16);
+        var wBot = Math.max(pctBot * maxW, 16);
         var y = startY + pi * segH;
         var col = pyColors[pi % pyColors.length];
-        var d = "M" + ((svgW - wTop) / 2).toFixed(1) + "," + y.toFixed(1) +
-          " L" + ((svgW + wTop) / 2).toFixed(1) + "," + y.toFixed(1) +
-          " L" + ((svgW + wBot) / 2).toFixed(1) + "," + (y + segH - 1).toFixed(1) +
-          " L" + ((svgW - wBot) / 2).toFixed(1) + "," + (y + segH - 1).toFixed(1) + " Z";
+        var d = "M" + (cx - wTop).toFixed(1) + "," + y.toFixed(1) +
+          " L" + (cx + wTop).toFixed(1) + "," + y.toFixed(1) +
+          " L" + (cx + wBot).toFixed(1) + "," + (y + segH - 2).toFixed(1) +
+          " L" + (cx - wBot).toFixed(1) + "," + (y + segH - 2).toFixed(1) + " Z";
         pySvg += '<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1"/>';
         var pctVal = pyTotal ? Math.round((vencRows[pi].value / pyTotal) * 100) : 0;
-        pySvg += '<text x="' + (svgW / 2) + '" y="' + (y + segH / 2 + 1).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="system-ui,sans-serif">' + esc(shortName(vencRows[pi].nombre)) + ' (' + vencRows[pi].value + ')</text>';
-        pyLegend += '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' + esc(shortName(vencRows[pi].nombre)) + ' (' + vencRows[pi].value + ')</span>';
+        // value inside segment
+        pySvg += '<text x="' + cx + '" y="' + (y + segH / 2 + 1).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' (' + pctVal + '%)</text>';
+        // label outside left with arrow line
+        var labelY = y + segH / 2;
+        var segLeftEdge = cx - wBot;
+        pySvg += '<line x1="' + (labelX + 90).toFixed(1) + '" y1="' + labelY.toFixed(1) + '" x2="' + (segLeftEdge - 4).toFixed(1) + '" y2="' + labelY.toFixed(1) + '" stroke="' + col + '" stroke-width="1.2" opacity="0.6"/>';
+        pySvg += '<polygon points="' + (segLeftEdge - 4).toFixed(1) + ',' + labelY.toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY - 3.5).toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY + 3.5).toFixed(1) + '" fill="' + col + '" opacity="0.6"/>';
+        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="11" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre) + '</text>';
+        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY + 9).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
       }
       $("#dashVencPie").innerHTML = '<div class="ch-wrap">' +
-        '<svg class="ch-svg" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +
-        '<div class="ch-legend">' + pyLegend + '</div></div>';
+        '<svg class="ch-svg ch-svg-pyramid" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +
+        '</div>';
     } else {
       $("#dashVencPie").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin vencidos.</p></div>';
     }
