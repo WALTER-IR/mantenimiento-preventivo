@@ -14,7 +14,7 @@
   let auditoria = [];
   let sesion = null;
   let appConfig = { empresa: "Empresa", intervalo: 90 };
-  let currentView = "dashboard";
+  let currentView = localStorage.getItem("lastView") || "dashboard";
   let alertTab = "vencidos";
   let currentDetailId = null;
   let usuarioPerfilMode = false;
@@ -289,6 +289,8 @@
     await auditar("CIERRE DE SESION", "Usuario: " + (sesion ? sesion.nombre : ""));
     sesion = null;
     await DB.clearSesion();
+    try { localStorage.setItem("lastView", "dashboard"); } catch (e) { /* */ }
+    currentView = "dashboard";
     applySessionUI();
     showLogin();
   }
@@ -301,6 +303,7 @@
 
   function setView(view) {
     currentView = view;
+    try { localStorage.setItem("lastView", view); } catch (e) { /* */ }
     $$(".view").forEach((v) => v.classList.add("hidden"));
     $("#view-" + view).classList.remove("hidden");
     $$(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
@@ -3942,7 +3945,7 @@
         applySessionUI();
         if (sesion) {
           $("#loginScreen").classList.add("hidden");
-          setView("dashboard");
+          setView(currentView || "dashboard");
         } else {
           showLogin();
         }

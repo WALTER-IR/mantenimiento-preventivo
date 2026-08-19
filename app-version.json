@@ -1,6 +1,6 @@
 {
-  "version": "1.24.38",
+  "version": "1.24.39",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Stats de rendimiento ocultas para usuario normal, solo admin las ve."
+  "changelog": "La app recuerda la ultima vista y regresa a ella al recargar o sincronizar."
 }
