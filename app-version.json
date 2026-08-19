@@ -1,6 +1,6 @@
 {
-  "version": "1.24.13",
+  "version": "1.24.14",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Grafico de vencidos ahora es un donut chart moderno con total en el centro y labels conectados por lineas."
+  "changelog": "Donut chart: labels visibles, colores formales, texto consistente con el dashboard."
 }
