@@ -432,7 +432,7 @@
     var vencMax = vencRows.length ? Math.max.apply(null, vencRows.map(function (r) { return r.value; })) : 1;
     if (vencRows.length) {
       var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
-      var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
+      var pyColors = ["#16A34A", "#EAB308", "#F97316", "#DC2626", "#991B1B", "#7F1D1D", "#450A0A", "#000000"];
       var pySvg = "";
       var svgH = 440, svgW = 680, cx = svgW * 0.65;
       var segH = Math.min((svgH - 10) / vencRows.length, 70);
@@ -440,10 +440,9 @@
       var startY = (svgH - totalH) / 2 + 5;
       var maxW = svgW * 0.42;
       var labelEnd = 200;
-      var widths = [0];
-      for (var wi = 0; wi < vencRows.length; wi++) {
-        var cumPct = vencRows.slice(0, wi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
-        widths.push(Math.max(cumPct * maxW, 4));
+      var widths = [];
+      for (var wi = 0; wi <= vencRows.length; wi++) {
+        widths.push((wi / vencRows.length) * maxW);
       }
       for (var pi = 0; pi < vencRows.length; pi++) {
         var wTop = widths[pi];
