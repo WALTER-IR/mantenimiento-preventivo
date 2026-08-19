@@ -1,6 +1,6 @@
 {
-  "version": "1.24.32",
+  "version": "1.24.33",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Etiquetas de piramide alineadas a x=200."
+  "changelog": "ch-svg max-width cambiado a 80%."
 }
