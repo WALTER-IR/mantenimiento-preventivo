@@ -434,10 +434,10 @@
       var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
       var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
       var pySvg = "";
-      var svgH = 380, svgW = 620, cx = svgW * 0.76;
-      var segH = Math.min((svgH - 20) / vencRows.length, 62);
+      var svgH = 440, svgW = 620, cx = svgW * 0.76;
+      var segH = Math.min((svgH - 10) / vencRows.length, 70);
       var totalH = segH * vencRows.length;
-      var startY = (svgH - totalH) / 2 + 10;
+      var startY = (svgH - totalH) / 2 + 5;
       var maxW = svgW * 0.24;
       var labelX = 10;
       var labelEnd = 160;
@@ -454,13 +454,13 @@
           " L" + (cx - wBot).toFixed(1) + "," + (y + segH - 2).toFixed(1) + " Z";
         pySvg += '<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1.5"/>';
         var pctVal = pyTotal ? Math.round((vencRows[pi].value / pyTotal) * 100) : 0;
-        pySvg += '<text x="' + cx + '" y="' + (y + segH / 2 + 2).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' (' + pctVal + '%)</text>';
+        pySvg += '<text x="' + cx + '" y="' + (y + segH / 2 + 2).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="17" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' (' + pctVal + '%)</text>';
         var labelY = y + segH / 2;
         var segLeftEdge = cx - wBot;
         pySvg += '<line x1="' + (labelEnd + 10).toFixed(1) + '" y1="' + labelY.toFixed(1) + '" x2="' + (segLeftEdge - 4).toFixed(1) + '" y2="' + labelY.toFixed(1) + '" stroke="' + col + '" stroke-width="1.4" opacity="0.6"/>';
         pySvg += '<polygon points="' + (segLeftEdge - 4).toFixed(1) + ',' + labelY.toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY - 4.5).toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY + 4.5).toFixed(1) + '" fill="' + col + '" opacity="0.6"/>';
-        pySvg += '<text x="' + labelEnd + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="15" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre.toUpperCase()) + '</text>';
-        pySvg += '<text x="' + labelEnd + '" y="' + (labelY + 11).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="9" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
+        pySvg += '<text x="' + labelEnd + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="16" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre.toUpperCase()) + '</text>';
+        pySvg += '<text x="' + labelEnd + '" y="' + (labelY + 12).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
       }
       $("#dashVencPie").innerHTML = '<div class="ch-wrap">' +
         '<svg class="ch-svg ch-svg-pyramid" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +

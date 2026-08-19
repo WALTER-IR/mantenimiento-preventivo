@@ -1,6 +1,6 @@
 {
-  "version": "1.24.28",
+  "version": "1.24.29",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Piramide mas a la derecha (76%), mas alta (380px), subtexto reducido a 9px."
+  "changelog": "Piramide 100% altura, texto grande (nombre 16px, subtexto 12px, valor 17px)."
 }
