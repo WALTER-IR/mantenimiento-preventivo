@@ -1,6 +1,6 @@
 {
-  "version": "1.24.29",
+  "version": "1.24.30",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Piramide 100% altura, texto grande (nombre 16px, subtexto 12px, valor 17px)."
+  "changelog": "Subtexto rojo de piramide aumentado a 18px."
 }
