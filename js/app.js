@@ -406,7 +406,7 @@
       $("#dashVencPie").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin vencidos.</p></div>`;
     }
 
-    // KPI Cards: reprogramados y finalizados.
+    // KPI Cards: reprogramados y finalizados (por fecha real de ocurrencia).
     var now = new Date();
     var monthlyReprog = [];
     var monthlyFin = [];
@@ -416,11 +416,9 @@
       var rc = 0, fc = 0;
       mantenimientos.forEach(function (m) {
         if (!visIds.has(m.equipoId)) return;
-        if (m.fecha && m.fecha.indexOf(ym) === 0) {
-          var es = estadoMant(m);
-          if (es === "reprogramado") rc++;
-          if (es === "finalizado") fc++;
-        }
+        var es = estadoMant(m);
+        if (es === "reprogramado" && m.fechaReprogramada && m.fechaReprogramada.indexOf(ym) === 0) rc++;
+        if (es === "finalizado" && m.fechaReal && m.fechaReal.indexOf(ym) === 0) fc++;
       });
       monthlyReprog.push(rc);
       monthlyFin.push(fc);

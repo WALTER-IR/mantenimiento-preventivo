@@ -1,6 +1,6 @@
 {
-  "version": "1.24.9",
+  "version": "1.24.10",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Removidas tarjetas de estadísticas del panel de control."
+  "changelog": "KPI Cards ahora usan fecha real de ocurrencia (fechaReprogramada/fechaReal) en vez de fecha programada."
 }
