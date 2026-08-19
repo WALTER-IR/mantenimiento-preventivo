@@ -1,6 +1,6 @@
 {
-  "version": "1.24.17",
+  "version": "1.24.19",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Restaurado donut chart de vencidos por responsable con CAT_COLORS."
+  "changelog": "Barras de vencidos ahora son horizontales con nombres completos legibles."
 }

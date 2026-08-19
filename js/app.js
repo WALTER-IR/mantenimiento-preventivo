@@ -415,7 +415,7 @@
       monthlyFin.push(fc);
     }
 
-    // Vencidos por responsable (excluye admins) — Donut chart.
+    // Vencidos por responsable (excluye admins).
     var norm = function (s) { return String(s || "").trim().toLowerCase().replace(/\s+/g, " "); };
     var adminNames = usuarios.filter(function (u) { return u.rol === ROL.ADMIN; }).map(function (u) { return norm(u.nombre); });
     var vencByResp = new Map();
@@ -428,10 +428,21 @@
     var vencRows = Array.from(vencByResp.entries())
       .map(function (e) { return { nombre: e[0] === "sin responsable" ? "Sin responsable" : e[0], value: e[1] }; })
       .sort(function (a, b) { return b.value - a.value; });
-    $("#dashVencPie").innerHTML = channelDistributionChartHTML({
-      categories: vencRows.map(function (r) { return r.nombre; }),
-      values: vencRows.map(function (r) { return r.value; })
-    });
+    var vencTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
+    var vencMax = vencRows.length ? Math.max.apply(null, vencRows.map(function (r) { return r.value; })) : 1;
+    if (vencRows.length) {
+      $("#dashVencPie").innerHTML = '<div class="hbar-chart">' + vencRows.map(function (r) {
+        var pct = vencTotal ? Math.round((r.value / vencTotal) * 100) : 0;
+        return '<div class="hbar-row">' +
+          '<span class="hbar-name">' + esc(r.nombre) + '</span>' +
+          '<div class="hbar-track"><div class="hbar-fill" style="width:' + ((r.value / vencMax) * 100) + '%;background:#E11D48"></div></div>' +
+          '<span class="hbar-val">' + r.value + '</span>' +
+          '<span class="hbar-sub">' + pct + '%</span>' +
+        '</div>';
+      }).join("") + '</div>';
+    } else {
+      $("#dashVencPie").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin vencidos.</p></div>';
+    }
 
     // KPI Cards.
     var reprogDetails = Object.entries(reprogByUser).map(function (e) { return { name: e[0], count: e[1] }; }).sort(function (a, b) { return b.count - a.count; });
