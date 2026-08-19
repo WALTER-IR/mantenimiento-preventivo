@@ -1,6 +1,6 @@
 {
-  "version": "1.24.19",
+  "version": "1.24.20",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Barras de vencidos ahora son horizontales con nombres completos legibles."
+  "changelog": "Grafico de piramide para vencidos por responsable con segmentos proporcionales."
 }

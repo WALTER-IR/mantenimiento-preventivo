@@ -431,15 +431,32 @@
     var vencTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
     var vencMax = vencRows.length ? Math.max.apply(null, vencRows.map(function (r) { return r.value; })) : 1;
     if (vencRows.length) {
-      $("#dashVencPie").innerHTML = '<div class="hbar-chart">' + vencRows.map(function (r) {
-        var pct = vencTotal ? Math.round((r.value / vencTotal) * 100) : 0;
-        return '<div class="hbar-row">' +
-          '<span class="hbar-name">' + esc(r.nombre) + '</span>' +
-          '<div class="hbar-track"><div class="hbar-fill" style="width:' + ((r.value / vencMax) * 100) + '%;background:#E11D48"></div></div>' +
-          '<span class="hbar-val">' + r.value + '</span>' +
-          '<span class="hbar-sub">' + pct + '%</span>' +
-        '</div>';
-      }).join("") + '</div>';
+      var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
+      var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
+      var pySvg = "";
+      var pyLegend = "";
+      var svgH = 220, svgW = 280, segH = Math.min(svgH / vencRows.length, 36);
+      var totalH = segH * vencRows.length;
+      var startY = (svgH - totalH) / 2;
+      for (var pi = 0; pi < vencRows.length; pi++) {
+        var pctTop = pi === 0 ? 0 : vencRows.slice(0, pi).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
+        var pctBot = vencRows.slice(0, pi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
+        var wTop = Math.max(pctTop * svgW * 0.85, 20);
+        var wBot = Math.max(pctBot * svgW * 0.85, 20);
+        var y = startY + pi * segH;
+        var col = pyColors[pi % pyColors.length];
+        var d = "M" + ((svgW - wTop) / 2).toFixed(1) + "," + y.toFixed(1) +
+          " L" + ((svgW + wTop) / 2).toFixed(1) + "," + y.toFixed(1) +
+          " L" + ((svgW + wBot) / 2).toFixed(1) + "," + (y + segH - 1).toFixed(1) +
+          " L" + ((svgW - wBot) / 2).toFixed(1) + "," + (y + segH - 1).toFixed(1) + " Z";
+        pySvg += '<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1"/>';
+        var pctVal = pyTotal ? Math.round((vencRows[pi].value / pyTotal) * 100) : 0;
+        pySvg += '<text x="' + (svgW / 2) + '" y="' + (y + segH / 2 + 1).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="system-ui,sans-serif">' + esc(shortName(vencRows[pi].nombre)) + ' (' + vencRows[pi].value + ')</text>';
+        pyLegend += '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' + esc(shortName(vencRows[pi].nombre)) + ' (' + vencRows[pi].value + ')</span>';
+      }
+      $("#dashVencPie").innerHTML = '<div class="ch-wrap">' +
+        '<svg class="ch-svg" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +
+        '<div class="ch-legend">' + pyLegend + '</div></div>';
     } else {
       $("#dashVencPie").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin vencidos.</p></div>';
     }
