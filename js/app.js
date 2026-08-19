@@ -390,21 +390,12 @@
     const vencRows = [...vencByResp.entries()]
       .map(([name, count]) => ({ nombre: name === "sin responsable" ? "Sin responsable" : name, value: count }))
       .sort((a, b) => b.value - a.value);
-    const vencTotal = vencRows.reduce((s, r) => s + r.value, 0);
-    const vencMax = vencRows.length ? Math.max(...vencRows.map((r) => r.value)) : 1;
-    if (vencRows.length) {
-      $("#dashVencPie").innerHTML = `<div class="bar-chart">` + vencRows.map((r) => {
-        const pct = vencTotal ? Math.round((r.value / vencTotal) * 100) : 0;
-        return `<div class="bar-col" title="${esc(r.nombre)}: ${r.value} vencidos (${pct}%)">
-          <div class="bar-val">${r.value}</div>
-          <div class="bar-track"><div class="bar-fill" style="height:${(r.value / vencMax) * 100}%;background:#E11D48"></div></div>
-          <div class="bar-label">${esc(shortName(r.nombre))}</div>
-          <div class="bar-sub">${pct}%</div>
-        </div>`;
-      }).join("") + `</div>`;
-    } else {
-      $("#dashVencPie").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>Sin vencidos.</p></div>`;
-    }
+    $("#dashVencPie").innerHTML = channelDistributionChartHTML({
+      title: "Vencidos por responsable",
+      categories: vencRows.map((r) => r.nombre),
+      values: vencRows.map((r) => r.value),
+      colors: ["#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE", "#7C3AED", "#6D28D9", "#5B21B6", "#4C1D95"]
+    });
 
     // KPI Cards: reprogramados y finalizados (por fecha real de ocurrencia).
     var now = new Date();
@@ -483,6 +474,67 @@
   function shortName(n) {
     const s = String(n || "");
     return s.length > 18 ? s.slice(0, 17) + "…" : s;
+  }
+
+  // ============================================================
+  //  Channel Distribution Chart (reusable pie chart with labels)
+  // ============================================================
+  function channelDistributionChartHTML(o) {
+    var cats = o.categories || [];
+    var vals = o.values || [];
+    var palette = o.colors || ["#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE", "#7C3AED", "#6D28D9"];
+    var total = vals.reduce(function (s, v) { return s + v; }, 0);
+    if (!total || !cats.length) {
+      return '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin datos.</p></div>';
+    }
+    var cx = 130, cy = 130, r = 95, innerR = 0;
+    var pi2 = Math.PI * 2;
+    var startAngle = -Math.PI / 2;
+    var paths = [];
+    var labels = [];
+    var legendItems = [];
+    var angle = startAngle;
+    for (var i = 0; i < cats.length; i++) {
+      var pct = vals[i] / total;
+      var sweep = pct * pi2;
+      var endAngle = angle + sweep;
+      var midAngle = angle + sweep / 2;
+      if (sweep < 0.001) { angle = endAngle; continue; }
+      var x1 = cx + r * Math.cos(angle);
+      var y1 = cy + r * Math.sin(angle);
+      var x2 = cx + r * Math.cos(endAngle);
+      var y2 = cy + r * Math.sin(endAngle);
+      var largeArc = sweep > Math.PI ? 1 : 0;
+      var d = "M" + cx + "," + cy + " L" + x1.toFixed(2) + "," + y1.toFixed(2) +
+        " A" + r + "," + r + " 0 " + largeArc + " 1 " + x2.toFixed(2) + "," + y2.toFixed(2) + " Z";
+      var col = palette[i % palette.length];
+      paths.push('<path d="' + d + '" fill="' + col + '" stroke="#1e1b2e" stroke-width="1.5"/>');
+      // label line
+      var labelR = r + 18;
+      var lx = cx + labelR * Math.cos(midAngle);
+      var ly = cy + labelR * Math.sin(midAngle);
+      var tx = cx + (labelR + 40) * Math.cos(midAngle);
+      var ty = cy + (labelR + 40) * Math.sin(midAngle);
+      var anchor = Math.cos(midAngle) < -0.1 ? "end" : Math.cos(midAngle) > 0.1 ? "start" : "middle";
+      var pctLabel = Math.round(pct * 100) + "%";
+      labels.push(
+        '<polyline points="' + lx.toFixed(1) + ',' + ly.toFixed(1) + ' ' + tx.toFixed(1) + ',' + ty.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1" opacity="0.6"/>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty - 4).toFixed(1) + '" text-anchor="' + anchor + '" fill="#CBD5E1" font-size="10.5" font-weight="600">' + esc(shortName(cats[i])) + '</text>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty + 10).toFixed(1) + '" text-anchor="' + anchor + '" fill="' + col + '" font-size="10" font-weight="700">' + pctLabel + ' (' + vals[i] + ')</text>'
+      );
+      legendItems.push(
+        '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' +
+        esc(shortName(cats[i])) + ' (' + vals[i] + ')</span>'
+      );
+      angle = endAngle;
+    }
+    return '<div class="ch-wrap">' +
+      '<svg class="ch-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">' +
+      paths.join("") + labels.join("") +
+      '</svg>' +
+      '<div class="ch-total"><span class="ch-total-val">' + total + '</span><span class="ch-total-lbl">Total</span></div>' +
+      '<div class="ch-legend">' + legendItems.join("") + '</div>' +
+      '</div>';
   }
 
   function kpiCardHTML(o) {

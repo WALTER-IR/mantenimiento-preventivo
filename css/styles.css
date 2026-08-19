@@ -320,6 +320,16 @@ body {
 .kpi-detail-name { color: var(--text-muted, #94A3B8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
 .kpi-detail-count { font-weight: 700; font-size: 13px; }
 
+/* Channel Distribution Chart */
+.ch-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0; }
+.ch-svg { width: 100%; max-width: 260px; height: auto; }
+.ch-total { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
+.ch-total-val { font-size: 26px; font-weight: 800; color: var(--text-primary, #F1F5F9); line-height: 1; }
+.ch-total-lbl { font-size: 11px; color: var(--text-muted, #94A3B8); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+.ch-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin-top: 10px; }
+.ch-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted, #94A3B8); }
+.ch-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
 /* Torta (pie) y anillo (donut) */
 .pie-wrap, .donut-wrap { display: flex; flex-direction: column; align-items: center; padding: 10px 0 0; }
 .pie-chart { width: 60%; max-width: 180px; height: auto; }

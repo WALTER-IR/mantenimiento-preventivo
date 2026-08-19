@@ -1,6 +1,6 @@
 {
-  "version": "1.24.11",
+  "version": "1.24.12",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "KPI Cards ahora muestran desglose por técnico (reprogramados y finalizados del mes actual)."
+  "changelog": "Grafico de vencidos por responsable ahora es un pie chart moderno con labels conectados por lineas y estilo lavanda."
 }
