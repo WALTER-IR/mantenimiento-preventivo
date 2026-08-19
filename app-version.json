@@ -1,6 +1,6 @@
 {
-  "version": "1.24.37",
+  "version": "1.24.38",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Rendimiento: usuario normal solo ve sus datos. Admin ve todos. Se mantiene en la pagina al actualizar."
+  "changelog": "Stats de rendimiento ocultas para usuario normal, solo admin las ve."
 }

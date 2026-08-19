@@ -1001,14 +1001,17 @@
 
     const sel = $("#perfUsuario");
     const toolbar = sel.closest(".toolbar");
+    const statsGrid = $("#perfStatsGrid");
 
     if (!admin) {
       if (toolbar) toolbar.classList.add("hidden");
+      if (statsGrid) statsGrid.classList.add("hidden");
       var myName = sesion ? sesion.nombre : "";
       var me = rows.filter((r) => r.nombre === myName);
       var filtered = me.length ? me : [{ nombre: myName || "Sin datos", prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }];
     } else {
       if (toolbar) toolbar.classList.remove("hidden");
+      if (statsGrid) statsGrid.classList.remove("hidden");
       const prev = sel.value;
       const opts = ['<option value="">Todos los responsables</option>']
         .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`))
