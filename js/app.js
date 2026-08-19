@@ -427,7 +427,7 @@
     });
     var vencRows = Array.from(vencByResp.entries())
       .map(function (e) { return { nombre: e[0] === "sin responsable" ? "Sin responsable" : e[0], value: e[1] }; })
-      .sort(function (a, b) { return b.value - a.value; });
+      .sort(function (a, b) { return a.value - b.value; });
     var vencTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
     var vencMax = vencRows.length ? Math.max.apply(null, vencRows.map(function (r) { return r.value; })) : 1;
     if (vencRows.length) {
@@ -454,14 +454,14 @@
         pySvg += '<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1"/>';
         var pctVal = pyTotal ? Math.round((vencRows[pi].value / pyTotal) * 100) : 0;
         // value inside segment
-        pySvg += '<text x="' + cx + '" y="' + (y + segH / 2 + 1).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' (' + pctVal + '%)</text>';
+        pySvg += '<text x="' + cx + '" y="' + (y + segH / 2 + 1).toFixed(1) + '" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' (' + pctVal + '%)</text>';
         // label outside left with arrow line
         var labelY = y + segH / 2;
         var segLeftEdge = cx - wBot;
         pySvg += '<line x1="' + (labelX + 90).toFixed(1) + '" y1="' + labelY.toFixed(1) + '" x2="' + (segLeftEdge - 4).toFixed(1) + '" y2="' + labelY.toFixed(1) + '" stroke="' + col + '" stroke-width="1.2" opacity="0.6"/>';
         pySvg += '<polygon points="' + (segLeftEdge - 4).toFixed(1) + ',' + labelY.toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY - 3.5).toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY + 3.5).toFixed(1) + '" fill="' + col + '" opacity="0.6"/>';
-        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="11" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre) + '</text>';
-        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY + 9).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
+        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="13" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre) + '</text>';
+        pySvg += '<text x="' + (labelX + 86) + '" y="' + (labelY + 10).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="11" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
       }
       $("#dashVencPie").innerHTML = '<div class="ch-wrap">' +
         '<svg class="ch-svg ch-svg-pyramid" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +
