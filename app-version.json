@@ -1,6 +1,6 @@
 {
-  "version": "1.24.26",
+  "version": "1.24.27",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Piramide: etiquetas mas anchas, subtexto 8.5px, base alineada correctamente."
+  "changelog": "Piramide mas a la derecha, texto mas grande (nombre 15px, subtexto 11px, valor 15px)."
 }
