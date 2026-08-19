@@ -477,7 +477,7 @@
   }
 
   // ============================================================
-  //  Channel Distribution Chart (reusable pie chart with labels)
+  //  Channel Distribution Donut Chart (reusable)
   // ============================================================
   function channelDistributionChartHTML(o) {
     var cats = o.categories || [];
@@ -487,7 +487,7 @@
     if (!total || !cats.length) {
       return '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin datos.</p></div>';
     }
-    var cx = 130, cy = 130, r = 95, innerR = 0;
+    var cx = 130, cy = 130, r = 100, ir = 58;
     var pi2 = Math.PI * 2;
     var startAngle = -Math.PI / 2;
     var paths = [];
@@ -500,21 +500,26 @@
       var endAngle = angle + sweep;
       var midAngle = angle + sweep / 2;
       if (sweep < 0.001) { angle = endAngle; continue; }
-      var x1 = cx + r * Math.cos(angle);
-      var y1 = cy + r * Math.sin(angle);
-      var x2 = cx + r * Math.cos(endAngle);
-      var y2 = cy + r * Math.sin(endAngle);
+      var ox1 = cx + r * Math.cos(angle);
+      var oy1 = cy + r * Math.sin(angle);
+      var ox2 = cx + r * Math.cos(endAngle);
+      var oy2 = cy + r * Math.sin(endAngle);
+      var ix1 = cx + ir * Math.cos(endAngle);
+      var iy1 = cy + ir * Math.sin(endAngle);
+      var ix2 = cx + ir * Math.cos(angle);
+      var iy2 = cy + ir * Math.sin(angle);
       var largeArc = sweep > Math.PI ? 1 : 0;
-      var d = "M" + cx + "," + cy + " L" + x1.toFixed(2) + "," + y1.toFixed(2) +
-        " A" + r + "," + r + " 0 " + largeArc + " 1 " + x2.toFixed(2) + "," + y2.toFixed(2) + " Z";
+      var d = "M" + ox1.toFixed(2) + "," + oy1.toFixed(2) +
+        " A" + r + "," + r + " 0 " + largeArc + " 1 " + ox2.toFixed(2) + "," + oy2.toFixed(2) +
+        " L" + ix1.toFixed(2) + "," + iy1.toFixed(2) +
+        " A" + ir + "," + ir + " 0 " + largeArc + " 0 " + ix2.toFixed(2) + "," + iy2.toFixed(2) + " Z";
       var col = palette[i % palette.length];
       paths.push('<path d="' + d + '" fill="' + col + '" stroke="#1e1b2e" stroke-width="1.5"/>');
-      // label line
       var labelR = r + 18;
       var lx = cx + labelR * Math.cos(midAngle);
       var ly = cy + labelR * Math.sin(midAngle);
-      var tx = cx + (labelR + 40) * Math.cos(midAngle);
-      var ty = cy + (labelR + 40) * Math.sin(midAngle);
+      var tx = cx + (labelR + 38) * Math.cos(midAngle);
+      var ty = cy + (labelR + 38) * Math.sin(midAngle);
       var anchor = Math.cos(midAngle) < -0.1 ? "end" : Math.cos(midAngle) > 0.1 ? "start" : "middle";
       var pctLabel = Math.round(pct * 100) + "%";
       labels.push(
@@ -531,8 +536,9 @@
     return '<div class="ch-wrap">' +
       '<svg class="ch-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">' +
       paths.join("") + labels.join("") +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#F1F5F9" font-size="26" font-weight="800">' + total + '</text>' +
+      '<text x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle" fill="#94A3B8" font-size="10" text-transform="uppercase" letter-spacing="0.5">TOTAL</text>' +
       '</svg>' +
-      '<div class="ch-total"><span class="ch-total-val">' + total + '</span><span class="ch-total-lbl">Total</span></div>' +
       '<div class="ch-legend">' + legendItems.join("") + '</div>' +
       '</div>';
   }

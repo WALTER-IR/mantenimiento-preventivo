@@ -323,9 +323,6 @@ body {
 /* Channel Distribution Chart */
 .ch-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0; }
 .ch-svg { width: 100%; max-width: 260px; height: auto; }
-.ch-total { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
-.ch-total-val { font-size: 26px; font-weight: 800; color: var(--text-primary, #F1F5F9); line-height: 1; }
-.ch-total-lbl { font-size: 11px; color: var(--text-muted, #94A3B8); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 .ch-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin-top: 10px; }
 .ch-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted, #94A3B8); }
 .ch-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
