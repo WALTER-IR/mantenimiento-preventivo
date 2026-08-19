@@ -3839,7 +3839,6 @@
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        // Resize to 100x100, keep aspect ratio, center in square
         const canvas = document.createElement("canvas");
         const size = 100;
         canvas.width = size; canvas.height = size;
@@ -3849,8 +3848,7 @@
         const dw = img.width * ratio, dh = img.height * ratio;
         ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
         const fullB64 = canvas.toDataURL("image/png");
-        const pureB64 = fullB64.replace(/^data:image\/png;base64,/, "");
-        setLogoData(pureB64);
+        window.__pendingLogoB64 = fullB64.replace(/^data:image\/png;base64,/, "");
         $("#logoPreview").src = fullB64;
         $("#logoPreview").classList.remove("hidden");
       };
@@ -3861,10 +3859,19 @@
   $("#logoInput").addEventListener("change", (e) => {
     if (e.target.files[0]) processLogo(e.target.files[0]);
   });
+  $("#btnSaveLogo").addEventListener("click", () => {
+    const b64 = window.__pendingLogoB64 || "";
+    if (!b64) return toast("Selecciona una imagen primero", "err");
+    setLogoData(b64);
+    toast("Logo guardado y sincronizando...", "ok");
+    if (navigator.onLine) syncSubir();
+  });
   $("#btnClearLogo").addEventListener("click", () => {
+    window.__pendingLogoB64 = "";
     setLogoData("");
     $("#logoPreview").classList.add("hidden");
     $("#logoInput").value = "";
+    if (navigator.onLine) syncSubir();
   });
   // Restore logo preview on load
   const savedLogo = getLogoData();
@@ -3966,7 +3973,11 @@
         }
         // Sincronización con la nube: solo si hay sesión activa (evita que syncBajar
         // reemplace los usuarios locales antes de que el usuario pueda iniciar sesión).
-        if (sesion && navigator.onLine) syncBajar();
+        if (sesion && navigator.onLine) {
+          await syncBajar();
+          var logoSync = getLogoData();
+          if (logoSync) { $("#logoPreview").src = "data:image/png;base64," + logoSync; $("#logoPreview").classList.remove("hidden"); }
+        }
         /* Service Worker en modo SOLO CACHÉ (sin red): mantiene el
            funcionamiento sin conexión pero NO sincroniza nada en
            segundo plano. La actualización automática está deshabilitada;
