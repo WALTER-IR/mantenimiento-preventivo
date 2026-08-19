@@ -1,6 +1,6 @@
 {
-  "version": "1.24.41",
+  "version": "1.24.42",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Configuracion con acordeones colapsables."
+  "changelog": "Logo guardado en IndexedDB, persiste al borrar cache."
 }

@@ -3565,6 +3565,9 @@
     auditoria = await DB.getAuditoria(300);
     feriados = await DB.getAll("feriados");
     appConfig = await DB.getConfig();
+    if (!getLogoData() && appConfig.logo) {
+      try { localStorage.setItem("formato_logo_base64", appConfig.logo); } catch (e) { /* */ }
+    }
     // Corrige fechas dañadas (formato JavaScript/Excel) guardadas por versiones anteriores.
     let mCamb = false;
     mantenimientos.forEach((m) => {
@@ -3828,6 +3831,7 @@
       if (b64) localStorage.setItem("formato_logo_base64", b64);
       else localStorage.removeItem("formato_logo_base64");
     } catch (e) {}
+    DB.setConfig("logo", b64 || "").catch(() => {});
   }
   function processLogo(file) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -3952,6 +3956,8 @@
         sesion = await DB.getSesion();
         window.__STORAGE_OK__ = true;
         applySessionUI();
+        var logoNow = getLogoData();
+        if (logoNow) { $("#logoPreview").src = "data:image/png;base64," + logoNow; $("#logoPreview").classList.remove("hidden"); }
         if (sesion) {
           $("#loginScreen").classList.add("hidden");
           setView(currentView || "dashboard");
