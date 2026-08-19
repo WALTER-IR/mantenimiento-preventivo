@@ -1,6 +1,6 @@
 {
-  "version": "1.24.42",
+  "version": "1.24.43",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Logo guardado en IndexedDB, persiste al borrar cache."
+  "changelog": "Logo del login mas ancho (140x100px)."
 }
