@@ -1,6 +1,6 @@
 {
-  "version": "1.24.39",
+  "version": "1.24.40",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "La app recuerda la ultima vista y regresa a ella al recargar o sincronizar."
+  "changelog": "Logo se sincroniza en la nube. Se mantiene al borrar cache o importar respaldo."
 }

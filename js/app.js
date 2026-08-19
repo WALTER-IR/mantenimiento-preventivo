@@ -2624,6 +2624,7 @@
       app: CFG.APP_NAME,
       version: CFG.APP_VERSION,
       exportado: now(),
+      logo: getLogoData(),
       config: appConfig,
       usuarios,
       equipos,
@@ -2707,6 +2708,7 @@
       version: 4,
       exported: todayISO(),
       sync_at: new Date().toISOString(),
+      logo: getLogoData(),
       usuarios: uss,
       equipos: eqs,
       mantenimientos: mts,
@@ -2934,6 +2936,7 @@
           descargarJSON(buildRespaldo(), "respaldo-antes-de-importar-" + todayISO() + ".json");
         }
         await reemplazarDatos(datos, esApk);
+        if (data.logo) setLogoData(data.logo);
         await auditar("IMPORTAR DATOS", esApk ? "Integración de respaldo APK (base principal)" : "Restauración de respaldo");
         await reload();
         if (sesion && !usuarios.some((u) => u.id === sesion.id)) {
@@ -3026,6 +3029,7 @@
       const cloud = cloudMs(data);
       if (cloud > 0 && cloud <= lastSyncAt()) return false; // la nube no es más nueva
       await reemplazarDatos(convertirRespaldoApk(data), true);
+      if (data.logo) { setLogoData(data.logo); } else if (!getLogoData()) { /* keep existing */ }
       await auditar("SINCRONIZAR", "Datos recibidos desde la nube");
       await reload();
       await ensureAdmin();
