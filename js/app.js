@@ -439,13 +439,15 @@
       var totalH = segH * vencRows.length;
       var startY = (svgH - totalH) / 2 + 5;
       var maxW = svgW * 0.42;
-      var labelX = 10;
       var labelEnd = 200;
+      var widths = [0];
+      for (var wi = 0; wi < vencRows.length; wi++) {
+        var cumPct = vencRows.slice(0, wi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
+        widths.push(Math.max(cumPct * maxW, 4));
+      }
       for (var pi = 0; pi < vencRows.length; pi++) {
-        var pctTop = pi === 0 ? 0 : vencRows.slice(0, pi).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
-        var pctBot = vencRows.slice(0, pi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
-        var wTop = pi === 0 ? 0 : Math.max(pctTop * maxW, 10);
-        var wBot = pi === vencRows.length - 1 ? maxW : Math.max(pctBot * maxW, 10);
+        var wTop = widths[pi];
+        var wBot = widths[pi + 1];
         var y = startY + pi * segH;
         var col = pyColors[pi % pyColors.length];
         var d = "M" + (cx - wTop).toFixed(1) + "," + y.toFixed(1) +
