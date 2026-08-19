@@ -1,6 +1,6 @@
 {
-  "version": "1.24.30",
+  "version": "1.24.31",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Subtexto rojo de piramide aumentado a 18px."
+  "changelog": "Piramide mas ancha ocupando 90% de la seccion."
 }

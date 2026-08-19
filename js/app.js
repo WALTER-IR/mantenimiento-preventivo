@@ -434,11 +434,11 @@
       var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
       var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
       var pySvg = "";
-      var svgH = 440, svgW = 620, cx = svgW * 0.76;
+      var svgH = 440, svgW = 680, cx = svgW * 0.65;
       var segH = Math.min((svgH - 10) / vencRows.length, 70);
       var totalH = segH * vencRows.length;
       var startY = (svgH - totalH) / 2 + 5;
-      var maxW = svgW * 0.24;
+      var maxW = svgW * 0.42;
       var labelX = 10;
       var labelEnd = 160;
       for (var pi = 0; pi < vencRows.length; pi++) {
