@@ -255,6 +255,8 @@
       err.classList.remove("hidden");
       return;
     }
+    // Sincronizar desde la nube ANTES de validar (así los usuarios están actualizados).
+    if (navigator.onLine) { await syncBajar(); await reload(); }
     // Lógica idéntica al APK: "admin"/"administrador" entra con cualquier usuario administrador;
     // los responsables entran con su DNI o nombre (clave asignada o DNI si no tienen clave).
     const ku = usuario.replace(/[^a-z0-9]/g, "").toLowerCase();
@@ -282,7 +284,6 @@
     $("#loginUsuario").value = "";
     $("#loginClave").value = "";
     applySessionUI();
-    if (navigator.onLine) { await syncBajar(); await reload(); }
     applyLogoToUI(getLogoData());
     setView("dashboard");
   }
