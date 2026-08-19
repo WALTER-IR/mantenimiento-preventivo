@@ -440,7 +440,7 @@
       var startY = (svgH - totalH) / 2 + 5;
       var maxW = svgW * 0.42;
       var labelX = 10;
-      var labelEnd = 160;
+      var labelEnd = 200;
       for (var pi = 0; pi < vencRows.length; pi++) {
         var pctTop = pi === 0 ? 0 : vencRows.slice(0, pi).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
         var pctBot = vencRows.slice(0, pi + 1).reduce(function (s, r) { return s + r.value; }, 0) / pyTotal;
