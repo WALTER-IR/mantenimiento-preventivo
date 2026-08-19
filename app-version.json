@@ -1,6 +1,6 @@
 {
-  "version": "1.24.22",
+  "version": "1.24.23",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Piramide con letras mas grandes y orden ascendente (menor arriba)."
+  "changelog": "Piramide alineada a la derecha, punta en la cima, mas alta y letras grandes."
 }
