@@ -351,20 +351,23 @@
     $("#dashAvanceTitle").textContent = "Gráfico de avance \u2014 " + total + " Equipos";
 
     const prog = { programado: 0, reprogramado: 0, finalizado: 0 };
+    const atrasados = vis.filter((e) => statusOf(e).key === "vencido").length;
     mantenimientos.forEach((m) => {
       if (!visIds.has(m.equipoId)) return;
       prog[estadoMant(m)]++;
     });
 
     // Gráfico de avance global (barras apiladas).
-    const totP = prog.programado + prog.reprogramado + prog.finalizado;
+    const totP = prog.programado + prog.reprogramado + prog.finalizado + atrasados;
     const segG = totP
-      ? `<div class="perf-seg prog" style="flex:${(prog.programado / totP) * 100}"></div>` +
+      ? `<div class="perf-seg atras" style="flex:${(atrasados / totP) * 100}"></div>` +
+        `<div class="perf-seg prog" style="flex:${(prog.programado / totP) * 100}"></div>` +
         `<div class="perf-seg reprog" style="flex:${(prog.reprogramado / totP) * 100}"></div>` +
         `<div class="perf-seg fin" style="flex:${(prog.finalizado / totP) * 100}"></div>`
       : `<div class="perf-seg empty" style="flex:1"></div>`;
     $("#dashBar").innerHTML = segG;
     $("#dashNums").innerHTML =
+      `<span class="atras-t">${atrasados} atrasados</span>` +
       `<span class="prog-t">${prog.programado} program.</span>` +
       `<span class="reprog-t">${prog.reprogramado} reprogram.</span>` +
       `<span class="fin-t">${prog.finalizado} finaliz.</span>`;
