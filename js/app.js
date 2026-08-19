@@ -434,11 +434,11 @@
       var pyTotal = vencRows.reduce(function (s, r) { return s + r.value; }, 0);
       var pyColors = ["#E11D48", "#F43F5E", "#FB7185", "#FDA4AF", "#FECDD3", "#FFF1F2", "#BE123C", "#9F1239"];
       var pySvg = "";
-      var svgH = 340, svgW = 600, cx = svgW * 0.72;
-      var segH = Math.min((svgH - 20) / vencRows.length, 56);
+      var svgH = 380, svgW = 620, cx = svgW * 0.76;
+      var segH = Math.min((svgH - 20) / vencRows.length, 62);
       var totalH = segH * vencRows.length;
       var startY = (svgH - totalH) / 2 + 10;
-      var maxW = svgW * 0.28;
+      var maxW = svgW * 0.24;
       var labelX = 10;
       var labelEnd = 160;
       for (var pi = 0; pi < vencRows.length; pi++) {
@@ -460,7 +460,7 @@
         pySvg += '<line x1="' + (labelEnd + 10).toFixed(1) + '" y1="' + labelY.toFixed(1) + '" x2="' + (segLeftEdge - 4).toFixed(1) + '" y2="' + labelY.toFixed(1) + '" stroke="' + col + '" stroke-width="1.4" opacity="0.6"/>';
         pySvg += '<polygon points="' + (segLeftEdge - 4).toFixed(1) + ',' + labelY.toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY - 4.5).toFixed(1) + ' ' + (segLeftEdge - 10).toFixed(1) + ',' + (labelY + 4.5).toFixed(1) + '" fill="' + col + '" opacity="0.6"/>';
         pySvg += '<text x="' + labelEnd + '" y="' + (labelY - 4).toFixed(1) + '" text-anchor="end" fill="#1E293B" font-size="15" font-weight="700" font-family="system-ui,sans-serif">' + esc(vencRows[pi].nombre.toUpperCase()) + '</text>';
-        pySvg += '<text x="' + labelEnd + '" y="' + (labelY + 11).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="11" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
+        pySvg += '<text x="' + labelEnd + '" y="' + (labelY + 11).toFixed(1) + '" text-anchor="end" fill="' + col + '" font-size="9" font-weight="600" font-family="system-ui,sans-serif">' + vencRows[pi].value + ' vencidos</text>';
       }
       $("#dashVencPie").innerHTML = '<div class="ch-wrap">' +
         '<svg class="ch-svg ch-svg-pyramid" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + pySvg + '</svg>' +
