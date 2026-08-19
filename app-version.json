@@ -1,6 +1,6 @@
 {
-  "version": "1.24.14",
+  "version": "1.24.15",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Donut chart: labels visibles, colores formales, texto consistente con el dashboard."
+  "changelog": "Donut chart reducido, labels visibles, colores CAT_COLORS del grafico de categorias."
 }

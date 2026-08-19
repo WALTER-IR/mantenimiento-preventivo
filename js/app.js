@@ -393,8 +393,7 @@
     $("#dashVencPie").innerHTML = channelDistributionChartHTML({
       title: "Vencidos por responsable",
       categories: vencRows.map((r) => r.nombre),
-      values: vencRows.map((r) => r.value),
-      colors: ["#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE", "#7C3AED", "#6D28D9", "#5B21B6", "#4C1D95"]
+      values: vencRows.map((r) => r.value)
     });
 
     // KPI Cards: reprogramados y finalizados (por fecha real de ocurrencia).
@@ -482,12 +481,12 @@
   function channelDistributionChartHTML(o) {
     var cats = o.categories || [];
     var vals = o.values || [];
-    var palette = o.colors || ["#3B82F6", "#0EA5E9", "#14B8A6", "#6366F1", "#8B5CF6", "#06B6D4", "#2563EB", "#0D9488"];
+    var palette = o.colors || CAT_COLORS;
     var total = vals.reduce(function (s, v) { return s + v; }, 0);
     if (!total || !cats.length) {
       return '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Sin datos.</p></div>';
     }
-    var cx = 150, cy = 150, r = 100, ir = 58;
+    var size = 260, cx = size / 2, cy = size / 2, r = 68, ir = 40;
     var pi2 = Math.PI * 2;
     var startAngle = -Math.PI / 2;
     var paths = [];
@@ -515,17 +514,17 @@
         " A" + ir + "," + ir + " 0 " + largeArc + " 0 " + ix2.toFixed(2) + "," + iy2.toFixed(2) + " Z";
       var col = palette[i % palette.length];
       paths.push('<path d="' + d + '" fill="' + col + '" stroke="#F8FAFC" stroke-width="1.5"/>');
-      var labelR = r + 16;
+      var labelR = r + 12;
       var lx = cx + labelR * Math.cos(midAngle);
       var ly = cy + labelR * Math.sin(midAngle);
-      var tx = cx + (labelR + 42) * Math.cos(midAngle);
-      var ty = cy + (labelR + 42) * Math.sin(midAngle);
+      var tx = cx + (labelR + 30) * Math.cos(midAngle);
+      var ty = cy + (labelR + 30) * Math.sin(midAngle);
       var anchor = Math.cos(midAngle) < -0.1 ? "end" : Math.cos(midAngle) > 0.1 ? "start" : "middle";
       var pctLabel = Math.round(pct * 100) + "%";
       labels.push(
         '<polyline points="' + lx.toFixed(1) + ',' + ly.toFixed(1) + ' ' + tx.toFixed(1) + ',' + ty.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.2" opacity="0.5"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + (ty - 4).toFixed(1) + '" text-anchor="' + anchor + '" fill="var(--text-muted, #64748B)" font-size="11" font-weight="600">' + esc(shortName(cats[i])) + '</text>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + (ty + 10).toFixed(1) + '" text-anchor="' + anchor + '" fill="' + col + '" font-size="10" font-weight="700">' + pctLabel + ' (' + vals[i] + ')</text>'
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty - 4).toFixed(1) + '" text-anchor="' + anchor + '" fill="#64748B" font-size="10" font-weight="600">' + esc(shortName(cats[i])) + '</text>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + (ty + 10).toFixed(1) + '" text-anchor="' + anchor + '" fill="' + col + '" font-size="9.5" font-weight="700">' + pctLabel + ' (' + vals[i] + ')</text>'
       );
       legendItems.push(
         '<span class="ch-legend-item"><span class="ch-legend-dot" style="background:' + col + '"></span>' +
@@ -534,10 +533,10 @@
       angle = endAngle;
     }
     return '<div class="ch-wrap">' +
-      '<svg class="ch-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">' +
+      '<svg class="ch-svg" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">' +
       paths.join("") + labels.join("") +
-      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="var(--text, #1E293B)" font-size="28" font-weight="800">' + total + '</text>' +
-      '<text x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle" fill="var(--text-muted, #64748B)" font-size="10" letter-spacing="0.5">TOTAL</text>' +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#1E293B" font-size="22" font-weight="800" font-family="system-ui,sans-serif">' + total + '</text>' +
+      '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" fill="#94A3B8" font-size="8" letter-spacing="0.8" font-family="system-ui,sans-serif">TOTAL</text>' +
       '</svg>' +
       '<div class="ch-legend">' + legendItems.join("") + '</div>' +
       '</div>';
