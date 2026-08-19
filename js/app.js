@@ -282,6 +282,8 @@
     $("#loginUsuario").value = "";
     $("#loginClave").value = "";
     applySessionUI();
+    if (navigator.onLine) { await syncBajar(); await reload(); }
+    applyLogoToUI(getLogoData());
     setView("dashboard");
   }
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.24.45",
+  "version": "1.24.46",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Logo fijo en login, sidebar y topbar. Logo se preserva en cloud y DB."
+  "changelog": "Login sincroniza datos desde la nube antes de mostrar el dashboard."
 }
