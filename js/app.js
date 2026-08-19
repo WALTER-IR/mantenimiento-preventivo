@@ -997,24 +997,33 @@
   // ============================================================
   function renderRendimiento() {
     const { rows, tot, tecnicos, sinUsado } = avancePorUsuario();
+    const admin = esAdmin();
 
-    // Combo para elegir un responsable (conserva la selección mientras siga existiendo).
     const sel = $("#perfUsuario");
-    const prev = sel.value;
-    const opts = ['<option value="">Todos los responsables</option>']
-      .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`))
-      .concat(sinUsado ? [`<option value="__sin__">Sin asignar</option>`] : []);
-    if (sel.innerHTML !== opts.join("")) sel.innerHTML = opts.join("");
-    if (![...sel.options].some((o) => o.value === prev)) sel.value = "";
-    const filtro = sel.value;
+    const toolbar = sel.closest(".toolbar");
 
-    const vis = filtro === "__sin__"
-      ? rows.filter((r) => r.nombre === "Sin asignar")
-      : filtro
-        ? rows.filter((r) => r.nombre === filtro).length
-          ? rows.filter((r) => r.nombre === filtro)
-          : [{ nombre: filtro, prog: 0, reprog: 0, fin: 0, equipos: new Set() }]
-        : rows;
+    if (!admin) {
+      if (toolbar) toolbar.classList.add("hidden");
+      var myName = sesion ? sesion.nombre : "";
+      var me = rows.filter((r) => r.nombre === myName);
+      var filtered = me.length ? me : [{ nombre: myName || "Sin datos", prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }];
+    } else {
+      if (toolbar) toolbar.classList.remove("hidden");
+      const prev = sel.value;
+      const opts = ['<option value="">Todos los responsables</option>']
+        .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`))
+        .concat(sinUsado ? [`<option value="__sin__">Sin asignar</option>`] : []);
+      if (sel.innerHTML !== opts.join("")) sel.innerHTML = opts.join("");
+      if (![...sel.options].some((o) => o.value === prev)) sel.value = "";
+      const filtro = sel.value;
+      var filtered = filtro === "__sin__"
+        ? rows.filter((r) => r.nombre === "Sin asignar")
+        : filtro
+          ? rows.filter((r) => r.nombre === filtro).length
+            ? rows.filter((r) => r.nombre === filtro)
+            : [{ nombre: filtro, prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }]
+          : rows;
+    }
 
     $("#perfProg").textContent = tot.prog;
     $("#perfReprog").textContent = tot.reprog;
@@ -1022,12 +1031,12 @@
     $("#perfTotal").textContent = tot.total;
     $("#perfPct").textContent = tot.total ? Math.round((tot.fin / tot.total) * 100) + "%" : "0%";
 
-    $("#perfList").innerHTML = vis.length
-      ? vis.map(barHTML).join("")
+    $("#perfList").innerHTML = filtered.length
+      ? filtered.map(barHTML).join("")
       : `<div class="empty-state"><div class="empty-icon">📈</div><p>Sin mantenimientos para mostrar.</p></div>`;
 
-    $("#perfTbody").innerHTML = vis.length
-      ? vis.map((b) => {
+    $("#perfTbody").innerHTML = filtered.length
+      ? filtered.map((b) => {
         const t = b.prog + b.reprog + b.fin;
         const pct = t ? Math.round((b.fin / t) * 100) : 0;
         return `<tr>
