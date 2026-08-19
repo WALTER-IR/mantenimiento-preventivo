@@ -1,6 +1,6 @@
 {
-  "version": "1.24.23",
+  "version": "1.24.24",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-18",
-  "changelog": "Piramide alineada a la derecha, punta en la cima, mas alta y letras grandes."
+  "changelog": "Nombres en mayuscula, titulo cambiado a Mantenimiento Vencido."
 }
