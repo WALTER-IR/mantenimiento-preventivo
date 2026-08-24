@@ -163,9 +163,10 @@
   function esEstadoFinal(estado) { return estado === "finalizado"; }
 
   function estadoMant(mant) {
-    if (mant.estado === "finalizado") return "finalizado";
-    if (mant.estado === "reprogramado") {
-      const f = normFecha(mant.fechaReprog || mant.fecha);
+    const est = (mant.estado || "").toLowerCase();
+    if (est === "finalizado") return "finalizado";
+    if (est === "reprogramado") {
+      const f = normFecha(mant.fechaReprog || mant.fechaReprogramada || mant.fecha);
       if (f && f < todayISO()) return "vencido";
       return "reprogramado";
     }
@@ -1333,29 +1334,31 @@
   // ============================================================
   function openMantForm(id, equipoId) {
     const mant = id ? mantenimientos.find((x) => x.id === id) : null;
+    const esEdicion = !!mant;
     const title = $("#modalMantTitle");
-    if (title) title.textContent = mant ? "Editar mantenimiento" : "Registrar mantenimiento";
+    if (title) title.textContent = esEdicion ? "Editar mantenimiento" : "Registrar mantenimiento";
     $("#mtId").value = mant ? mant.id : "";
 
     const sel = $("#mtEquipo");
     if (sel) {
       const visibles = equiposVisibles();
       sel.innerHTML = visibles.map((eq) =>
-        '<option value="' + eq.id + '" ' + ((mant && mant.equipoId === eq.id) || (equipoId && equipoId === eq.id) ? "selected" : "") + '>' + esc(eq.nombre) + ' (' + esc(eq.marca || "") + ' ' + esc(eq.serie || "") + ')</option>'
+        '<option value="' + eq.id + '" ' + ((mant && mant.equipoId === eq.id) || (equipoId && equipoId === eq.id) ? "selected" : "") + '>' + esc(eq.hostname || eq.nombre || "Sin nombre") + ' ' + esc(eq.marca || "") + ' ' + esc(eq.serie ? '\u00b7 S/N: ' + eq.serie : "") + '</option>'
       ).join("");
       if (!visibles.length) sel.innerHTML = '<option value="">Sin equipos</option>';
       if (equipoId) sel.value = equipoId;
     }
 
     $("#mtFecha").value = mant ? normFecha(mant.fecha) : todayISO();
-    $("#mtTipo").value = mant ? (mant.tipoMant || mant.tipo || "preventivo") : "preventivo";
     $("#mtPrioridad").value = mant ? (mant.prioridad || "") : "";
-    $("#mtFechaReprog").value = mant ? normFecha(mant.fechaReprog) : "";
+    $("#mtFechaReprog").value = mant ? normFecha(mant.fechaReprog || mant.fechaReprogramada) : "";
     $("#mtFechaReal").value = mant ? normFecha(mant.fechaReal) : "";
-    $("#mtEstado").value = mant ? (mant.estado || "finalizado") : "finalizado";
-    $("#mtTecnico").value = mant ? (mant.tecnico || mant.responsable || "") : (sesion ? sesion.nombre : "");
-    $("#mtCosto").value = mant ? (mant.costo || "") : "";
-    $("#mtProxima").value = mant ? normFecha(mant.fechaProxima) : "";
+
+    const estadoMobile = mant ? (mant.estado || "Programado") : "Programado";
+    const estadoMap = { programado: "Programado", reprogramado: "Reprogramado", finalizado: "Finalizado" };
+    $("#mtEstado").value = estadoMap[estadoMobile.toLowerCase()] || estadoMobile;
+
+    $("#mtProxima").value = mant ? normFecha(mant.fechaProxima || mant.proxima) : "";
     $("#mtObs").value = mant ? (mant.observaciones || mant.obs || "") : "";
 
     const softChecked = mant ? (mant.checklistSoft || []) : [];
@@ -1364,15 +1367,26 @@
     renderChecklist("#checklistSoft", CHECKLIST_SOFT, allChecked.length ? allChecked : softChecked);
     renderChecklist("#checklistHard", CHECKLIST_HARD, allChecked.length ? [] : hardChecked);
 
-    if (!mant && !equipoId) {
-      const selEq = $("#mtEquipo");
-      if (selEq && selEq.value) {
-        const eq = equipos.find((e) => e.id === selEq.value);
-        if (eq) {
-          const intervalo = Number(eq.intervalo || appConfig.intervalo || 90);
-          $("#mtProxima").value = addDays(todayISO(), intervalo);
-        }
-      }
+    if (esEdicion) {
+      sel.disabled = true;
+      $("#mtPrioridad").disabled = true;
+      $("#mtEstado").disabled = true;
+      $("#mtFecha").disabled = true;
+      $("#mtProxima").disabled = true;
+      $("#mtFechaReprog").disabled = false;
+      $("#mtFechaReal").disabled = false;
+      $("#mtObs").disabled = false;
+    } else {
+      sel.disabled = false;
+      $("#mtPrioridad").disabled = false;
+      $("#mtEstado").disabled = false;
+      $("#mtFecha").disabled = false;
+      $("#mtProxima").disabled = false;
+      $("#mtFechaReprog").disabled = true;
+      $("#mtFechaReal").disabled = true;
+      $("#mtObs").disabled = false;
+      const intervalo = Number(appConfig.intervalo || 90);
+      $("#mtProxima").value = addDays(todayISO(), intervalo);
     }
 
     openModal("modalMant");
@@ -1382,43 +1396,77 @@
     const equipoId = ($("#mtEquipo") || {}).value;
     const fecha = normFecha($("#mtFecha").value);
     if (!equipoId) { toast("Selecciona un equipo", "danger"); return; }
-    if (!fecha) { toast("La fecha es obligatoria", "danger"); return; }
+    if (!fecha) { toast("Selecciona la FECHA PROGRAMADA", "danger"); return; }
 
     const id = $("#mtId").value || uid();
-    const tipoMant = ($("#mtTipo") || {}).value || "preventivo";
-    const estado = ($("#mtEstado") || {}).value || "finalizado";
-    const intervalo = appConfig.intervalo || 90;
+    const prioridad = ($("#mtPrioridad") || {}).value || "";
+    const fechaReprog = normFecha($("#mtFechaReprog").value);
+    const fechaReal = normFecha($("#mtFechaReal").value);
+    const proxima = normFecha($("#mtProxima").value);
+    const observaciones = ($("#mtObs") || {}).value.trim();
+
+    let estado = "Programado";
+    if (fechaReal.length > 0) {
+      estado = "Finalizado";
+    } else if (fechaReprog.length > 0) {
+      estado = "Reprogramado";
+    }
 
     const checklistSoft = getCheckedChecklist("#checklistSoft");
     const checklistHard = getCheckedChecklist("#checklistHard");
+
+    const now = new Date();
+    const stamp = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + ("0" + now.getDate()).slice(-2) + " " + ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2) + ":" + ("0" + now.getSeconds()).slice(-2);
+
+    const mantAnt = $("#mtId").value ? mantenimientos.find((m) => m.id === id) : null;
+    const antiguoFinalizado = mantAnt ? (mantAnt.estado || "").toLowerCase() : "";
+    const eraFinalizado = antiguoFinalizado === "finalizado";
+
+    let proximaCalc = proxima;
+    if (estado === "Finalizado") {
+      if (!eraFinalizado && mantAnt) {
+        proximaCalc = proxima || addDays(fechaReal, 365);
+      } else if (!proximaCalc) {
+        proximaCalc = addDays(fechaReal, 365);
+      }
+    }
+
+    let finalizadoEn = mantAnt ? (mantAnt.finalizadoEn || "") : "";
+    if (estado === "Finalizado" && !eraFinalizado) {
+      finalizadoEn = stamp;
+    } else if (estado !== "Finalizado") {
+      finalizadoEn = "";
+    }
 
     const data = {
       id,
       equipoId,
       fecha,
-      tipoMant,
-      tipo: tipoMant,
-      prioridad: ($("#mtPrioridad") || {}).value || "",
-      fechaReprog: normFecha($("#mtFechaReprog").value),
-      fechaReal: normFecha($("#mtFechaReal").value),
+      prioridad,
+      fechaReprog,
+      fechaReal,
+      fechaReprogramada: fechaReprog,
+      fechaProgramada: fecha,
       estado,
       checklistSoft,
       checklistHard,
       checklist: checklistSoft.concat(checklistHard),
-      tecnico: ($("#mtTecnico") || {}).value.trim(),
-      responsable: ($("#mtTecnico") || {}).value.trim(),
-      costo: Number($("#mtCosto").value) || 0,
-      fechaProxima: normFecha($("#mtProxima").value) || addDays(fecha, intervalo),
-      observaciones: ($("#mtObs") || {}).value.trim(),
-      obs: ($("#mtObs") || {}).value.trim(),
-      fechaCreacion: normFecha($("#mtId").value ? ((mantenimientos.find((m) => m.id === id) || {}).fechaCreacion || "") : "") || todayISO()
+      actividades: checklistSoft.concat(checklistHard).join("|"),
+      responsable: (sesion ? sesion.nombre : ""),
+      tecnico: (sesion ? sesion.nombre : ""),
+      fechaProxima: proximaCalc,
+      proxima: proximaCalc,
+      observaciones,
+      obs: observaciones,
+      finalizadoEn,
+      fechaCreacion: (mantAnt && mantAnt.fechaCreacion) || todayISO()
     };
 
     await DB.put("mantenimientos", data);
     const esEdit = !!$("#mtId").value;
     const eq = equipos.find((e) => e.id === equipoId);
     await auditar(esEdit ? "EDITAR MANTENIMIENTO" : "NUEVO MANTENIMIENTO",
-      (eq ? eq.nombre : equipoId) + " - " + fecha);
+      (eq ? (eq.hostname || eq.nombre) : equipoId) + " - " + fecha);
     toast(esEdit ? "Mantenimiento actualizado" : "Mantenimiento registrado");
     closeModal("modalMant");
     await reload();
@@ -2495,6 +2543,32 @@
     });
     const btnGuardarMant = $("#btnGuardarMant");
     if (btnGuardarMant) btnGuardarMant.addEventListener("click", saveMant);
+    const mtFechaReprog = $("#mtFechaReprog");
+    if (mtFechaReprog) mtFechaReprog.addEventListener("change", () => {
+      const sel = $("#mtEstado");
+      if (!sel) return;
+      if (mtFechaReprog.value) {
+        sel.value = "Reprogramado";
+        sel.disabled = true;
+      } else if (!($("#mtFechaReal") || {}).value) {
+        sel.value = "Programado";
+        sel.disabled = false;
+      }
+    });
+    const mtFechaReal = $("#mtFechaReal");
+    if (mtFechaReal) mtFechaReal.addEventListener("change", () => {
+      const sel = $("#mtEstado");
+      if (!sel) return;
+      if (mtFechaReal.value) {
+        sel.value = "Finalizado";
+        sel.disabled = true;
+        const prox = $("#mtProxima");
+        if (prox && !prox.value) prox.value = addDays(normFecha(mtFechaReal.value), 365);
+      } else if (!($("#mtFechaReprog") || {}).value) {
+        sel.value = "Programado";
+        sel.disabled = false;
+      }
+    });
     const mantList = $("#mantList");
     if (mantList) {
       mantList.addEventListener("click", (e) => {

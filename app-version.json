@@ -1,6 +1,6 @@
 {
-  "version": "1.24.65",
+  "version": "1.24.66",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix avance: dashBar sin clase perf-bar para evitar nested flex. Rendimiento incluye vencidos en rojo."
+  "changelog": "Formulario mantenimiento igual al movil: auto-estado por fechas, campos bloqueados, proxima auto+365d, sin tipo/tecnico/costo."
 }
