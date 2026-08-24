@@ -1,6 +1,6 @@
 {
-  "version": "1.24.54",
+  "version": "1.24.55",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-20",
-  "changelog": "Fix: getLogoData() undefined -> appConfig.logo directo."
+  "changelog": "Normaliza snake_case->camelCase en syncBajar. ensureAdmin ya no sobreescribe admin de la nube."
 }

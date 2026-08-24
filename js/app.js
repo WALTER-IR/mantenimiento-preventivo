@@ -369,22 +369,12 @@
   //  Sesion / Login
   // ============================================================
   async function ensureAdmin() {
-    const flag = "admin_reset_" + CFG.APP_VERSION;
     const cfg = await DB.getConfig();
     if (!usuarios.some((u) => u.rol === ROL.ADMIN)) {
       const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
       usuarios.push(a);
       await DB.putUsuario(a);
-      await DB.setConfig(flag, true);
-      return;
-    }
-    if (!cfg[flag]) {
-      const admin = usuarios.find((u) => u.id === "us-admin") || usuarios.find((u) => u.rol === ROL.ADMIN);
-      if (admin) {
-        admin.nombre = "admin"; admin.dni = "admin"; admin.clave = "admin"; admin.rol = ROL.ADMIN; admin.id = "us-admin";
-        await DB.putUsuario(admin);
-      }
-      await DB.setConfig(flag, true);
+      await DB.setConfig("admin_created", true);
     }
   }
 
@@ -1798,6 +1788,27 @@
     }
   }
 
+  function normalizeEquipos(arr) {
+    return arr.map((eq) => {
+      if (!eq.usuarioAsignado && eq.usuario_asignado) eq.usuarioAsignado = eq.usuario_asignado;
+      if (!eq.responsableId && eq.responsable_id) eq.responsableId = eq.responsable_id;
+      if (!eq.fechaProgramada && eq.fecha_programada) eq.fechaProgramada = eq.fecha_programada;
+      return eq;
+    });
+  }
+  function normalizeMantenimientos(arr) {
+    return arr.map((m) => {
+      if (!m.equipoId && m.equipo_id) m.equipoId = m.equipo_id;
+      if (!m.fechaProgramada && m.fecha_programada) m.fechaProgramada = m.fecha_programada;
+      if (!m.fechaReal && m.fecha_real) m.fechaReal = m.fecha_real;
+      if (!m.fechaReprogramada && m.fecha_reprogramada) m.fechaReprogramada = m.fecha_reprogramada;
+      if (!m.finalizadoEn && m.finalizado_en) m.finalizadoEn = m.finalizado_en;
+      if (!m.tecnico && m.tecnico) m.tecnico = m.tecnico;
+      if (!m.tecnico && m.responsable) m.tecnico = m.responsable;
+      return m;
+    });
+  }
+
   async function syncBajar() {
     try {
       const url = CFG.SYNC_URL + "/" + CFG.SYNC_TOKEN + ".json?auth=" + CFG.SYNC_SECRET;
@@ -1807,8 +1818,8 @@
       if (!raw) { toast("No hay datos en la nube", "danger"); return; }
       const data = (raw.db && typeof raw.db === "object") ? raw.db : raw;
 
-      if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", data.equipos);
-      if (data.mantenimientos && Array.isArray(data.mantenimientos)) await DB.bulkPut("mantenimientos", data.mantenimientos);
+      if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", normalizeEquipos(data.equipos));
+      if (data.mantenimientos && Array.isArray(data.mantenimientos)) await DB.bulkPut("mantenimientos", normalizeMantenimientos(data.mantenimientos));
       if (data.usuarios && Array.isArray(data.usuarios)) {
         const localUsers = await DB.getAll("usuarios");
         const localMap = {};
