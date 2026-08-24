@@ -1,6 +1,6 @@
 {
-  "version": "1.24.63",
+  "version": "1.24.64",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix avance bar: usa flex:grow en vez de width inline para que los colores se muestren correctamente."
+  "changelog": "Fix avance bar: flex:0 0 X% para que cada segmento tome su porcentaje exacto."
 }
