@@ -1,6 +1,6 @@
 {
-  "version": "1.24.55",
+  "version": "1.24.56",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-20",
-  "changelog": "Normaliza snake_case->camelCase en syncBajar. ensureAdmin ya no sobreescribe admin de la nube."
+  "changelog": "Normalizacion completa: hostname->nombre, equipo->tipo, usuario_id->responsableId, asigna tecnico a mantenimientos desde equipo."
 }

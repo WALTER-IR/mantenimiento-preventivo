@@ -1790,9 +1790,15 @@
 
   function normalizeEquipos(arr) {
     return arr.map((eq) => {
+      if (!eq.nombre && eq.hostname) eq.nombre = eq.hostname;
+      if (!eq.nombre && eq.equipo && eq.serie) eq.nombre = eq.equipo + " " + eq.serie;
+      if (!eq.tipo && eq.equipo) eq.tipo = eq.equipo;
       if (!eq.usuarioAsignado && eq.usuario_asignado) eq.usuarioAsignado = eq.usuario_asignado;
+      if (!eq.responsableId && eq.usuario_id) eq.responsableId = eq.usuario_id;
       if (!eq.responsableId && eq.responsable_id) eq.responsableId = eq.responsable_id;
-      if (!eq.fechaProgramada && eq.fecha_programada) eq.fechaProgramada = eq.fecha_programada;
+      if (!eq.responsable && eq.usuarioAsignado) eq.responsable = eq.usuarioAsignado;
+      if (!eq.codInventario && eq.cod_inventario) eq.codInventario = eq.cod_inventario;
+      if (!eq.codInventario && eq.codigo) eq.codInventario = eq.codigo;
       return eq;
     });
   }
@@ -1803,8 +1809,9 @@
       if (!m.fechaReal && m.fecha_real) m.fechaReal = m.fecha_real;
       if (!m.fechaReprogramada && m.fecha_reprogramada) m.fechaReprogramada = m.fecha_reprogramada;
       if (!m.finalizadoEn && m.finalizado_en) m.finalizadoEn = m.finalizado_en;
-      if (!m.tecnico && m.tecnico) m.tecnico = m.tecnico;
       if (!m.tecnico && m.responsable) m.tecnico = m.responsable;
+      if (!m.tipoMant && m.tipo_mant) m.tipoMant = m.tipo_mant;
+      if (!m.tipoMant && m.tipo) m.tipoMant = m.tipo;
       return m;
     });
   }
@@ -1837,8 +1844,28 @@
           await DB.setConfig(k, v);
         }
       }
+      if (data.logo) await DB.setConfig("logo", data.logo);
 
       await reload();
+
+      const eqMap = {};
+      equipos.forEach((eq) => { eqMap[eq.id] = eq; });
+      let mantsFixed = 0;
+      for (let i = 0; i < mantenimientos.length; i++) {
+        const m = mantenimientos[i];
+        if (!m.tecnico && !m.responsable) {
+          const eq = eqMap[m.equipoId];
+          if (eq && (eq.responsable || eq.usuarioAsignado)) {
+            m.tecnico = eq.responsable || eq.usuarioAsignado;
+            m.responsable = m.tecnico;
+            mantsFixed++;
+          }
+        }
+      }
+      if (mantsFixed > 0) {
+        await DB.bulkPut("mantenimientos", mantenimientos);
+        await reload();
+      }
       await auditar("SINCRONIZAR BAJAR", "Datos descargados de la nube");
       toast("Datos descargados de la nube");
       refreshView();
