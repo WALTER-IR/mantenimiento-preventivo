@@ -931,6 +931,7 @@
       } else {
         perfList.innerHTML = data.map((d) => {
           const bd = [
+            { value: d.vencido, color: "#DC2626", label: "Vencidos" },
             { value: d.programado, color: "#0891B2", label: "Programado" },
             { value: d.reprogramado, color: "#D97706", label: "Reprogramado" },
             { value: d.finalizado, color: "#059669", label: "Finalizado" }

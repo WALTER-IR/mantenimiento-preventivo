@@ -1,6 +1,6 @@
 {
-  "version": "1.24.64",
+  "version": "1.24.65",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix avance bar: flex:0 0 X% para que cada segmento tome su porcentaje exacto."
+  "changelog": "Fix avance: dashBar sin clase perf-bar para evitar nested flex. Rendimiento incluye vencidos en rojo."
 }
