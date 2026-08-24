@@ -166,11 +166,11 @@
     const est = (mant.estado || "").toLowerCase();
     if (est === "finalizado") return "finalizado";
     if (est === "reprogramado") {
-      const f = normFecha(mant.fechaReprog || mant.fechaReprogramada || mant.fecha);
+      const f = normFecha(mant.fechaReprog || mant.fechaReprogramada || mant.fecha_reprogramada || mant.fecha || mant.fecha_programada);
       if (f && f < todayISO()) return "vencido";
       return "reprogramado";
     }
-    const f = normFecha(mant.fecha);
+    const f = normFecha(mant.fecha || mant.fecha_programada);
     if (f && f < todayISO()) return "vencido";
     return "programado";
   }
@@ -362,6 +362,8 @@
     auditoria = await DB.getAuditoria(300);
     feriados = await DB.getAll("feriados");
     appConfig = await DB.getConfig();
+    equipos = normalizeEquipos(equipos, usuarios);
+    mantenimientos = normalizeMantenimientos(mantenimientos);
     applyTheme(appConfig.colorPrimario || appConfig.temaColor);
     applyLogoToUI(appConfig.logo);
   }
@@ -1082,17 +1084,21 @@
     const data = {
       id,
       nombre: nombre.trim(),
+      hostname: ($("#eqHostname") || {}).value.trim() || nombre.trim(),
       tipo: ($("#eqTipo") || {}).value || "laptop",
+      equipo: ($("#eqTipo") || {}).value || "laptop",
       marca: ($("#eqMarca") || {}).value.trim(),
       codInventario: ($("#eqCodInventario") || {}).value.trim(),
+      cod_inventario: ($("#eqCodInventario") || {}).value.trim(),
       dni: ($("#eqDni") || {}).value.trim(),
       serie: ($("#eqSerie") || {}).value.trim(),
-      hostname: ($("#eqHostname") || {}).value.trim(),
       departamento: ($("#eqDepartamento") || {}).value.trim(),
       responsableId: respId,
+      usuario_id: respId,
       responsable: respUser ? respUser.nombre : "",
       cargo: ($("#eqCargo") || {}).value.trim(),
       usuarioAsignado: ($("#eqUsuarioAsignado") || {}).value.trim(),
+      usuario_asignado: ($("#eqUsuarioAsignado") || {}).value.trim(),
       area: ($("#eqArea") || {}).value.trim(),
       ubicacion: ($("#eqUbicacion") || {}).value.trim(),
       so: ($("#eqSO") || {}).value.trim(),
@@ -1359,7 +1365,7 @@
     const estadoMap = { programado: "Programado", reprogramado: "Reprogramado", finalizado: "Finalizado" };
     $("#mtEstado").value = estadoMap[estadoMobile.toLowerCase()] || estadoMobile;
 
-    $("#mtProxima").value = mant ? normFecha(mant.fechaProxima || mant.proxima) : "";
+    $("#mtProxima").value = mant ? normFecha(mant.fechaProxima || mant.proxima || mant.proxima) : "";
     $("#mtObs").value = mant ? (mant.observaciones || mant.obs || "") : "";
 
     const softChecked = mant ? (mant.checklistSoft || []) : [];
@@ -1442,12 +1448,15 @@
     const data = {
       id,
       equipoId,
+      equipo_id: equipoId,
       fecha,
+      fecha_programada: fecha,
       prioridad,
       fechaReprog,
-      fechaReal,
       fechaReprogramada: fechaReprog,
-      fechaProgramada: fecha,
+      fecha_reprogramada: fechaReprog,
+      fechaReal,
+      fecha_real: fechaReal,
       estado,
       checklistSoft,
       checklistHard,
@@ -1460,6 +1469,7 @@
       observaciones,
       obs: observaciones,
       finalizadoEn,
+      finalizado_en: finalizadoEn,
       fechaCreacion: (mantAnt && mantAnt.fechaCreacion) || todayISO()
     };
 
@@ -1844,12 +1854,61 @@
   // ============================================================
   //  SINCRONIZACION (Firebase)
   // ============================================================
+  function mantToCloud(m) {
+    return {
+      id: m.id,
+      equipo_id: m.equipoId || m.equipo_id || 0,
+      prioridad: m.prioridad || "",
+      fecha_programada: m.fecha || m.fechaProgramada || m.fecha_programada || "",
+      fecha_reprogramada: m.fechaReprog || m.fechaReprogramada || m.fecha_reprogramada || "",
+      fecha_real: m.fechaReal || m.fecha_real || "",
+      estado: m.estado || "Programado",
+      actividades: m.actividades || (m.checklist || []).join("|"),
+      proxima: m.proxima || m.fechaProxima || "",
+      observaciones: m.observaciones || m.obs || "",
+      finalizado_en: m.finalizadoEn || m.finalizado_en || ""
+    };
+  }
+
+  function eqToCloud(eq) {
+    return {
+      id: eq.id,
+      usuario_id: eq.responsableId || eq.usuario_id || 0,
+      hostname: eq.hostname || eq.nombre || "",
+      ip: eq.ip || "",
+      ubicacion: eq.ubicacion || "",
+      equipo: eq.tipo || eq.equipo || "",
+      cod_inventario: eq.codInventario || eq.cod_inventario || "",
+      serie: eq.serie || "",
+      marca: eq.marca || "",
+      modelo: eq.modelo || "",
+      contrato: eq.contrato || "",
+      status: eq.status || "",
+      usuario_asignado: eq.usuarioAsignado || eq.usuario_asignado || "",
+      area: eq.area || "",
+      cargo: eq.cargo || "",
+      dni: eq.dni || ""
+    };
+  }
+
   async function syncSubir() {
     try {
       const url = CFG.SYNC_URL + "/" + CFG.SYNC_TOKEN + ".json?auth=" + CFG.SYNC_SECRET;
+
+      const guardUrl = url;
+      const guardResp = await fetch(guardUrl);
+      if (guardResp.ok) {
+        const guardRaw = await guardResp.json();
+        const guardData = (guardRaw && guardRaw.db && typeof guardRaw.db === "object") ? guardRaw.db : guardRaw;
+        if (guardData && Array.isArray(guardData.equipos) && guardData.equipos.length > equipos.length) {
+          toast("Nube tiene más equipos (" + guardData.equipos.length + " vs " + equipos.length + "). Descargá primero.", "danger");
+          return;
+        }
+      }
+
       const data = {
-        equipos: equipos,
-        mantenimientos: mantenimientos,
+        equipos: equipos.map(eqToCloud),
+        mantenimientos: mantenimientos.map(mantToCloud),
         usuarios: usuarios,
         feriados: feriados,
         appConfig: appConfig,
@@ -1873,10 +1932,15 @@
       if (!eq.nombre && eq.equipo && eq.serie) eq.nombre = eq.equipo + " " + eq.serie;
       if (!eq.tipo && eq.equipo) eq.tipo = eq.equipo;
       if (!eq.usuarioAsignado && eq.usuario_asignado) eq.usuarioAsignado = eq.usuario_asignado;
+      if (!eq.usuario_asignado && eq.usuarioAsignado) eq.usuario_asignado = eq.usuarioAsignado;
       if (!eq.responsableId && eq.usuario_id) eq.responsableId = eq.usuario_id;
       if (!eq.responsableId && eq.responsable_id) eq.responsableId = eq.responsable_id;
+      if (!eq.usuario_id && eq.responsableId) eq.usuario_id = eq.responsableId;
       if (!eq.codInventario && eq.cod_inventario) eq.codInventario = eq.cod_inventario;
+      if (!eq.cod_inventario && eq.codInventario) eq.cod_inventario = eq.codInventario;
       if (!eq.codInventario && eq.codigo) eq.codInventario = eq.codigo;
+      if (!eq.hostname && eq.nombre) eq.hostname = eq.nombre;
+      if (!eq.equipo && eq.tipo) eq.equipo = eq.tipo;
       if (!eq.responsable && eq.responsableId) {
         const u = uMap[eq.responsableId];
         if (u) eq.responsable = u.nombre;
@@ -1888,12 +1952,21 @@
   function normalizeMantenimientos(arr) {
     return arr.map((m) => {
       if (!m.equipoId && m.equipo_id) m.equipoId = m.equipo_id;
+      if (!m.equipo_id && m.equipoId) m.equipo_id = m.equipoId;
       if (!m.fecha && m.fecha_programada) m.fecha = m.fecha_programada;
       if (!m.fechaProgramada && m.fecha_programada) m.fechaProgramada = m.fecha_programada;
+      if (!m.fecha_programada && (m.fechaProgramada || m.fecha)) m.fecha_programada = m.fechaProgramada || m.fecha;
       if (!m.fechaReal && m.fecha_real) m.fechaReal = m.fecha_real;
+      if (!m.fecha_real && m.fechaReal) m.fecha_real = m.fechaReal;
       if (!m.fechaReprogramada && m.fecha_reprogramada) m.fechaReprogramada = m.fecha_reprogramada;
       if (!m.fechaReprog && m.fecha_reprogramada) m.fechaReprog = m.fecha_reprogramada;
+      if (!m.fecha_reprogramada && (m.fechaReprogramada || m.fechaReprog)) m.fecha_reprogramada = m.fechaReprogramada || m.fechaReprog;
       if (!m.finalizadoEn && m.finalizado_en) m.finalizadoEn = m.finalizado_en;
+      if (!m.finalizado_en && m.finalizadoEn) m.finalizado_en = m.finalizadoEn;
+      if (!m.observaciones && m.obs) m.observaciones = m.obs;
+      if (!m.obs && m.observaciones) m.obs = m.observaciones;
+      if (!m.actividades && m.checklist) m.actividades = m.checklist.join("|");
+      if (!m.actividades && m.checklistSoft) m.actividades = m.checklistSoft.concat(m.checklistHard || []).join("|");
       if (!m.tecnico && m.responsable) m.tecnico = m.responsable;
       if (!m.tipoMant && m.tipo_mant) m.tipoMant = m.tipo_mant;
       if (!m.tipoMant && m.tipo) m.tipoMant = m.tipo;

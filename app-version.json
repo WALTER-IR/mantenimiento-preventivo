@@ -1,6 +1,6 @@
 {
-  "version": "1.24.67",
+  "version": "1.24.68",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix fecha programada en edicion: busca en fecha/fechaProgramada/fecha_programada. Solo muestra todayISO si es nuevo."
+  "changelog": "Homologacion total web-APK: syncSubir envia snake_case al cloud (mantToCloud/eqToCloud), normalizeMantenimientos/Equipos bidireccional, saveMant guarda ambos formatos, reload() normaliza, guard anti-sobreescritura en syncSubir."
 }
