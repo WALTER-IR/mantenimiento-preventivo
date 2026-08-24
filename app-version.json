@@ -1,6 +1,6 @@
 {
-  "version": "1.24.57",
+  "version": "1.24.58",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-20",
-  "changelog": "Responsable en titulo rojo negrita, rendimiento filtra por responsable desde equipo, tecnico derivado de equipo."
+  "updated": "2026-08-24",
+  "changelog": "Fix fecha en mantenimientos: fecha_programada -> fecha para que estadoMant funcione. Avance ahora muestra 190 vencidos, 615 futuros."
 }

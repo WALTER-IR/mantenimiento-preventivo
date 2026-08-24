@@ -1821,9 +1821,11 @@
   function normalizeMantenimientos(arr) {
     return arr.map((m) => {
       if (!m.equipoId && m.equipo_id) m.equipoId = m.equipo_id;
+      if (!m.fecha && m.fecha_programada) m.fecha = m.fecha_programada;
       if (!m.fechaProgramada && m.fecha_programada) m.fechaProgramada = m.fecha_programada;
       if (!m.fechaReal && m.fecha_real) m.fechaReal = m.fecha_real;
       if (!m.fechaReprogramada && m.fecha_reprogramada) m.fechaReprogramada = m.fecha_reprogramada;
+      if (!m.fechaReprog && m.fecha_reprogramada) m.fechaReprog = m.fecha_reprogramada;
       if (!m.finalizadoEn && m.finalizado_en) m.finalizadoEn = m.finalizado_en;
       if (!m.tecnico && m.responsable) m.tecnico = m.responsable;
       if (!m.tipoMant && m.tipo_mant) m.tipoMant = m.tipo_mant;
