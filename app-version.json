@@ -1,6 +1,6 @@
 {
-  "version": "1.24.52",
+  "version": "1.24.53",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-20",
-  "changelog": "FIX: SYNC_TOKEN corrige ruta a /db. syncBajar lee datos reales de Firebase."
+  "changelog": "Fix: refreshView explicito post-login, SW v67 para bust cache, logging errores."
 }

@@ -416,7 +416,7 @@
     // Si no hay usuarios locales, sincronizar desde la nube primero
     if (!usuarios.length && navigator.onLine) {
       if (err) { err.textContent = "Conectando con la nube..."; err.classList.remove("hidden"); }
-      try { await syncBajar(); await reload(); } catch (e) {}
+      try { await syncBajar(); await reload(); } catch (e) { console.error("sync pre-login:", e); }
     }
     const ku = usuario.toLowerCase().replace(/[^a-z0-9]/g, "");
     const adminKey = ku === "admin" || ku === "administrador";
@@ -468,7 +468,11 @@
     applySessionUI();
     setView("dashboard");
     // Sincronizar desde la nube DESPUES de validar login
-    if (navigator.onLine) { try { await syncBajar(); await reload(); applyLogoToUI(getLogoData()); } catch (e) {} }
+    if (navigator.onLine) { try { await syncBajar(); } catch (e) { console.error("sync post-login:", e); } }
+    await reload();
+    applyLogoToUI(getLogoData());
+    applySessionUI();
+    refreshView();
   }
 
   async function confirmTOTPVerify() {

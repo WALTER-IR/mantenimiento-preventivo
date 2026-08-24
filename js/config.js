@@ -8,7 +8,7 @@
 //  Déjala vacía "" para desactivar por completo la consulta de versiones.
 // ============================================================
 window.APP_CONFIG = {
-  APP_VERSION: "1.24.52",
+  APP_VERSION: "1.24.53",
   APP_NAME: "Mantenimiento Preventivo",
   UPDATE_URL: "https://WALTER-IR.github.io/mantenimiento-preventivo/", // ej. "https://midominio.com/mantenimiento/"
   // Sincronización en la nube (Firebase Realtime Database, protegida).
