@@ -1,6 +1,6 @@
 {
-  "version": "1.24.61",
+  "version": "1.24.63",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix perf-seg: flex:0 0 auto para que width inline funcione correctamente en grafico de avance."
+  "changelog": "Fix avance bar: usa flex:grow en vez de width inline para que los colores se muestren correctamente."
 }

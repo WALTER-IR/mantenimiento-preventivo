@@ -776,7 +776,7 @@
     if (!total) total = data.reduce((s, d) => s + d.value, 0) || 1;
     return '<div class="perf-bar">' + data.map((d) => {
       const pct = (d.value / total * 100).toFixed(1);
-      return '<div class="perf-seg" style="width:' + pct + '%;background:' + d.color + '" title="' + esc(d.label) + ': ' + d.value + '"></div>';
+      return '<div class="perf-seg" style="flex:' + pct + ' 0 0;background:' + d.color + '" title="' + esc(d.label) + ': ' + d.value + '"></div>';
     }).join("") + '</div>';
   }
 
