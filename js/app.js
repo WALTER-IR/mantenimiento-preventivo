@@ -1799,8 +1799,9 @@
       const url = CFG.SYNC_URL + "/" + CFG.SYNC_TOKEN + ".json?auth=" + CFG.SYNC_SECRET;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const data = await resp.json();
-      if (!data) { toast("No hay datos en la nube", "danger"); return; }
+      const raw = await resp.json();
+      if (!raw) { toast("No hay datos en la nube", "danger"); return; }
+      const data = raw.db || raw;
 
       if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", data.equipos);
       if (data.mantenimientos && Array.isArray(data.mantenimientos)) await DB.bulkPut("mantenimientos", data.mantenimientos);

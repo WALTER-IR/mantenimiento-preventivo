@@ -1,6 +1,6 @@
 {
-  "version": "1.24.50",
+  "version": "1.24.51",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-19",
-  "changelog": "Fix: si no hay usuarios locales, sincroniza desde la nube ANTES de validar."
+  "updated": "2026-08-20",
+  "changelog": "FIX CRITICO: syncBajar descifra wrapper 'db' de Firebase. Login + sync funcionan."
 }
