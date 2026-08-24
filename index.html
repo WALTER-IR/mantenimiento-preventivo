@@ -275,6 +275,8 @@
         <div class="accordion-body">
           <p class="card-text" id="miCuentaInfo"></p>
           <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
+          <button class="btn btn-outline btn-block" id="btnMi2FA">🔐 Seguridad (2FA)</button>
+          <div id="mi2FAStatus" class="card-text" style="font-size:12px;margin-top:6px"></div>
         </div>
       </div>
 
@@ -731,6 +733,47 @@ Atentamente,</textarea>
       <div class="modal-foot">
         <button class="btn btn-outline" data-close="modalErrores">Cerrar</button>
         <button class="btn btn-primary" id="btnCopiarErrores">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal verificacion TOTP (login) -->
+  <div id="modalTOTPVerify" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Verificacion en dos pasos</h3>
+        <button class="modal-close" data-close="modalTOTPVerify">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center">
+        <p class="card-text">Abre tu aplicacion de autenticacion e ingresa el codigo de 6 digitos.</p>
+        <input type="text" id="totpVerifyCode" class="input" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px" inputmode="numeric" autocomplete="one-time-code" />
+        <p id="totpVerifyError" class="field-error hidden"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-close="modalTOTPVerify">Cancelar</button>
+        <button class="btn btn-primary" id="btnTOTPVerifyConfirm">Verificar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal configurar TOTP (admin perfil) -->
+  <div id="modalTOTPSetup" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Configurar autenticacion en dos pasos</h3>
+        <button class="modal-close" data-close="modalTOTPSetup">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center">
+        <p class="card-text">Escanea este codigo QR con Google Authenticator, Microsoft Authenticator o Authy.</p>
+        <img id="totpQRImage" class="totp-qr" alt="QR Code" style="margin:12px auto;display:block;max-width:200px;border:1px solid #e2e8f0;border-radius:12px" />
+        <p id="totpSecretDisplay" style="font-size:11px;color:#94A3B8;word-break:break-all;margin:6px 0"></p>
+        <p class="card-text" style="margin-top:12px">Ingresa el codigo de 6 digitos para confirmar:</p>
+        <input type="text" id="totpSetupCode" class="input" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px" inputmode="numeric" autocomplete="one-time-code" />
+        <p id="totpSetupError" class="field-error hidden"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-close="modalTOTPSetup">Cancelar</button>
+        <button class="btn btn-primary" id="btnTOTPSetupConfirm">Activar 2FA</button>
       </div>
     </div>
   </div>
