@@ -1349,10 +1349,11 @@
       if (equipoId) sel.value = equipoId;
     }
 
-    $("#mtFecha").value = mant ? normFecha(mant.fecha) : todayISO();
+    const fFecha = mant ? normFecha(mant.fecha || mant.fechaProgramada || mant.fecha_programada) : "";
+    $("#mtFecha").value = fFecha || (mant ? "" : todayISO());
     $("#mtPrioridad").value = mant ? (mant.prioridad || "") : "";
-    $("#mtFechaReprog").value = mant ? normFecha(mant.fechaReprog || mant.fechaReprogramada) : "";
-    $("#mtFechaReal").value = mant ? normFecha(mant.fechaReal) : "";
+    $("#mtFechaReprog").value = mant ? normFecha(mant.fechaReprog || mant.fechaReprogramada || mant.fecha_reprogramada) : "";
+    $("#mtFechaReal").value = mant ? normFecha(mant.fechaReal || mant.fecha_real) : "";
 
     const estadoMobile = mant ? (mant.estado || "Programado") : "Programado";
     const estadoMap = { programado: "Programado", reprogramado: "Reprogramado", finalizado: "Finalizado" };
