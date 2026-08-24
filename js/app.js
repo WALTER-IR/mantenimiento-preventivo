@@ -850,8 +850,9 @@
       const r = m.tecnico || m.responsable || "Sin asignar";
       respMap[r] = (respMap[r] || 0) + 1;
     });
+    const respColors = ["#DC2626","#2563EB","#059669","#D97706","#7C3AED","#0891B2","#E11D48","#64748B","#9333EA","#0D9488"];
     const respData = Object.entries(respMap)
-      .map(([k, v]) => ({ label: k, value: v, color: "var(--pri-500)" }))
+      .map(([k, v], i) => ({ label: k, value: v, color: respColors[i % respColors.length] }))
       .sort((a, b) => b.value - a.value).slice(0, 10);
     const dashBarChart = $("#dashBarChart");
     if (dashBarChart) dashBarChart.innerHTML = barChartHTML(respData);

@@ -1,6 +1,6 @@
 {
-  "version": "1.24.59",
+  "version": "1.24.60",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix graficos: CAT_LABELS/CAT_COLORSUpperCase para NOTEBOOK/DESKTOP/CONVERTIBLE. Pyramid de ubicaciones restaurado."
+  "changelog": "Fix colores graficos: bar-row flex layout, bar-fill height:100%, responsable con hex colors."
 }
