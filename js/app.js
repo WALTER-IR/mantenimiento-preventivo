@@ -716,8 +716,8 @@
   // ============================================================
   //  Equipos por categoria / marca
   // ============================================================
-  const CAT_COLORS = { laptop: "#2563EB", desktop: "#059669", allinone: "#D97706", servidor: "#7C3AED" };
-  const CAT_LABELS = { laptop: "Laptop", desktop: "Escritorio", allinone: "Todo en uno", servidor: "Servidor" };
+  const CAT_COLORS = { NOTEBOOK: "#2563EB", DESKTOP: "#059669", CONVERTIBLE: "#D97706", SERVIDOR: "#7C3AED", laptop: "#2563EB", desktop: "#059669", allinone: "#D97706", servidor: "#7C3AED" };
+  const CAT_LABELS = { NOTEBOOK: "Notebook", DESKTOP: "Escritorio", CONVERTIBLE: "Convertible", SERVIDOR: "Servidor", laptop: "Laptop", desktop: "Escritorio", allinone: "Todo en uno", servidor: "Servidor" };
 
   function equiposPorCategoria() {
     const cats = {};
@@ -739,6 +739,15 @@
   }
 
   const MARCA_COLORS = ["#2563EB","#059669","#D97706","#DC2626","#7C3AED","#0891B2","#E11D48","#64748B"];
+
+  function pyramidHTML(data) {
+    if (!data.length) return '<div class="empty-state"><p>Sin datos.</p></div>';
+    const mx = Math.max(...data.map((d) => d.value), 1);
+    return '<div class="pyramid-wrap">' + data.map((d) => {
+      const pct = Math.round((d.value / mx) * 100);
+      return '<div class="pyramid-row"><div class="pyramid-bar" style="width:' + pct + '%;background:' + (d.color || "var(--pri-500)") + '"><span class="pyramid-val">' + d.value + '</span></div><span class="pyramid-label">' + esc(shortName(d.label)) + '</span></div>';
+    }).join("") + '</div>';
+  }
 
   function marcasEquipoHTML() {
     const data = marcasPorEquipo().map((d, i) => ({ ...d, color: MARCA_COLORS[i % MARCA_COLORS.length] }));
@@ -863,6 +872,13 @@
     // Equipos por marca
     const dashMarcaBar = $("#dashMarcaBar");
     if (dashMarcaBar) dashMarcaBar.innerHTML = marcasEquipoHTML();
+
+    // Ubicaciones piramide
+    const locMap = {};
+    visibles.forEach((eq) => { const l = eq.ubicacion || "Sin ubicacion"; locMap[l] = (locMap[l] || 0) + 1; });
+    const locData = Object.entries(locMap).map(([k, v], i) => ({ label: k, value: v, color: ["#DC2626","#D97706","#059669","#2563EB","#7C3AED","#0891B2","#E11D48","#64748B","#9333EA","#0D9488"][i % 10] })).sort((a, b) => b.value - a.value).slice(0, 10);
+    const dashPiramide = $("#dashPiramide");
+    if (dashPiramide) dashPiramide.innerHTML = pyramidHTML(locData);
 
     // KPIs
     const kpiReprog = $("#kpiReprogramados");

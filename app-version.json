@@ -1,6 +1,6 @@
 {
-  "version": "1.24.58",
+  "version": "1.24.59",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix fecha en mantenimientos: fecha_programada -> fecha para que estadoMant funcione. Avance ahora muestra 190 vencidos, 615 futuros."
+  "changelog": "Fix graficos: CAT_LABELS/CAT_COLORSUpperCase para NOTEBOOK/DESKTOP/CONVERTIBLE. Pyramid de ubicaciones restaurado."
 }
