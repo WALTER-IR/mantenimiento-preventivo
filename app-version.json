@@ -1,6 +1,6 @@
 {
-  "version": "1.24.53",
+  "version": "1.24.54",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-20",
-  "changelog": "Fix: refreshView explicito post-login, SW v67 para bust cache, logging errores."
+  "changelog": "Fix: getLogoData() undefined -> appConfig.logo directo."
 }

@@ -464,13 +464,13 @@
     if (err) err.classList.add("hidden");
     $("#loginUsuario").value = "";
     $("#loginClave").value = "";
-    applyLogoToUI(getLogoData());
+    applyLogoToUI(appConfig.logo);
     applySessionUI();
     setView("dashboard");
     // Sincronizar desde la nube DESPUES de validar login
     if (navigator.onLine) { try { await syncBajar(); } catch (e) { console.error("sync post-login:", e); } }
     await reload();
-    applyLogoToUI(getLogoData());
+    applyLogoToUI(appConfig.logo);
     applySessionUI();
     refreshView();
   }
@@ -495,7 +495,7 @@
     await auditar("INICIO DE SESION (2FA)", "Usuario: " + u.nombre);
     const modal = $("#modalTOTPVerify"); if (modal) modal.classList.add("hidden");
     if (err) err.classList.add("hidden");
-    applyLogoToUI(getLogoData());
+    applyLogoToUI(appConfig.logo);
     applySessionUI();
     setView("dashboard");
   }
