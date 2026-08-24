@@ -1,6 +1,6 @@
 {
-  "version": "1.24.56",
+  "version": "1.24.57",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-20",
-  "changelog": "Normalizacion completa: hostname->nombre, equipo->tipo, usuario_id->responsableId, asigna tecnico a mantenimientos desde equipo."
+  "changelog": "Responsable en titulo rojo negrita, rendimiento filtra por responsable desde equipo, tecnico derivado de equipo."
 }

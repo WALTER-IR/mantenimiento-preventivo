@@ -780,7 +780,12 @@
     const mantsFiltrados = mantenimientos.filter((m) => eqIds.has(m.equipoId));
     const usuariosMap = {};
     mantsFiltrados.forEach((m) => {
-      const resp = m.tecnico || m.responsable || "Sin asignar";
+      let resp = m.tecnico || m.responsable || "";
+      if (!resp) {
+        const eq = equipos.find((e) => e.id === m.equipoId);
+        resp = eq ? (eq.responsable || eq.usuarioAsignado || "") : "";
+      }
+      resp = resp || "Sin asignar";
       if (usuarioFiltro && resp !== usuarioFiltro) return;
       if (!usuariosMap[resp]) usuariosMap[resp] = { programado: 0, reprogramado: 0, finalizado: 0, vencido: 0 };
       const est = estadoMant(m);
@@ -874,8 +879,12 @@
     const prevVal = sel ? sel.value : "";
     const tecnicos = new Set();
     const eqIds = new Set(equiposVisibles().map((eq) => eq.id));
+    equiposVisibles().forEach((eq) => {
+      if (eq.responsable) tecnicos.add(eq.responsable);
+    });
     mantenimientos.filter((m) => eqIds.has(m.equipoId)).forEach((m) => {
-      tecnicos.add(m.tecnico || m.responsable || "Sin asignar");
+      const t = m.tecnico || m.responsable;
+      if (t) tecnicos.add(t);
     });
     if (sel) {
       sel.innerHTML = '<option value="">Todos los responsables</option>' +
@@ -971,11 +980,12 @@
         const estColor = est === "vencido" ? "linear-gradient(135deg,#DC2626,#EF4444)" :
           est === "proximo" ? "linear-gradient(135deg,#D97706,#F59E0B)" : "var(--pri-grad)";
         const numMants = mantenimientos.filter((m) => m.equipoId === eq.id).length;
+        const eqResp = eq.responsable || eq.usuarioAsignado || "Sin asignar";
         return '<div class="item-card" data-equipo="' + eq.id + '">' +
           '<div class="item-avatar" style="background:' + estColor + '">&#128187;</div>' +
-          '<div class="item-body"><div class="item-title">' + esc(eq.nombre || "Sin nombre") + '</div>' +
-          '<div class="item-sub">' + esc(eq.marca || "") + ' ' + esc(eq.serie ? '\u00b7 S/N: ' + eq.serie : "") + '</div>' +
-          '<div class="item-sub">' + esc(eq.usuarioAsignado || eq.responsable || "\u2014") + (eq.ubicacion ? ' \u00b7 ' + esc(eq.ubicacion) : "") + '</div></div>' +
+          '<div class="item-body"><div class="item-title" style="color:#DC2626;font-weight:700">' + esc(eqResp) + '</div>' +
+          '<div class="item-sub">' + esc(eq.hostname || eq.nombre || "") + ' ' + esc(eq.marca || "") + ' ' + esc(eq.serie ? '\u00b7 S/N: ' + eq.serie : "") + '</div>' +
+          '<div class="item-sub">' + esc(eq.usuarioAsignado || "\u2014") + (eq.ubicacion ? ' \u00b7 ' + esc(eq.ubicacion) : "") + '</div></div>' +
           '<div class="item-meta">' +
           (est === "vencido" ? '<span class="badge danger">Vencido</span>' :
             est === "proximo" ? '<span class="badge warn">Proximo</span>' :
@@ -1788,7 +1798,9 @@
     }
   }
 
-  function normalizeEquipos(arr) {
+  function normalizeEquipos(arr, usersArr) {
+    const uMap = {};
+    if (usersArr) usersArr.forEach((u) => { uMap[u.id] = u; });
     return arr.map((eq) => {
       if (!eq.nombre && eq.hostname) eq.nombre = eq.hostname;
       if (!eq.nombre && eq.equipo && eq.serie) eq.nombre = eq.equipo + " " + eq.serie;
@@ -1796,9 +1808,13 @@
       if (!eq.usuarioAsignado && eq.usuario_asignado) eq.usuarioAsignado = eq.usuario_asignado;
       if (!eq.responsableId && eq.usuario_id) eq.responsableId = eq.usuario_id;
       if (!eq.responsableId && eq.responsable_id) eq.responsableId = eq.responsable_id;
-      if (!eq.responsable && eq.usuarioAsignado) eq.responsable = eq.usuarioAsignado;
       if (!eq.codInventario && eq.cod_inventario) eq.codInventario = eq.cod_inventario;
       if (!eq.codInventario && eq.codigo) eq.codInventario = eq.codigo;
+      if (!eq.responsable && eq.responsableId) {
+        const u = uMap[eq.responsableId];
+        if (u) eq.responsable = u.nombre;
+      }
+      if (!eq.responsable && eq.usuarioAsignado) eq.responsable = eq.usuarioAsignado;
       return eq;
     });
   }
@@ -1825,7 +1841,7 @@
       if (!raw) { toast("No hay datos en la nube", "danger"); return; }
       const data = (raw.db && typeof raw.db === "object") ? raw.db : raw;
 
-      if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", normalizeEquipos(data.equipos));
+      if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", normalizeEquipos(data.equipos, data.usuarios || []));
       if (data.mantenimientos && Array.isArray(data.mantenimientos)) await DB.bulkPut("mantenimientos", normalizeMantenimientos(data.mantenimientos));
       if (data.usuarios && Array.isArray(data.usuarios)) {
         const localUsers = await DB.getAll("usuarios");
