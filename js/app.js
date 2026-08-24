@@ -1325,11 +1325,34 @@
       list.innerHTML = pageData.map((m) => {
         const eq = equipos.find((e) => e.id === m.equipoId);
         const est = estadoMant(m);
+        const resp = eq ? (eq.responsable || "") : "";
+        const user = eq ? (eq.usuarioAsignado || "") : "";
+        const ubi = eq ? (eq.ubicacion || "") : "";
+        const serie = eq ? (eq.serie || "") : "";
+        const host = eq ? (eq.hostname || "") : "";
+
+        const line1 = esc((user || "Sin asignar") + " \u00b7 " + (ubi || "Sin ubicacion"));
+        const line2 = serie ? esc("S/N: " + serie) + (host ? " - " + esc(host) : "") : esc(host || "Sin serie");
+        const line3 = "RESPONSABLE: " + esc(resp || "Sin responsable");
+
+        const fReprog = normFecha(m.fechaReprog || m.fechaReprogramada || m.fecha_reprogramada);
+        const fReal = normFecha(m.fechaReal || m.fecha_real);
+        const fProg = normFecha(m.fecha || m.fechaProgramada || m.fecha_programada);
+        let line4 = fProg ? esc("Programada: " + fmtDate(fProg)) : "";
+        if (fReprog) line4 = esc("Reprogramada: " + fmtDate(fReprog));
+        let line5 = "";
+        if (fReal) line5 += esc("Real: " + fmtDate(fReal));
+        if (m.prioridad) line5 += (line5 ? " - " : "") + esc("Prioridad: " + m.prioridad);
+
         return '<div class="item-card" data-mant="' + m.id + '">' +
           '<div class="item-avatar">&#128295;</div>' +
-          '<div class="item-body"><div class="item-title">' + esc(eq ? eq.nombre : "Equipo eliminado") + '</div>' +
-          '<div class="item-sub">' + fmtDate(m.fecha) + ' \u00b7 ' + esc(m.tipoMant || m.tipo || "\u2014") + ' \u00b7 ' + esc(m.tecnico || m.responsable || "\u2014") + '</div>' +
-          '<div class="item-sub">' + esc(m.observaciones || m.obs || "") + '</div></div>' +
+          '<div class="item-body">' +
+            '<div class="item-title">' + line1 + '</div>' +
+            '<div class="item-sub">' + line2 + '</div>' +
+            '<div class="item-sub">' + line3 + '</div>' +
+            (line4 ? '<div class="item-sub">' + line4 + '</div>' : "") +
+            (line5 ? '<div class="item-sub">' + line5 + '</div>' : "") +
+          '</div>' +
           '<div class="item-meta">' + estadoBadge(est) + '</div></div>';
       }).join("") + paginationHTML(filtered.length, mantPage, mantPageSize, "mant");
     }

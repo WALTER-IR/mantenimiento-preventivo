@@ -1,6 +1,6 @@
 {
-  "version": "1.24.68",
+  "version": "1.24.69",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Homologacion total web-APK: syncSubir envia snake_case al cloud (mantToCloud/eqToCloud), normalizeMantenimientos/Equipos bidireccional, saveMant guarda ambos formatos, reload() normaliza, guard anti-sobreescritura en syncSubir."
+  "changelog": "Formato de vista de mantenimiento: usuarioAsignado + ubicacion, S/N serie + hostname, responsable, fecha programada/reprogramada, fecha real + prioridad."
 }
