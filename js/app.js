@@ -66,6 +66,27 @@
     if (lock.lockedUntil <= Date.now()) return 0;
     return Math.ceil((lock.lockedUntil - Date.now()) / 1000);
   }
+  function cleanExpiredLockouts() {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("login_lock_")) {
+          try {
+            const d = JSON.parse(localStorage.getItem(k));
+            if (d && d.lockedUntil && Date.now() > d.lockedUntil) localStorage.removeItem(k);
+          } catch (e) { localStorage.removeItem(k); }
+        }
+      }
+    } catch (e) {}
+  }
+  function clearAllLockouts() {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("login_lock_")) localStorage.removeItem(k);
+      }
+    } catch (e) {}
+  }
 
   // ============================================================
   //  TOTP (Google Authenticator)
@@ -394,22 +415,28 @@
     if (!usuario || !clave) { if (err) { err.textContent = "Ingresa usuario y contrasena"; err.classList.remove("hidden"); } return; }
     const ku = usuario.toLowerCase().replace(/[^a-z0-9]/g, "");
     const adminKey = ku === "admin" || ku === "administrador";
-    const u = adminKey
-      ? usuarios.find((x) => x.rol === ROL.ADMIN)
-      : usuarios.find((x) => (x.nombre || "").toLowerCase() === usuario.toLowerCase() || (x.dni || "").toLowerCase() === usuario.toLowerCase());
+    let u;
+    if (adminKey) {
+      u = usuarios.find((x) => x.rol === ROL.ADMIN && (x.dni || "").toLowerCase() === usuario.toLowerCase());
+      if (!u) u = usuarios.find((x) => x.rol === ROL.ADMIN && (x.nombre || "").toLowerCase().includes(ku));
+      if (!u) u = usuarios.find((x) => x.rol === ROL.ADMIN);
+    } else {
+      u = usuarios.find((x) => (x.dni || "").toLowerCase() === usuario.toLowerCase());
+      if (!u) u = usuarios.find((x) => (x.nombre || "").toLowerCase() === usuario.toLowerCase());
+    }
     if (!u) { if (err) { err.textContent = "Usuario o contrasena incorrectos"; err.classList.remove("hidden"); } return; }
-    // Bloqueo por fuerza bruta
+    // Bloqueo por fuerza bruta (solo este usuario)
     if (isLockedOut(u.id)) {
       const secs = lockoutRemaining(u.id);
       const mins = Math.ceil(secs / 60);
-      if (err) { err.textContent = "Cuenta bloqueada. Intenta en " + mins + " minuto" + (mins === 1 ? "" : "s"); err.classList.remove("hidden"); }
+      if (err) { err.textContent = "Cuenta bloqueada (" + u.nombre + "). Intenta en " + mins + " minuto" + (mins === 1 ? "" : "s"); err.classList.remove("hidden"); }
       return;
     }
     const pwOk = u.clave ? u.clave === clave.trim() : u.dni === clave.trim();
     if (!pwOk) {
       const lock = recordFailedLogin(u.id);
       const remaining = lock.attempts >= MAX_ATTEMPTS ? "Cuenta bloqueada 5 minutos" : (MAX_ATTEMPTS - lock.attempts) + " intentos restantes";
-      if (err) { err.textContent = "Usuario o contrasena incorrectos (" + remaining + ")"; err.classList.remove("hidden"); }
+      if (err) { err.textContent = "Contrasena incorrecta (" + remaining + ")"; err.classList.remove("hidden"); }
       await auditar("INTENTO FALLIDO", "Usuario: " + u.nombre + " · Intentos: " + lock.attempts);
       return;
     }
@@ -2597,6 +2624,7 @@
   // ============================================================
   async function init() {
     try {
+      cleanExpiredLockouts();
       await reload();
       await ensureAdmin();
 
