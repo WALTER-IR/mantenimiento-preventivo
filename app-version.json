@@ -1,6 +1,6 @@
 {
-  "version": "1.24.60",
+  "version": "1.24.61",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fix colores graficos: bar-row flex layout, bar-fill height:100%, responsable con hex colors."
+  "changelog": "Fix perf-seg: flex:0 0 auto para que width inline funcione correctamente en grafico de avance."
 }

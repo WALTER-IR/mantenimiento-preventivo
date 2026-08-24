@@ -369,7 +369,7 @@ body {
 /* ---------------- Performance bars ---------------- */
 .perf-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: #E2E8F0; }
 .perf-bar-lg { height: 20px; border-radius: 10px; }
-.perf-seg { transition: flex .3s; min-width: 1px; }
+.perf-seg { flex: 0 0 auto; transition: width .3s; min-width: 1px; }
 .perf-seg.atras { background: #DC2626; }
 .perf-seg.prog { background: #2563EB; }
 .perf-seg.reprog { background: #D97706; }
