@@ -1,6 +1,6 @@
 {
-  "version": "1.24.49",
+  "version": "1.24.50",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Fix login: lockout per-usuario, limpieza lockouts, busqueda admin mejorada, clave preservada al bajar."
+  "changelog": "Fix: si no hay usuarios locales, sincroniza desde la nube ANTES de validar."
 }

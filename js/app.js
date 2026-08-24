@@ -413,6 +413,11 @@
     const clave = ($("#loginClave") || { value: "" }).value;
     const err = $("#loginError");
     if (!usuario || !clave) { if (err) { err.textContent = "Ingresa usuario y contrasena"; err.classList.remove("hidden"); } return; }
+    // Si no hay usuarios locales, sincronizar desde la nube primero
+    if (!usuarios.length && navigator.onLine) {
+      if (err) { err.textContent = "Conectando con la nube..."; err.classList.remove("hidden"); }
+      try { await syncBajar(); await reload(); } catch (e) {}
+    }
     const ku = usuario.toLowerCase().replace(/[^a-z0-9]/g, "");
     const adminKey = ku === "admin" || ku === "administrador";
     let u;
