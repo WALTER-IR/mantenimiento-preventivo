@@ -1588,11 +1588,41 @@
         const badge = a.tipo === "vencido"
           ? '<span class="badge danger">Vencido ' + a.diasVencidos + ' dia' + (a.diasVencidos !== 1 ? "s" : "") + '</span>'
           : '<span class="badge warn">En ' + a.diasRestantes + ' dia' + (a.diasRestantes !== 1 ? "s" : "") + '</span>';
+
+        const eqMants = mantenimientos.filter((m) => m.equipoId === eq.id);
+        const lastMant = eqMants.length ? eqMants.sort((a2, b2) => (b2.fecha || "").localeCompare(a2.fecha || ""))[0] : null;
+
+        const user = eq.usuarioAsignado || "";
+        const ubi = eq.ubicacion || "";
+        const serie = eq.serie || "";
+        const host = eq.hostname || "";
+        const resp = eq.responsable || "";
+
+        const line1 = esc((user || "Sin asignar") + " \u00b7 " + (ubi || "Sin ubicacion"));
+        const line2 = serie ? esc("S/N: " + serie) + (host ? " - " + esc(host) : "") : esc(host || "Sin serie");
+        const line3 = "RESPONSABLE: " + esc(resp || "Sin responsable");
+
+        let line4 = "";
+        let line5 = "";
+        if (lastMant) {
+          const fReprog = normFecha(lastMant.fechaReprog || lastMant.fechaReprogramada || lastMant.fecha_reprogramada);
+          const fReal = normFecha(lastMant.fechaReal || lastMant.fecha_real);
+          const fProg = normFecha(lastMant.fecha || lastMant.fechaProgramada || lastMant.fecha_programada);
+          if (fReprog) line4 = esc("Reprogramada: " + fmtDate(fReprog));
+          else if (fProg) line4 = esc("Programada: " + fmtDate(fProg));
+          if (fReal) line5 += esc("Real: " + fmtDate(fReal));
+          if (lastMant.prioridad) line5 += (line5 ? " - " : "") + esc("Prioridad: " + lastMant.prioridad);
+        }
+
         return '<div class="item-card" data-equipo="' + eq.id + '">' +
           '<div class="item-avatar" style="background:' + (a.tipo === "vencido" ? "linear-gradient(135deg,#DC2626,#EF4444)" : "linear-gradient(135deg,#D97706,#F59E0B)") + '">&#128276;</div>' +
-          '<div class="item-body"><div class="item-title">' + esc(eq.nombre || "Sin nombre") + '</div>' +
-          '<div class="item-sub">' + esc(eq.marca || "") + ' \u00b7 ' + esc(eq.serie || "") + ' \u00b7 ' + esc(eq.hostname || "") + '</div>' +
-          '<div class="item-sub">Asignado a: ' + esc(eq.usuarioAsignado || eq.responsable || "\u2014") + ' \u00b7 ' + esc(eq.ubicacion || "") + '</div></div>' +
+          '<div class="item-body">' +
+            '<div class="item-title">' + line1 + '</div>' +
+            '<div class="item-sub">' + line2 + '</div>' +
+            '<div class="item-sub">' + line3 + '</div>' +
+            (line4 ? '<div class="item-sub">' + line4 + '</div>' : "") +
+            (line5 ? '<div class="item-sub">' + line5 + '</div>' : "") +
+          '</div>' +
           '<div class="item-meta">' + badge + '<div class="item-sub" style="margin-top:2px">Vence: ' + fmtDate(a.proxDue) + '</div></div></div>';
       }).join("") + paginationHTML(alertas.length, alertPage, alertPageSize, "alert");
     }
