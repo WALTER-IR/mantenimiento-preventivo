@@ -392,8 +392,6 @@
     const clave = ($("#loginClave") || { value: "" }).value;
     const err = $("#loginError");
     if (!usuario || !clave) { if (err) { err.textContent = "Ingresa usuario y contrasena"; err.classList.remove("hidden"); } return; }
-    // Sincronizar desde la nube ANTES de validar.
-    if (navigator.onLine) { try { await syncBajar(); await reload(); } catch (e) {} }
     const ku = usuario.toLowerCase().replace(/[^a-z0-9]/g, "");
     const adminKey = ku === "admin" || ku === "administrador";
     const u = adminKey
@@ -437,6 +435,8 @@
     applyLogoToUI(getLogoData());
     applySessionUI();
     setView("dashboard");
+    // Sincronizar desde la nube DESPUES de validar login
+    if (navigator.onLine) { try { await syncBajar(); await reload(); applyLogoToUI(getLogoData()); } catch (e) {} }
   }
 
   async function confirmTOTPVerify() {
@@ -1772,7 +1772,17 @@
 
       if (data.equipos && Array.isArray(data.equipos)) await DB.bulkPut("equipos", data.equipos);
       if (data.mantenimientos && Array.isArray(data.mantenimientos)) await DB.bulkPut("mantenimientos", data.mantenimientos);
-      if (data.usuarios && Array.isArray(data.usuarios)) await DB.bulkPut("usuarios", data.usuarios);
+      if (data.usuarios && Array.isArray(data.usuarios)) {
+        const localUsers = await DB.getAll("usuarios");
+        const localMap = {};
+        localUsers.forEach((lu) => { localMap[String(lu.id)] = lu; });
+        const merged = data.usuarios.map((cu) => {
+          const existing = localMap[String(cu.id)];
+          if (existing && existing.clave) { cu.clave = existing.clave; }
+          return cu;
+        });
+        await DB.bulkPut("usuarios", merged);
+      }
       if (data.feriados && Array.isArray(data.feriados)) await DB.bulkPut("feriados", data.feriados);
       if (data.appConfig) {
         for (const [k, v] of Object.entries(data.appConfig)) {

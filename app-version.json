@@ -1,6 +1,6 @@
 {
-  "version": "1.24.48",
+  "version": "1.24.49",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-19",
-  "changelog": "Bloqueo por fuerza bruta (5 intentos/5min) + TOTP Google Authenticator."
+  "changelog": "Fix: login valida contra datos locales, sincroniza DESPUES. Clave local preservada al bajar."
 }
