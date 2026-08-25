@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inventario de Equipos</string>
+
+    <string name="correo_asunto">Programación de Mantenimiento de Equipos de Computo</string>
+    <string name="correo_cuerpo">Estimados señores:\n\nPor medio de la presente, les informamos que se ha programado una jornada de mantenimiento preventivo con el objetivo de garantizar el correcto funcionamiento de los equipos de cómputo y minimizar la probabilidad de fallas. A continuación se detallan las acciones previstas para la intervención.\n\nDetalle de equipos programados:\n\nRecomendaciones para los usuarios:\n  * Guardar su información importante.\n  * Cerrar sesión antes de la intervención.\n  * Informarnos en caso de requerir reprogramación.\n\nSi tiene dudas o necesita más información, no dude en contactarnos.\nAtentamente,</string>
+
+    <string-array name="prioridades">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+
+    <string-array name="alertas_proximos">
+        <item>Próximos 7 días</item>
+        <item>Próximos 15 días</item>
+        <item>Próximos 30 días</item>
+    </string-array>
+
+    <string-array name="estados_mantenimiento">
+        <item>Programado</item>
+        <item>Reprogramado</item>
+        <item>Finalizado</item>
+    </string-array>
+
+    <string-array name="filtros_estado_mant">
+        <item>Estado: todos</item>
+        <item>Programado</item>
+        <item>Reprogramado</item>
+        <item>Finalizado</item>
+    </string-array>
+
+    <string-array name="actividades_mantenimiento">
+        <item>Desfragmentación de disco duro</item>
+        <item>Limpieza de temporales</item>
+        <item>Liberación de espacio en el disco duro</item>
+        <item>Limpieza de papelera de reciclaje</item>
+        <item>Limpieza de RAM</item>
+        <item>Limpieza de Disco Duro</item>
+        <item>Limpieza de Placa y disipador</item>
+        <item>Se añadió pasta térmica al procesador</item>
+        <item>Limpieza de Fuente de poder</item>
+    </string-array>
+
+    <string-array name="zonas">
+        <item>Norte</item>
+        <item>Sur</item>
+    </string-array>
+
+    <string-array name="estados_equipo">
+        <item>Activo</item>
+        <item>En uso</item>
+        <item>Inactivo</item>
+        <item>Reparación</item>
+        <item>Baja</item>
+    </string-array>
+</resources>

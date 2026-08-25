@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@color/bg">
+
+    <TextView
+        android:id="@+id/usuTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="14dp"
+        style="@style/Title"
+        android:text="Responsables" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/Title"
+            android:text="Responsables" />
+
+        <Button
+            android:id="@+id/btnCargaResponsables"
+            style="@style/BtnOutline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="6dp"
+            android:text="Masiva" />
+
+        <Button
+            android:id="@+id/btnNuevoUsuario"
+            style="@style/BtnPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ Nuevo" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/usuHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:text="Toca para editar · Mantén pulsado para cambiar permisos"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
+
+    <ListView
+        android:id="@+id/listaUsuarios"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
+
+    <TextView
+        android:id="@+id/emptyUsuarios"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="30dp"
+        android:text="No hay responsables registrados."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:visibility="gone" />
+</LinearLayout>
