@@ -1292,17 +1292,22 @@
 
     if (selUsuario) {
       const prev = selUsuario.value;
-      const tecnicos = new Set();
-      mantenimientos.forEach((m) => tecnicos.add(m.tecnico || m.responsable || "Sin asignar"));
-      selUsuario.innerHTML = '<option value="">Todos los usuarios</option>' +
-        [...tecnicos].sort().map((t) => '<option value="' + esc(t) + '">' + esc(t) + '</option>').join("");
+      const respSet = new Set();
+      equiposVisibles().forEach((eq) => { if (eq.responsable) respSet.add(eq.responsable); });
+      selUsuario.innerHTML = '<option value="">Todos los responsables</option>' +
+        [...respSet].sort().map((t) => '<option value="' + esc(t) + '">' + esc(t) + '</option>').join("");
       if ([...selUsuario.options].some((o) => o.value === prev)) selUsuario.value = prev;
     }
 
+    const filtroUsuario = selUsuario ? selUsuario.value : "";
     if (selUbicacion) {
       const prev = selUbicacion.value;
       const ubics = new Set();
-      equipos.forEach((eq) => { if (eq.ubicacion) ubics.add(eq.ubicacion); });
+      const eqVisibles = equiposVisibles();
+      eqVisibles.forEach((eq) => {
+        if (filtroUsuario && eq.responsable !== filtroUsuario) return;
+        if (eq.ubicacion) ubics.add(eq.ubicacion);
+      });
       selUbicacion.innerHTML = '<option value="">Todas las ubicaciones</option>' +
         [...ubics].sort().map((u) => '<option value="' + esc(u) + '">' + esc(u) + '</option>').join("");
       if ([...selUbicacion.options].some((o) => o.value === prev)) selUbicacion.value = prev;
@@ -1395,6 +1400,14 @@
   // ============================================================
   //  MANTENIMIENTOS - formulario
   // ============================================================
+  function updateMantEqInfo(eqId) {
+    const eq = equipos.find((e) => String(e.id) === String(eqId));
+    const respEl = $("#mtResponsable");
+    const ubiEl = $("#mtUbicacion");
+    if (respEl) respEl.value = eq ? (eq.responsable || "") : "";
+    if (ubiEl) ubiEl.value = eq ? (eq.ubicacion || "") : "";
+  }
+
   function openMantForm(id, equipoId) {
     const mant = id ? mantenimientos.find((x) => x.id === id) : null;
     const esEdicion = !!mant;
@@ -1410,6 +1423,7 @@
       ).join("");
       if (!visibles.length) sel.innerHTML = '<option value="">Sin equipos</option>';
       if (equipoId) sel.value = equipoId;
+      updateMantEqInfo(sel.value);
     }
 
     const fFecha = mant ? normFecha(mant.fecha || mant.fechaProgramada || mant.fecha_programada) : "";
@@ -2710,6 +2724,8 @@
     });
     const btnGuardarMant = $("#btnGuardarMant");
     if (btnGuardarMant) btnGuardarMant.addEventListener("click", saveMant);
+    const filterUsuarioMant = $("#filterUsuarioMant");
+    if (filterUsuarioMant) filterUsuarioMant.addEventListener("change", () => { renderMantenimientos(); });
     const mtFechaReprog = $("#mtFechaReprog");
     if (mtFechaReprog) mtFechaReprog.addEventListener("change", () => {
       const sel = $("#mtEstado");
@@ -2743,6 +2759,8 @@
         if (card) openMantForm(card.dataset.mant);
       });
     }
+    const mtEquipo = $("#mtEquipo");
+    if (mtEquipo) mtEquipo.addEventListener("change", () => { updateMantEqInfo(mtEquipo.value); });
 
     // Alertas
     const btnAlertVencidos = $("#btnAlertVencidos");

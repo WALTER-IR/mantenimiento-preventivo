@@ -1,6 +1,6 @@
 {
-  "version": "1.24.72",
+  "version": "1.24.73",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Click en equipo abre directamente formulario edicion modal ancho (860px). Campo modelo agregado, duplicado codInventario eliminado."
+  "changelog": "Modal mantenimiento ancho (860px). Filtro ubicaciones por responsable. Campos readonly responsable/ubicacion en formulario. Prioridad carga correctamente."
 }
