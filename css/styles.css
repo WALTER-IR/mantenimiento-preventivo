@@ -267,7 +267,7 @@ body {
   background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 520px;
   max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow);
 }
-.modal-xl { max-width: 720px; }
+.modal-xl { max-width: 860px; }
 .modal-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 18px; border-bottom: 1px solid var(--border);
@@ -303,11 +303,12 @@ body {
 
 /* ---------------- Detail grid ---------------- */
 .detail-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 16px;
   margin-bottom: 16px; font-size: 13px;
 }
-.detail-grid .dt { color: var(--text-muted); font-weight: 600; }
-.detail-grid .dd { font-weight: 500; }
+.detail-grid .dt { color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+.detail-grid .dd { font-weight: 500; padding: 4px 8px; background: var(--surface-alt, #f8fafc); border-radius: 6px; min-height: 28px; display: flex; align-items: center; }
+.detail-grid .dd-full { grid-column: 1 / -1; }
 
 /* ---------------- Mant list ---------------- */
 .mant-list .item-card { cursor: default; }

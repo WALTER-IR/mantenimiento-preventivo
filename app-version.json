@@ -1,6 +1,6 @@
 {
-  "version": "1.24.70",
+  "version": "1.24.71",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Alertas con mismo formato que mantenimientos: usuarioAsignado + ubicacion, S/N serie - hostname, responsable, fecha programada/reprogramada, fecha real + prioridad."
+  "changelog": "Modal detalle equipo ancho (860px) con grid 4 columnas, eqTipo y filterTipo dinámicos desde BD, historial con fechas reales/programadas/reprogramadas."
 }

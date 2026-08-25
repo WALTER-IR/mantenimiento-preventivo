@@ -968,6 +968,18 @@
     const q = search.toLowerCase();
     const visibles = equiposVisibles();
 
+    const tipos = new Set();
+    visibles.forEach((e) => { if (e.tipo) tipos.add(e.tipo); });
+    const filterTipo = $("#filterTipo");
+    if (filterTipo) {
+      const prev = filterTipo.value;
+      filterTipo.innerHTML = '<option value="">Todos los tipos</option>' +
+        [...tipos].sort().map((t) =>
+          '<option value="' + esc(t) + '" ' + (prev === t ? "selected" : "") + '>' + esc(CAT_LABELS[t] || t) + '</option>'
+        ).join("");
+      if ([...filterTipo.options].some((o) => o.value === prev)) filterTipo.value = prev;
+    }
+
     const filtered = visibles.filter((eq) => {
       if (filtroTipo && eq.tipo !== filtroTipo) return false;
       if (!q) return true;
@@ -1025,7 +1037,20 @@
     if (title) title.textContent = eq ? "Editar equipo" : "Nuevo equipo";
     $("#eqId").value = eq ? eq.id : "";
     $("#eqNombre").value = eq ? eq.nombre || "" : "";
-    $("#eqTipo").value = eq ? eq.tipo || "laptop" : "laptop";
+
+    const tipos = new Set();
+    equipos.forEach((e) => { if (e.tipo) tipos.add(e.tipo); });
+    const selTipo = $("#eqTipo");
+    if (selTipo) {
+      selTipo.innerHTML = [...tipos].sort().map((t) =>
+        '<option value="' + esc(t) + '" ' + (eq && eq.tipo === t ? "selected" : "") + '>' + esc(CAT_LABELS[t] || t) + '</option>'
+      ).join("");
+      if (eq && eq.tipo && !tipos.has(eq.tipo)) {
+        selTipo.innerHTML += '<option value="' + esc(eq.tipo) + '" selected>' + esc(CAT_LABELS[eq.tipo] || eq.tipo) + '</option>';
+      }
+      if (!eq) selTipo.value = "";
+    }
+
     $("#eqMarca").value = eq ? eq.marca || "" : "";
     $("#eqCodInventario").value = eq ? eq.codInventario || "" : "";
     $("#eqDni").value = eq ? eq.dni || "" : "";
@@ -1127,7 +1152,7 @@
     if (!eq) return;
 
     const title = $("#detalleTitle");
-    if (title) title.textContent = "Detalle - " + (eq.nombre || "Equipo");
+    if (title) title.textContent = eq.hostname || eq.nombre || "Detalle del equipo";
 
     const est = statusOf(eq);
     const eqMant = mantenimientos.filter((m) => m.equipoId === eq.id)
@@ -1136,29 +1161,30 @@
 
     const info = $("#detalleInfo");
     if (info) {
+      const estBadge = est === "vencido" ? '<span class="badge danger">Vencido</span>'
+        : est === "proximo" ? '<span class="badge warn">Proximo</span>'
+        : '<span class="badge success">Al dia</span>';
       info.innerHTML =
-        '<span class="dt">Nombre:</span><span class="dd">' + esc(eq.nombre) + '</span>' +
-        '<span class="dt">Tipo:</span><span class="dd">' + esc(CAT_LABELS[eq.tipo] || eq.tipo) + '</span>' +
-        '<span class="dt">Marca:</span><span class="dd">' + esc(eq.marca || "\u2014") + '</span>' +
-        '<span class="dt">Serie:</span><span class="dd">' + esc(eq.serie || "\u2014") + '</span>' +
-        '<span class="dt">Hostname:</span><span class="dd">' + esc(eq.hostname || "\u2014") + '</span>' +
-        '<span class="dt">Cod. Inventario:</span><span class="dd">' + esc(eq.codInventario || "\u2014") + '</span>' +
-        '<span class="dt">DNI:</span><span class="dd">' + esc(eq.dni || "\u2014") + '</span>' +
-        '<span class="dt">Responsable:</span><span class="dd">' + esc(eq.responsable || eq.usuarioAsignado || "\u2014") + '</span>' +
-        '<span class="dt">Departamento:</span><span class="dd">' + esc(eq.departamento || "\u2014") + '</span>' +
-        '<span class="dt">Area:</span><span class="dd">' + esc(eq.area || "\u2014") + '</span>' +
-        '<span class="dt">Ubicacion:</span><span class="dd">' + esc(eq.ubicacion || "\u2014") + '</span>' +
-        '<span class="dt">Sistema Operativo:</span><span class="dd">' + esc(eq.so || "\u2014") + '</span>' +
-        '<span class="dt">IP:</span><span class="dd">' + esc(eq.ip || "\u2014") + '</span>' +
-        '<span class="dt">Fecha de compra:</span><span class="dd">' + fmtDate(eq.fechaCompra) + '</span>' +
-        '<span class="dt">Intervalo:</span><span class="dd">' + (eq.intervalo || appConfig.intervalo || 90) + ' dias</span>' +
-        '<span class="dt">Estado:</span><span class="dd">' +
-          (est === "vencido" ? '<span class="badge danger">Vencido</span>' :
-            est === "proximo" ? '<span class="badge warn">Proximo</span>' :
-            '<span class="badge success">Al dia</span>') + '</span>' +
-        '<span class="dt">Proximo vencimiento:</span><span class="dd">' + fmtDate(proxDue) + '</span>' +
-        '<span class="dt">Total mantenimientos:</span><span class="dd">' + eqMant.length + '</span>' +
-        (eq.notas ? '<span class="dt">Notas:</span><span class="dd">' + esc(eq.notas) + '</span>' : "");
+        '<span class="dt">Hostname</span><span class="dd">' + esc(eq.hostname || "\u2014") + '</span>' +
+        '<span class="dt">Tipo</span><span class="dd">' + esc(CAT_LABELS[eq.tipo] || eq.tipo || "\u2014") + '</span>' +
+        '<span class="dt">Marca</span><span class="dd">' + esc(eq.marca || "\u2014") + '</span>' +
+        '<span class="dt">Modelo</span><span class="dd">' + esc(eq.modelo || "\u2014") + '</span>' +
+        '<span class="dt">Serie</span><span class="dd">' + esc(eq.serie || "\u2014") + '</span>' +
+        '<span class="dt">Cod. Inventario</span><span class="dd">' + esc(eq.codInventario || "\u2014") + '</span>' +
+        '<span class="dt">IP</span><span class="dd">' + esc(eq.ip || "\u2014") + '</span>' +
+        '<span class="dt">Sistema Operativo</span><span class="dd">' + esc(eq.so || "\u2014") + '</span>' +
+        '<span class="dt">Responsable</span><span class="dd">' + esc(eq.responsable || "\u2014") + '</span>' +
+        '<span class="dt">Usuario Asignado</span><span class="dd">' + esc(eq.usuarioAsignado || "\u2014") + '</span>' +
+        '<span class="dt">DNI</span><span class="dd">' + esc(eq.dni || "\u2014") + '</span>' +
+        '<span class="dt">Cargo</span><span class="dd">' + esc(eq.cargo || "\u2014") + '</span>' +
+        '<span class="dt">Area</span><span class="dd">' + esc(eq.area || "\u2014") + '</span>' +
+        '<span class="dt">Ubicacion</span><span class="dd">' + esc(eq.ubicacion || "\u2014") + '</span>' +
+        '<span class="dt">Departamento</span><span class="dd">' + esc(eq.departamento || "\u2014") + '</span>' +
+        '<span class="dt">Intervalo</span><span class="dd">' + (eq.intervalo || appConfig.intervalo || 90) + ' dias</span>' +
+        '<span class="dt">Estado</span><span class="dd">' + estBadge + '</span>' +
+        '<span class="dt">Proximo vencimiento</span><span class="dd">' + fmtDate(proxDue) + '</span>' +
+        '<span class="dt">Total mantenimientos</span><span class="dd">' + eqMant.length + '</span>' +
+        (eq.notas ? '<span class="dt">Notas</span><span class="dd dd-full">' + esc(eq.notas) + '</span>' : "");
     }
 
     // Historial
@@ -1168,10 +1194,16 @@
       if (histEmpty) histEmpty.classList.add("hidden");
       if (hist) {
         hist.innerHTML = '<div class="table-wrap"><table class="data-table"><thead><tr>' +
-          '<th>Fecha</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Obs.</th></tr></thead><tbody>' +
-          eqMant.map((m) => '<tr><td>' + fmtDate(m.fecha) + '</td><td>' + esc(m.tipoMant || m.tipo || "\u2014") +
-            '</td><td>' + estadoBadge(estadoMant(m)) + '</td><td>' + esc(m.tecnico || m.responsable || "\u2014") +
-            '</td><td>' + esc(m.observaciones || m.obs || "\u2014") + '</td></tr>').join("") +
+          '<th>Fecha Programada</th><th>Reprog.</th><th>Fecha Real</th><th>Prioridad</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>' +
+          eqMant.map((m) => {
+            const fReprog = normFecha(m.fechaReprog || m.fechaReprogramada || m.fecha_reprogramada);
+            const fReal = normFecha(m.fechaReal || m.fecha_real);
+            const fProg = normFecha(m.fecha || m.fechaProgramada || m.fecha_programada);
+            return '<tr><td>' + fmtDate(fProg) + '</td><td>' + (fReprog ? fmtDate(fReprog) : "\u2014") +
+              '</td><td>' + (fReal ? fmtDate(fReal) : "\u2014") + '</td><td>' + esc(m.prioridad || "\u2014") +
+              '</td><td>' + estadoBadge(estadoMant(m)) + '</td><td>' + esc(m.tecnico || m.responsable || "\u2014") +
+              '</td></tr>';
+          }).join("") +
           '</tbody></table></div>';
       }
     } else {
