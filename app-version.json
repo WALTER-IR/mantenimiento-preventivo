@@ -1,6 +1,6 @@
 {
-  "version": "1.24.76",
+  "version": "1.24.77",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Usuario Asignado arriba del equipo. Botones Formato/PDF/Enviar se muestran cuando el mant editado esta finalizado."
+  "changelog": "Fechas reprogramacion y real fuera de grid para mejor acceso al calendario. Altura minima 42px en inputs date."
 }
