@@ -1052,6 +1052,7 @@
     }
 
     $("#eqMarca").value = eq ? eq.marca || "" : "";
+    $("#eqModelo").value = eq ? eq.modelo || "" : "";
     $("#eqCodInventario").value = eq ? eq.codInventario || "" : "";
     $("#eqDni").value = eq ? eq.dni || "" : "";
     $("#eqSerie").value = eq ? eq.serie || "" : "";
@@ -1113,6 +1114,7 @@
       tipo: ($("#eqTipo") || {}).value || "laptop",
       equipo: ($("#eqTipo") || {}).value || "laptop",
       marca: ($("#eqMarca") || {}).value.trim(),
+      modelo: ($("#eqModelo") || {}).value.trim(),
       codInventario: ($("#eqCodInventario") || {}).value.trim(),
       cod_inventario: ($("#eqCodInventario") || {}).value.trim(),
       dni: ($("#eqDni") || {}).value.trim(),
@@ -2672,7 +2674,13 @@
     if (equipoList) {
       equipoList.addEventListener("click", (e) => {
         const card = e.target.closest("[data-equipo]");
-        if (card) showEquipoDetalle(card.dataset.equipo);
+        if (card) {
+          if (puedeEditar()) {
+            openEquipoForm(card.dataset.equipo);
+          } else {
+            showEquipoDetalle(card.dataset.equipo);
+          }
+        }
       });
     }
 

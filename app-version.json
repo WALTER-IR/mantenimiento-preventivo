@@ -1,6 +1,6 @@
 {
-  "version": "1.24.71",
+  "version": "1.24.72",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Modal detalle equipo ancho (860px) con grid 4 columnas, eqTipo y filterTipo dinámicos desde BD, historial con fechas reales/programadas/reprogramadas."
+  "changelog": "Click en equipo abre directamente formulario edicion modal ancho (860px). Campo modelo agregado, duplicado codInventario eliminado."
 }
