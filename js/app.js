@@ -1322,7 +1322,6 @@
       if ([...selEquipo.options].some((o) => o.value === prev)) selEquipo.value = prev;
     }
 
-    const filtroUsuario = selUsuario ? selUsuario.value : "";
     const filtroUbicacion = selUbicacion ? selUbicacion.value : "";
     const filtroTipoEq = selEquipo ? selEquipo.value : "";
     const filtroTipoMant = ($("#filterTipoMant") || {}).value || "";
