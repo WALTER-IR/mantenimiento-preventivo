@@ -89,7 +89,7 @@
           <span class="legend-item"><i class="dot dot-reprog"></i>Reprogramado</span>
           <span class="legend-item"><i class="dot dot-fin"></i>Finalizado</span>
         </div>
-        <div id="dashBar"></div>
+        <div class="perf-bar perf-bar-lg" id="dashBar"></div>
         <div class="perf-nums" id="dashNums"></div>
       </div>
 
@@ -113,11 +113,6 @@
           <h3 class="card-title">Equipos por marca</h3>
           <div id="dashMarcaBar"></div>
         </div>
-      </div>
-
-      <div class="card">
-        <h3 class="card-title">Ubicaciones (Piramide)</h3>
-        <div id="dashPiramide"></div>
       </div>
 
       <div class="chart-row">
@@ -280,8 +275,6 @@
         <div class="accordion-body">
           <p class="card-text" id="miCuentaInfo"></p>
           <button class="btn btn-outline btn-block" id="btnMiPerfil">Editar mi perfil</button>
-          <button class="btn btn-outline btn-block" id="btnMi2FA">🔐 Seguridad (2FA)</button>
-          <div id="mi2FAStatus" class="card-text" style="font-size:12px;margin-top:6px"></div>
         </div>
       </div>
 
@@ -476,7 +469,7 @@ Atentamente,</textarea>
 
   <!-- ============================ MODAL EQUIPO ============================ -->
   <div id="modalEquipo" class="modal-overlay hidden">
-    <div class="modal modal-xl">
+    <div class="modal">
       <div class="modal-head">
         <h3 id="modalEquipoTitle">Nuevo equipo</h3>
         <button class="modal-close" data-close="modalEquipo">✕</button>
@@ -489,6 +482,10 @@ Atentamente,</textarea>
           <div>
             <label class="field-label" for="eqTipo">Tipo *</label>
             <select id="eqTipo" class="input select">
+              <option value="laptop">Laptop</option>
+              <option value="desktop">Computadora de escritorio</option>
+              <option value="allinone">Todo en uno</option>
+              <option value="servidor">Servidor</option>
             </select>
           </div>
           <div>
@@ -506,11 +503,12 @@ Atentamente,</textarea>
             <input type="text" id="eqDni" class="input" placeholder="Ej. 71913151" />
           </div>
         </div>
-        <div class="field-row">
           <div>
             <label class="field-label" for="eqSerie">No. de serie</label>
             <input type="text" id="eqSerie" class="input" placeholder="S/N" />
           </div>
+        </div>
+        <div class="field-row">
           <div>
             <label class="field-label" for="eqHostname">Hostname</label>
             <input type="text" id="eqHostname" class="input" placeholder="Ej. PC-ADMIN-01" />
@@ -544,8 +542,8 @@ Atentamente,</textarea>
             <input type="text" id="eqArea" class="input" placeholder="Ej. Contabilidad" />
           </div>
           <div>
-            <label class="field-label" for="eqModelo">Modelo</label>
-            <input type="text" id="eqModelo" class="input" placeholder="Ej. ThinkPad T14" />
+            <label class="field-label" for="eqCodInventario">Cod. Inventario</label>
+            <input type="text" id="eqCodInventario" class="input" placeholder="Ej. INV-2024-001" />
           </div>
         </div>
         <div class="field-row">
@@ -583,29 +581,28 @@ Atentamente,</textarea>
 
   <!-- ============================ MODAL MANTENIMIENTO ============================ -->
   <div id="modalMant" class="modal-overlay hidden">
-    <div class="modal modal-xl">
+    <div class="modal">
       <div class="modal-head">
         <h3 id="modalMantTitle">Registrar mantenimiento</h3>
         <button class="modal-close" data-close="modalMant">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="mtId" />
-        <label class="field-label">Usuario Asignado</label>
-        <input type="text" id="mtUsuarioAsignado" class="input" readonly style="background:var(--bg);color:var(--text-muted);" />
         <label class="field-label" for="mtEquipo">Equipo *</label>
         <select id="mtEquipo" class="input select"></select>
         <div class="field-row">
           <div>
-            <label class="field-label">Responsable</label>
-            <input type="text" id="mtResponsable" class="input" readonly style="background:var(--bg);color:var(--text-muted);" />
+            <label class="field-label" for="mtFecha">Fecha *</label>
+            <input type="date" id="mtFecha" class="input" />
           </div>
           <div>
-            <label class="field-label">Ubicacion</label>
-            <input type="text" id="mtUbicacion" class="input" readonly style="background:var(--bg);color:var(--text-muted);" />
+            <label class="field-label" for="mtTipo">Tipo</label>
+            <select id="mtTipo" class="input select">
+              <option value="preventivo">Preventivo</option>
+              <option value="correctivo">Correctivo</option>
+            </select>
           </div>
         </div>
-        <label class="field-label" for="mtFecha">Fecha programada *</label>
-        <input type="date" id="mtFecha" class="input" style="max-width:240px;" />
         <div class="field-row">
           <div>
             <label class="field-label" for="mtPrioridad">Prioridad</label>
@@ -617,22 +614,22 @@ Atentamente,</textarea>
             </select>
           </div>
           <div>
-            <label class="field-label" for="mtEstado">Estado</label>
-            <select id="mtEstado" class="input select">
-              <option value="Programado">Programado</option>
-              <option value="Reprogramado">Reprogramado</option>
-              <option value="Finalizado">Finalizado</option>
-            </select>
+            <label class="field-label" for="mtFechaReprog">Fecha reprogramación</label>
+            <input type="date" id="mtFechaReprog" class="input" />
           </div>
         </div>
         <div class="field-row">
           <div>
-            <label class="field-label" for="mtFechaReprog">Fecha reprogramación</label>
-            <input type="date" id="mtFechaReprog" class="input" />
-          </div>
-          <div>
             <label class="field-label" for="mtFechaReal">Fecha real</label>
             <input type="date" id="mtFechaReal" class="input" />
+          </div>
+          <div>
+            <label class="field-label" for="mtEstado">Estado</label>
+            <select id="mtEstado" class="input select">
+              <option value="finalizado">Finalizado</option>
+              <option value="programado">Programado</option>
+              <option value="reprogramado">Reprogramado</option>
+            </select>
           </div>
         </div>
         <label class="field-label"><strong>Actividades realizadas</strong></label>
@@ -644,21 +641,24 @@ Atentamente,</textarea>
           <h5><strong>Mantenimiento de Hardware</strong></h5>
           <div id="checklistHard" class="checklist"></div>
         </div>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="mtTecnico">Responsable de mantenimiento</label>
+            <input type="text" id="mtTecnico" class="input" placeholder="Nombre del responsable" />
+          </div>
+          <div>
+            <label class="field-label" for="mtCosto">Costo (opcional)</label>
+            <input type="number" id="mtCosto" class="input" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
         <label class="field-label" for="mtProxima">Próximo mantenimiento</label>
-        <input type="date" id="mtProxima" class="input" style="max-width:240px;" />
+        <input type="date" id="mtProxima" class="input" />
         <label class="field-label" for="mtObs"><strong>Observaciones</strong></label>
         <textarea id="mtObs" class="input textarea" rows="2" placeholder="Detalles del mantenimiento"></textarea>
       </div>
       <div class="modal-foot">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-outline btn-sm hidden" id="mtBtnFormato">Formato</button>
-          <button class="btn btn-outline btn-sm hidden" id="mtBtnPdf">PDF</button>
-          <button class="btn btn-outline btn-sm hidden" id="mtBtnEnviar">Enviar</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-left:auto;">
-          <button class="btn btn-outline" data-close="modalMant">Cancelar</button>
-          <button class="btn btn-primary" id="btnGuardarMant">Guardar mantenimiento</button>
-        </div>
+        <button class="btn btn-outline" data-close="modalMant">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarMant">Guardar mantenimiento</button>
       </div>
     </div>
   </div>
@@ -731,47 +731,6 @@ Atentamente,</textarea>
       <div class="modal-foot">
         <button class="btn btn-outline" data-close="modalErrores">Cerrar</button>
         <button class="btn btn-primary" id="btnCopiarErrores">Copiar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal verificacion TOTP (login) -->
-  <div id="modalTOTPVerify" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>Verificacion en dos pasos</h3>
-        <button class="modal-close" data-close="modalTOTPVerify">✕</button>
-      </div>
-      <div class="modal-body" style="text-align:center">
-        <p class="card-text">Abre tu aplicacion de autenticacion e ingresa el codigo de 6 digitos.</p>
-        <input type="text" id="totpVerifyCode" class="input" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px" inputmode="numeric" autocomplete="one-time-code" />
-        <p id="totpVerifyError" class="field-error hidden"></p>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-outline" data-close="modalTOTPVerify">Cancelar</button>
-        <button class="btn btn-primary" id="btnTOTPVerifyConfirm">Verificar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal configurar TOTP (admin perfil) -->
-  <div id="modalTOTPSetup" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>Configurar autenticacion en dos pasos</h3>
-        <button class="modal-close" data-close="modalTOTPSetup">✕</button>
-      </div>
-      <div class="modal-body" style="text-align:center">
-        <p class="card-text">Escanea este codigo QR con Google Authenticator, Microsoft Authenticator o Authy.</p>
-        <img id="totpQRImage" class="totp-qr" alt="QR Code" style="margin:12px auto;display:block;max-width:200px;border:1px solid #e2e8f0;border-radius:12px" />
-        <p id="totpSecretDisplay" style="font-size:11px;color:#94A3B8;word-break:break-all;margin:6px 0"></p>
-        <p class="card-text" style="margin-top:12px">Ingresa el codigo de 6 digitos para confirmar:</p>
-        <input type="text" id="totpSetupCode" class="input" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px" inputmode="numeric" autocomplete="one-time-code" />
-        <p id="totpSetupError" class="field-error hidden"></p>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-outline" data-close="modalTOTPSetup">Cancelar</button>
-        <button class="btn btn-primary" id="btnTOTPSetupConfirm">Activar 2FA</button>
       </div>
     </div>
   </div>

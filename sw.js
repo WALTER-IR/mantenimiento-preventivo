@@ -1,8 +1,8 @@
 // ============================================================
-//  Service Worker v74 - Network-first (fiabilidad)
+//  Service Worker v66 - Network-first (fiabilidad)
 //  Prioriza servir desde la RED. Si falla, usa caché como respaldo.
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v74";
+const CACHE_NAME = "mantenimiento-pwa-v66";
 
 const CORE_ASSETS = [
   "./",

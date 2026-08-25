@@ -1,6 +1,0 @@
-{
-  "version": "1.18.0",
-  "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-12",
-  "changelog": "Configuración: nueva opción 'Correo de programación' que permite redactar el texto del correo manualmente y envía el detalle de los equipos cargado automáticamente por ubicación."
-}
