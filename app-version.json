@@ -1,6 +1,6 @@
 {
-  "version": "1.24.79",
+  "version": "1.24.80",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Inputs date sin clase .input para evitar conflictos. appearance:auto y color-scheme para date picker nativo."
+  "changelog": "Revert CSS date inputs. Restaurada clase .input original que funcionaba en Edge."
 }
