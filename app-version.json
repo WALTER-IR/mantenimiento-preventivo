@@ -1,6 +1,6 @@
 {
-  "version": "1.24.77",
+  "version": "1.24.78",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fechas reprogramacion y real fuera de grid para mejor acceso al calendario. Altura minima 42px en inputs date."
+  "changelog": "Fix inputs date: color-scheme y calendar picker indicator para que se vean como date en vez de textbox."
 }
