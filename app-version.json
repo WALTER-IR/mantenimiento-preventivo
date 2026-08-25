@@ -1,6 +1,6 @@
 {
-  "version": "1.24.81",
+  "version": "1.24.82",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Fechas reprogramacion y real siempre habilitadas (estaban disabled al crear nuevo mant)."
+  "changelog": "Fechas con ancho reducido. Programada y proxima max 240px. Reprogramacion y real lado a lado en field-row."
 }
