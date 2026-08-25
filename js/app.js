@@ -1408,21 +1408,16 @@
     if (ubiEl) ubiEl.value = eq ? (eq.ubicacion || "") : "";
     if (usrEl) usrEl.value = eq ? (eq.usuarioAsignado || "") : "";
 
-    const esEdicion = !!($("#mtId").value);
+    const mantId = $("#mtId").value;
+    const currentMant = mantId ? mantenimientos.find((x) => String(x.id) === String(mantId)) : null;
     const fmtBtn = $("#mtBtnFormato");
     const pdfBtn = $("#mtBtnPdf");
     const envBtn = $("#mtBtnEnviar");
-    if (esEdicion && eq) {
-      const eqMant = mantenimientos.filter((m) => m.equipoId === eq.id)
-        .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
-      const lastMant = eqMant[0];
-      const fmtOk = lastMant && esFinalizado(lastMant);
-      if (fmtBtn) fmtBtn.classList.toggle("hidden", !fmtOk);
-      if (pdfBtn) pdfBtn.classList.toggle("hidden", !fmtOk);
-      if (envBtn) envBtn.classList.toggle("hidden", !fmtOk);
-      if (fmtBtn) fmtBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); };
-      if (pdfBtn) pdfBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); setTimeout(pdfFormato, 500); };
-      if (envBtn) envBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); setTimeout(enviarFormato, 500); };
+    const fmtOk = currentMant && esFinalizado(currentMant);
+    if (currentMant) {
+      if (fmtBtn) { fmtBtn.classList.toggle("hidden", !fmtOk); fmtBtn.onclick = () => { closeModal("modalMant"); renderFormato(currentMant.equipoId); }; }
+      if (pdfBtn) { pdfBtn.classList.toggle("hidden", !fmtOk); pdfBtn.onclick = () => { closeModal("modalMant"); renderFormato(currentMant.equipoId); setTimeout(pdfFormato, 500); }; }
+      if (envBtn) { envBtn.classList.toggle("hidden", !fmtOk); envBtn.onclick = () => { closeModal("modalMant"); renderFormato(currentMant.equipoId); setTimeout(enviarFormato, 500); }; }
     } else {
       if (fmtBtn) fmtBtn.classList.add("hidden");
       if (pdfBtn) pdfBtn.classList.add("hidden");
