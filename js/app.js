@@ -1479,8 +1479,8 @@
       $("#mtEstado").disabled = false;
       $("#mtFecha").disabled = false;
       $("#mtProxima").disabled = false;
-      $("#mtFechaReprog").disabled = true;
-      $("#mtFechaReal").disabled = true;
+      $("#mtFechaReprog").disabled = false;
+      $("#mtFechaReal").disabled = false;
       $("#mtObs").disabled = false;
       const intervalo = Number(appConfig.intervalo || 90);
       $("#mtProxima").value = addDays(todayISO(), intervalo);
