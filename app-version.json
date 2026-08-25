@@ -1,6 +1,6 @@
 {
-  "version": "1.24.73",
+  "version": "1.24.75",
   "app": "Mantenimiento Preventivo",
   "updated": "2026-08-24",
-  "changelog": "Modal mantenimiento ancho (860px). Filtro ubicaciones por responsable. Campos readonly responsable/ubicacion en formulario. Prioridad carga correctamente."
+  "changelog": "Editar mant: carga prioridad, checklist desde actividades pipe, usuarioAsignado, responsable, ubicacion. Botones Formato/PDF/Enviar en modal. Checklist reconstruido desde pipe."
 }

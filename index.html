@@ -602,6 +602,12 @@ Atentamente,</textarea>
             <input type="text" id="mtUbicacion" class="input" readonly style="background:var(--bg);color:var(--text-muted);" />
           </div>
         </div>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Usuario Asignado</label>
+            <input type="text" id="mtUsuarioAsignado" class="input" readonly style="background:var(--bg);color:var(--text-muted);" />
+          </div>
+          <div>
         <label class="field-label" for="mtFecha">Fecha programada *</label>
         <input type="date" id="mtFecha" class="input" />
         <div class="field-row">
@@ -648,8 +654,15 @@ Atentamente,</textarea>
         <textarea id="mtObs" class="input textarea" rows="2" placeholder="Detalles del mantenimiento"></textarea>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-outline" data-close="modalMant">Cancelar</button>
-        <button class="btn btn-primary" id="btnGuardarMant">Guardar mantenimiento</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm hidden" id="mtBtnFormato">Formato</button>
+          <button class="btn btn-outline btn-sm hidden" id="mtBtnPdf">PDF</button>
+          <button class="btn btn-outline btn-sm hidden" id="mtBtnEnviar">Enviar</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button class="btn btn-outline" data-close="modalMant">Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardarMant">Guardar mantenimiento</button>
+        </div>
       </div>
     </div>
   </div>

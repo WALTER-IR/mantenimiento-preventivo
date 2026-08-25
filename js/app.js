@@ -1403,8 +1403,31 @@
     const eq = equipos.find((e) => String(e.id) === String(eqId));
     const respEl = $("#mtResponsable");
     const ubiEl = $("#mtUbicacion");
+    const usrEl = $("#mtUsuarioAsignado");
     if (respEl) respEl.value = eq ? (eq.responsable || "") : "";
     if (ubiEl) ubiEl.value = eq ? (eq.ubicacion || "") : "";
+    if (usrEl) usrEl.value = eq ? (eq.usuarioAsignado || "") : "";
+
+    const esEdicion = !!($("#mtId").value);
+    const fmtBtn = $("#mtBtnFormato");
+    const pdfBtn = $("#mtBtnPdf");
+    const envBtn = $("#mtBtnEnviar");
+    if (esEdicion && eq) {
+      const eqMant = mantenimientos.filter((m) => m.equipoId === eq.id)
+        .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+      const lastMant = eqMant[0];
+      const fmtOk = lastMant && esFinalizado(lastMant);
+      if (fmtBtn) fmtBtn.classList.toggle("hidden", !fmtOk);
+      if (pdfBtn) pdfBtn.classList.toggle("hidden", !fmtOk);
+      if (envBtn) envBtn.classList.toggle("hidden", !fmtOk);
+      if (fmtBtn) fmtBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); };
+      if (pdfBtn) pdfBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); setTimeout(pdfFormato, 500); };
+      if (envBtn) envBtn.onclick = () => { closeModal("modalMant"); renderFormato(eq.id); setTimeout(enviarFormato, 500); };
+    } else {
+      if (fmtBtn) fmtBtn.classList.add("hidden");
+      if (pdfBtn) pdfBtn.classList.add("hidden");
+      if (envBtn) envBtn.classList.add("hidden");
+    }
   }
 
   function openMantForm(id, equipoId) {
@@ -1427,7 +1450,7 @@
 
     const fFecha = mant ? normFecha(mant.fecha || mant.fechaProgramada || mant.fecha_programada) : "";
     $("#mtFecha").value = fFecha || (mant ? "" : todayISO());
-    $("#mtPrioridad").value = mant ? (mant.prioridad || "") : "";
+    $("#mtPrioridad").value = mant ? (["Alta","Media","Baja"].find((p) => p.toLowerCase() === (mant.prioridad || "").toLowerCase()) || mant.prioridad || "") : "";
     $("#mtFechaReprog").value = mant ? normFecha(mant.fechaReprog || mant.fechaReprogramada || mant.fecha_reprogramada) : "";
     $("#mtFechaReal").value = mant ? normFecha(mant.fechaReal || mant.fecha_real) : "";
 
@@ -1441,8 +1464,10 @@
     const softChecked = mant ? (mant.checklistSoft || []) : [];
     const hardChecked = mant ? (mant.checklistHard || []) : [];
     const allChecked = mant ? (mant.checklist || []) : [];
-    renderChecklist("#checklistSoft", CHECKLIST_SOFT, allChecked.length ? allChecked : softChecked);
-    renderChecklist("#checklistHard", CHECKLIST_HARD, allChecked.length ? [] : hardChecked);
+    const fromActividades = mant && !allChecked.length && mant.actividades ? mant.actividades.split("|").map((s) => s.trim()).filter(Boolean) : [];
+    const effectiveChecked = allChecked.length ? allChecked : fromActividades;
+    renderChecklist("#checklistSoft", CHECKLIST_SOFT, effectiveChecked.length ? effectiveChecked : softChecked);
+    renderChecklist("#checklistHard", CHECKLIST_HARD, effectiveChecked.length ? [] : hardChecked);
 
     if (esEdicion) {
       sel.disabled = true;
@@ -2067,6 +2092,7 @@
       if (!m.obs && m.observaciones) m.obs = m.observaciones;
       if (!m.actividades && m.checklist) m.actividades = m.checklist.join("|");
       if (!m.actividades && m.checklistSoft) m.actividades = m.checklistSoft.concat(m.checklistHard || []).join("|");
+      if (!m.checklist && m.actividades) m.checklist = m.actividades.split("|").map((s) => s.trim()).filter(Boolean);
       if (!m.tecnico && m.responsable) m.tecnico = m.responsable;
       if (!m.tipoMant && m.tipo_mant) m.tipoMant = m.tipo_mant;
       if (!m.tipoMant && m.tipo) m.tipoMant = m.tipo;
