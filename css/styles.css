@@ -220,8 +220,8 @@ body {
 .field-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 10px 0 4px; }
 .field-label:first-child { margin-top: 0; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-input[type="date"] { min-height: 42px; cursor: pointer; color-scheme: light dark; }
-input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; padding: 4px; cursor: pointer; }
+input[type="date"] { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--surface); color: var(--text); appearance: auto; -webkit-appearance: auto; color-scheme: light dark; cursor: pointer; }
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.7; padding: 4px; cursor: pointer; }
 .filter-label { font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 
 /* ---------------- Buttons ---------------- */
