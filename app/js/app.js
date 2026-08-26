@@ -1,8 +1,17 @@
 // ============================================================
-//  Mantenimiento Preventivo - lógica de la aplicación
+//  Mantenimiento Preventivo - logica de la aplicacion
 // ============================================================
 (function () {
   "use strict";
+
+  // Force reload when SW activates new version
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", function (e) {
+      if (e.data && e.data.type === "FORCE_RELOAD") {
+        location.reload();
+      }
+    });
+  }
 
   const CFG = window.APP_CONFIG;
   const $ = (sel) => document.querySelector(sel);

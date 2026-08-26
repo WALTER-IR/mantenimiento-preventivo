@@ -1,8 +1,7 @@
 // ============================================================
-//  Service Worker v68 - Network-first (fiabilidad)
-//  Prioriza servir desde la RED. Si falla, usa caché como respaldo.
+//  Service Worker v69 - Force update + network-first
 // ============================================================
-const CACHE_NAME = "mantenimiento-pwa-v68";
+const CACHE_NAME = "mantenimiento-pwa-v69";
 
 const CORE_ASSETS = [
   "./",
@@ -18,19 +17,19 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .catch(() => {})
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+      Promise.all(keys.map((k) => caches.delete(k)))
+    ).then(() => self.clients.matchAll()).then((clients) => {
+      clients.forEach((c) => c.postMessage({ type: "FORCE_RELOAD" }));
+    })
   );
   self.clients.claim();
 });
@@ -39,7 +38,7 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Network-first: siempre intenta la red primero. Si falla, usa caché.
+// Network-first: siempre intenta la red primero. Si falla, usa cache.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET") return;
@@ -55,7 +54,7 @@ self.addEventListener("fetch", (event) => {
       .catch(() =>
         caches.match(event.request).then((cached) => {
           if (cached) return cached;
-          return new Response("Sin conexión", { status: 503, statusText: "Offline" });
+          return new Response("Sin conexion", { status: 503, statusText: "Offline" });
         })
       )
   );
