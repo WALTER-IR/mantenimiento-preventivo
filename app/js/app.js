@@ -920,23 +920,29 @@
     const eqById = new Map(equipos.map((e) => [String(e.id), e]));
     const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-    // Un "bucket" por usuario (excluye administradores).
     const buckets = new Map();
     const tecnicos = usuarios.filter((u) => u.rol !== ROL.ADMIN);
-    tecnicos.forEach((u) => buckets.set(u.id, { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }));
+    tecnicos.forEach((u) => buckets.set(norm(u.nombre), { usuario: u, nombre: u.nombre, prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() }));
     const sin = { usuario: null, nombre: "Sin asignar", prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() };
     buckets.set("__sin__", sin);
+
+    function getOrCreateBucket(name) {
+      const n = norm(name);
+      if (!n) return sin;
+      if (buckets.has(n)) return buckets.get(n);
+      const b = { usuario: null, nombre: name.trim(), prog: 0, reprog: 0, fin: 0, vencidos: 0, equipos: new Set() };
+      buckets.set(n, b);
+      return b;
+    }
 
     mantenimientos.forEach((m) => {
       if (scope && !scope.has(String(m.equipoId))) return;
       const eq = eqById.get(String(m.equipoId));
       let b = sin;
       if (eq) {
-        const resp = norm(eq.responsable);
-        const asig = norm(eq.usuarioAsignado);
-        const tec = tecnicos.find((u) => norm(u.nombre) === resp) ||
-          (asig && tecnicos.find((u) => norm(u.nombre) === asig));
-        b = buckets.get(tec ? tec.id : "__sin__");
+        const asig = (eq.usuarioAsignado || "").trim();
+        const resp = (eq.responsable || "").trim();
+        b = getOrCreateBucket(asig || resp);
       }
       b.equipos.add(eq ? String(eq.id) : "?");
       const e = estadoMant(m);
@@ -1009,7 +1015,7 @@
       if (statsGrid) statsGrid.classList.remove("hidden");
       const prev = sel.value;
       const opts = ['<option value="">Todos los responsables</option>']
-        .concat(tecnicos.map((u) => `<option value="${esc(u.nombre)}">${esc(u.nombre)}</option>`))
+        .concat(rows.filter((r) => r.nombre !== "Sin asignar").map((r) => `<option value="${esc(r.nombre)}">${esc(r.nombre)}</option>`))
         .concat(sinUsado ? [`<option value="__sin__">Sin asignar</option>`] : []);
       if (sel.innerHTML !== opts.join("")) sel.innerHTML = opts.join("");
       if (![...sel.options].some((o) => o.value === prev)) sel.value = "";
