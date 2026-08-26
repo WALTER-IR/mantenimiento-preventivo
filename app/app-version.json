@@ -1,6 +1,6 @@
 {
-  "version": "1.24.47",
+  "version": "1.24.49",
   "app": "Mantenimiento Preventivo",
-  "updated": "2026-08-19",
-  "changelog": "Login sincroniza ANTES de validar credenciales, un solo ingreso."
+  "updated": "2026-08-24",
+  "changelog": "Admin ve todos los usuarios. Fix login admin y sidebar confirmaciones."
 }

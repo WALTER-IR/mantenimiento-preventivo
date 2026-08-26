@@ -224,41 +224,10 @@
   }
 
   async function ensureAdmin() {
-    const flag = "admin_reset_" + CFG.APP_VERSION;
-    const cfg = await DB.getConfig();
-    if (!usuarios.some((u) => u.rol === ROL.ADMIN)) {
+    if (!usuarios.some((u) => u.id === "us-admin")) {
       const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
       usuarios.push(a);
       await DB.putUsuario(a);
-      await DB.setConfig(flag, true);
-      return;
-    }
-    if (!cfg[flag]) {
-      const admin = usuarios.find((u) => u.id === "us-admin") || usuarios.find((u) => u.rol === ROL.ADMIN);
-      if (admin.id !== "us-admin") {
-        const existing = usuarios.find((u) => u.id === "us-admin");
-        if (!existing) {
-          admin.id = "us-admin";
-          admin.nombre = "admin";
-          admin.dni = "admin";
-          admin.clave = "admin";
-          admin.rol = ROL.ADMIN;
-        } else {
-          existing.nombre = "admin";
-          existing.dni = "admin";
-          existing.clave = "admin";
-          existing.rol = ROL.ADMIN;
-        }
-      } else {
-        admin.nombre = "admin";
-        admin.dni = "admin";
-        admin.clave = "admin";
-        admin.rol = ROL.ADMIN;
-      }
-      const adminUser = usuarios.find((u) => u.id === "us-admin");
-      await DB.putUsuario(adminUser);
-      await DB.setConfig(flag, true);
-      auditar("RESTABLECER ADMIN", "Credenciales de administrador restablecidas");
     }
   }
 
@@ -277,10 +246,9 @@
     // los responsables entran con su DNI o nombre (clave asignada o DNI si no tienen clave).
     const ku = usuario.replace(/[^a-z0-9]/g, "").toLowerCase();
     const adminKey = ku === "admin" || ku === "administrador";
-    if (adminKey && !usuarios.some((x) => x.id === "us-admin")) {
-      const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
-      usuarios.push(a);
-      await DB.putUsuario(a);
+    if (adminKey) {
+      await ensureAdmin();
+      await reload();
     }
     const u = adminKey
       ? usuarios.find((x) => x.id === "us-admin") || usuarios.find((x) => x.rol === ROL.ADMIN)
