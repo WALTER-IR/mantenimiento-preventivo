@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Confirmaciones - Mantenimiento Preventivo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #333; min-height: 100vh; }
+        .header { background: #1e40af; color: #fff; padding: 20px 24px; }
+        .header h1 { font-size: 22px; margin: 0 0 4px; }
+        .header p { font-size: 14px; opacity: 0.85; margin: 0; }
+        .container { max-width: 960px; margin: 20px auto; padding: 0 16px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06); text-align: center; }
+        .stat-card .num { font-size: 28px; font-weight: 700; }
+        .stat-card .label { font-size: 13px; color: #64748b; margin-top: 4px; }
+        .stat-card.total .num { color: #1e40af; }
+        .stat-card.pend .num { color: #d97706; }
+        .stat-card.conf .num { color: #16a34a; }
+        .filters { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .filters input, .filters select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; flex: 1; min-width: 150px; }
+        .filters input:focus, .filters select:focus { outline: none; border-color: #1e40af; box-shadow: 0 0 0 2px rgba(30,64,175,.15); }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+        .btn-primary { background: #1e40af; color: #fff; }
+        .btn-primary:hover { background: #1e3a8a; }
+        .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.06); overflow: hidden; margin-bottom: 16px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8fafc; text-align: left; padding: 12px 16px; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 600; position: sticky; top: 0; cursor: pointer; user-select: none; }
+        th:hover { background: #eef2ff; }
+        td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+        tr:hover { background: #f8fafc; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-pend { background: #fef3c7; color: #92400e; }
+        .badge-conf { background: #dcfce7; color: #166534; }
+        .time-ago { font-size: 13px; color: #64748b; }
+        .time-warn { color: #d97706; }
+        .time-danger { color: #dc2626; }
+        .empty { text-align: center; padding: 40px; color: #94a3b8; }
+        .refresh-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .refresh-bar .info { font-size: 13px; color: #64748b; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; border-radius: 12px; padding: 28px; max-width: 480px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.15); }
+        .modal h3 { margin: 0 0 16px; font-size: 18px; }
+        .modal table { font-size: 14px; }
+        .modal td { padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+        .modal td:first-child { font-weight: 600; color: #64748b; width: 130px; }
+        .modal .close-btn { margin-top: 16px; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#128202; Estado de Confirmaciones</h1>
+        <p>Formato de Mantenimiento TI-F016</p>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card total"><div class="num" id="statTotal">-</div><div class="label">Total envios</div></div>
+            <div class="stat-card pend"><div class="num" id="statPend">-</div><div class="label">Pendientes</div></div>
+            <div class="stat-card conf"><div class="num" id="statConf">-</div><div class="label">Confirmados</div></div>
+        </div>
+        <div class="filters">
+            <input type="text" id="searchInput" placeholder="Buscar por equipo, responsable...">
+            <select id="filterEstado">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="confirmado">Confirmados</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadData()">&#8635; Actualizar</button>
+        </div>
+        <div class="refresh-bar">
+            <span class="info" id="lastUpdate">Cargando...</span>
+            <span class="info" id="countShow"></span>
+        </div>
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortBy('equipo')">Equipo &#8693;</th>
+                            <th onclick="sortBy('responsable')">Responsable &#8693;</th>
+                            <th onclick="sortBy('fecha_envio')">Fecha envio &#8693;</th>
+                            <th onclick="sortBy('estado')">Estado &#8693;</th>
+                            <th>Tiempo</th>
+                            <th onclick="sortBy('confirmado_por')">Confirmado por &#8693;</th>
+                            <th onclick="sortBy('confirmado_en')">Fecha confirmacion &#8693;</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="8" class="empty">Cargando datos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3 id="modalTitle">Detalle de confirmacion</h3>
+            <table id="modalTable"></table>
+            <div class="close-btn"><button class="btn btn-primary" onclick="document.getElementById('modalOverlay').classList.remove('active')">Cerrar</button></div>
+        </div>
+    </div>
+
+    <script>
+        var FB_URL = "https://mant-preventivo-57098-default-rtdb.europe-west1.firebasedatabase.app/confirmaciones.json";
+        var allData = [];
+        var sortField = "fecha_envio";
+        var sortAsc = false;
+
+        function loadData() {
+            document.getElementById("tableBody").innerHTML = '<tr><td colspan="8" class="empty">Cargando datos...</td></tr>';
+            fetch(FB_URL)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    allData = [];
+                    if (data) {
+                        Object.keys(data).forEach(function(id) {
+                            var rec = data[id];
+                            rec._id = id;
+                            allData.push(rec);
+                        });
+                    }
+                    updateStats();
+                    renderTable();
+                    document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-PE");
+                })
+                .catch(function(e) {
+                    document.getElementById("tableBody").innerHTML = '<tr><td colspan="8" class="empty">Error al cargar: ' + e.message + '</td></tr>';
+                });
+        }
+
+        function updateStats() {
+            var total = allData.length;
+            var conf = 0, pend = 0;
+            allData.forEach(function(r) {
+                if (r.estado === "confirmado") conf++; else pend++;
+            });
+            document.getElementById("statTotal").textContent = total;
+            document.getElementById("statPend").textContent = pend;
+            document.getElementById("statConf").textContent = conf;
+        }
+
+        function timeAgo(fechaStr) {
+            if (!fechaStr) return { text: "-", cls: "" };
+            var parts = fechaStr.split(/[/ :]/);
+            if (parts.length < 5) return { text: fechaStr, cls: "" };
+            var d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), parseInt(parts[3]), parseInt(parts[4]));
+            var diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return { text: "Ahora", cls: "" };
+            if (diff < 3600) return { text: Math.floor(diff / 60) + " min", cls: "" };
+            if (diff < 86400) { var h = Math.floor(diff / 3600); return { text: h + "h " + Math.floor((diff % 3600) / 60) + "min", cls: h >= 24 ? "time-warn" : "" }; }
+            var dias = Math.floor(diff / 86400);
+            return { text: dias + " dia(s)", cls: dias >= 3 ? "time-danger" : dias >= 1 ? "time-warn" : "" };
+        }
+
+        function renderTable() {
+            var search = document.getElementById("searchInput").value.toLowerCase();
+            var filter = document.getElementById("filterEstado").value;
+            var filtered = allData.filter(function(r) {
+                var matchSearch = !search || (r.equipo || "").toLowerCase().indexOf(search) >= 0 || (r.responsable || "").toLowerCase().indexOf(search) >= 0 || (r.confirmado_por || "").toLowerCase().indexOf(search) >= 0;
+                var matchFilter = !filter || r.estado === filter;
+                return matchSearch && matchFilter;
+            });
+            filtered.sort(function(a, b) {
+                var va = (a[sortField] || "").toLowerCase();
+                var vb = (b[sortField] || "").toLowerCase();
+                return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+            document.getElementById("countShow").textContent = filtered.length + " de " + allData.length;
+            if (filtered.length === 0) {
+                document.getElementById("tableBody").innerHTML = '<tr><td colspan="8" class="empty">No se encontraron registros</td></tr>';
+                return;
+            }
+            var html = "";
+            filtered.forEach(function(r) {
+                var ta = timeAgo(r.fecha_envio);
+                var badge = r.estado === "confirmado"
+                    ? '<span class="badge badge-conf">Confirmado</span>'
+                    : '<span class="badge badge-pend">Pendiente</span>';
+                html += '<tr>'
+                    + '<td>' + esc(r.equipo || "-") + '</td>'
+                    + '<td>' + esc(r.responsable || "-") + '</td>'
+                    + '<td>' + esc(r.fecha_envio || "-") + '</td>'
+                    + '<td>' + badge + '</td>'
+                    + '<td><span class="time-ago ' + ta.cls + '">' + ta.text + '</span></td>'
+                    + '<td>' + esc(r.confirmado_por || "-") + '</td>'
+                    + '<td>' + esc(r.confirmado_en || "-") + '</td>'
+                    + '<td><button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="showDetail(\'' + r._id + '\')">Ver</button></td>'
+                    + '</tr>';
+            });
+            document.getElementById("tableBody").innerHTML = html;
+        }
+
+        function sortBy(field) {
+            if (sortField === field) sortAsc = !sortAsc;
+            else { sortField = field; sortAsc = true; }
+            renderTable();
+        }
+
+        function showDetail(id) {
+            var r = allData.find(function(x) { return x._id === id; });
+            if (!r) return;
+            document.getElementById("modalTitle").textContent = "Detalle - " + (r.equipo || "");
+            var rows = [
+                ["ID", r._id],
+                ["Equipo", r.equipo],
+                ["Responsable", r.responsable],
+                ["Fecha envio", r.fecha_envio],
+                ["Estado", r.estado === "confirmado" ? "Confirmado" : "Pendiente"],
+                ["Confirmado por", r.confirmado_por || "-"],
+                ["Fecha confirmacion", r.confirmado_en || "-"],
+                ["Mant. ID", r.mantId || "-"]
+            ];
+            var html = "";
+            rows.forEach(function(row) {
+                html += "<tr><td>" + row[0] + "</td><td>" + esc(String(row[1] || "-")) + "</td></tr>";
+            });
+            document.getElementById("modalTable").innerHTML = html;
+            document.getElementById("modalOverlay").classList.add("active");
+        }
+
+        function closeModal(e) {
+            if (e.target === document.getElementById("modalOverlay")) {
+                document.getElementById("modalOverlay").classList.remove("active");
+            }
+        }
+
+        function esc(s) {
+            var d = document.createElement("div");
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        document.getElementById("searchInput").addEventListener("input", renderTable);
+        document.getElementById("filterEstado").addEventListener("change", renderTable);
+
+        loadData();
+        setInterval(loadData, 60000);
+    </script>
+</body>
+</html>
