@@ -235,12 +235,28 @@
     }
     if (!cfg[flag]) {
       const admin = usuarios.find((u) => u.id === "us-admin") || usuarios.find((u) => u.rol === ROL.ADMIN);
-      admin.nombre = "admin";
-      admin.dni = "admin";
-      admin.clave = "admin";
-      admin.rol = ROL.ADMIN;
-      if (admin.id !== "us-admin") admin.id = "us-admin";
-      await DB.putUsuario(admin);
+      if (admin.id !== "us-admin") {
+        const existing = usuarios.find((u) => u.id === "us-admin");
+        if (!existing) {
+          admin.id = "us-admin";
+          admin.nombre = "admin";
+          admin.dni = "admin";
+          admin.clave = "admin";
+          admin.rol = ROL.ADMIN;
+        } else {
+          existing.nombre = "admin";
+          existing.dni = "admin";
+          existing.clave = "admin";
+          existing.rol = ROL.ADMIN;
+        }
+      } else {
+        admin.nombre = "admin";
+        admin.dni = "admin";
+        admin.clave = "admin";
+        admin.rol = ROL.ADMIN;
+      }
+      const adminUser = usuarios.find((u) => u.id === "us-admin");
+      await DB.putUsuario(adminUser);
       await DB.setConfig(flag, true);
       auditar("RESTABLECER ADMIN", "Credenciales de administrador restablecidas");
     }
@@ -262,7 +278,7 @@
     const ku = usuario.replace(/[^a-z0-9]/g, "").toLowerCase();
     const adminKey = ku === "admin" || ku === "administrador";
     const u = adminKey
-      ? usuarios.find((x) => x.rol === ROL.ADMIN)
+      ? usuarios.find((x) => x.id === "us-admin") || usuarios.find((x) => x.rol === ROL.ADMIN)
       : usuarios.find((x) =>
           (x.nombre || "").toLowerCase() === usuario || (x.dni || "").toLowerCase() === usuario);
     if (!u) {
@@ -3613,7 +3629,7 @@
 
   function bindEvents() {
     // navegación (sidebar)
-    $$(".nav-item").forEach((b) => b.addEventListener("click", () => { setView(b.dataset.view); toggleSidebar(false); }));
+    $$(".nav-item").forEach((b) => b.addEventListener("click", () => { if (b.dataset.view) setView(b.dataset.view); toggleSidebar(false); }));
     $("#btnMenu").addEventListener("click", () => toggleSidebar(true));
     $("#sidebarBackdrop").addEventListener("click", () => toggleSidebar(false));
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleSidebar(false); });
