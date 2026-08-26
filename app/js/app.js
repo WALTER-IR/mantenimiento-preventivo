@@ -277,6 +277,11 @@
     // los responsables entran con su DNI o nombre (clave asignada o DNI si no tienen clave).
     const ku = usuario.replace(/[^a-z0-9]/g, "").toLowerCase();
     const adminKey = ku === "admin" || ku === "administrador";
+    if (adminKey && !usuarios.some((x) => x.id === "us-admin")) {
+      const a = { id: "us-admin", nombre: "admin", dni: "admin", clave: "admin", rol: ROL.ADMIN };
+      usuarios.push(a);
+      await DB.putUsuario(a);
+    }
     const u = adminKey
       ? usuarios.find((x) => x.id === "us-admin") || usuarios.find((x) => x.rol === ROL.ADMIN)
       : usuarios.find((x) =>
