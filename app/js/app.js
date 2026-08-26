@@ -3608,6 +3608,30 @@
   }
 
   function bindEvents() {
+    // Asegurar que el botón de Confirmaciones exista en el sidebar
+    (function ensureConfirmacionesBtn() {
+      var nav = $(".side-nav");
+      if (nav && !nav.querySelector("[data-confirmaciones]")) {
+        var exists = false;
+        nav.querySelectorAll(".nav-item").forEach(function (b) {
+          if (b.textContent.indexOf("Confirmaciones") !== -1) exists = true;
+        });
+        if (!exists) {
+          var btn = document.createElement("button");
+          btn.className = "nav-item";
+          btn.setAttribute("data-confirmaciones", "1");
+          btn.onclick = function () { window.open("https://walter-ir.github.io/mantenimiento-preventivo/app/confirmaciones.html", "_blank"); };
+          btn.innerHTML = '<span class="nav-ico">📋</span><span>Confirmaciones</span>';
+          var configBtn = null;
+          nav.querySelectorAll(".nav-item").forEach(function (b) {
+            if (b.dataset.view === "config") configBtn = b;
+          });
+          if (configBtn) nav.insertBefore(btn, configBtn);
+          else nav.appendChild(btn);
+        }
+      }
+    })();
+
     // navegación (sidebar)
     $$(".nav-item").forEach((b) => b.addEventListener("click", () => { if (b.dataset.view) setView(b.dataset.view); toggleSidebar(false); }));
     $("#btnMenu").addEventListener("click", () => toggleSidebar(true));
