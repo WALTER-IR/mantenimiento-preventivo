@@ -940,9 +940,10 @@
       const eq = eqById.get(String(m.equipoId));
       let b = sin;
       if (eq) {
-        const asig = (eq.usuarioAsignado || "").trim();
+        const tecnico = (m.tecnico || m.responsable || "").trim();
         const resp = (eq.responsable || "").trim();
-        b = getOrCreateBucket(asig || resp);
+        const asig = (eq.usuarioAsignado || "").trim();
+        b = getOrCreateBucket(tecnico || resp || asig);
       }
       b.equipos.add(eq ? String(eq.id) : "?");
       const e = estadoMant(m);
